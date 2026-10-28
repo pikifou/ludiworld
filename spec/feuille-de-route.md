@@ -22,8 +22,13 @@ Avancer petit, publier, en parler, laisser venir.
 - Tableau de suivi : temps, records, notions vues et sues.
 - Comptes et synchro entre appareils (Supabase, UE).
 
+## Ouverture aux autres créateurs (avancé dès la v0)
+- [x] `LUDIWORLD.md` : guide à donner à son IA (charte, cadre, fiche, kit, GitHub Pages, soumission).
+- [x] Soumission par issue GitHub, vérification automatique, pull request à valider.
+- [x] Jeux dont le site interdit les cadres : ouverts dans un nouvel onglet.
+- [ ] Mettre `ludi.json` à la racine de chacun des jeux de Julien et les repasser par l'import (exemple vivant pour les autres).
+
 ## v2 : les autres parents
-- Un créateur soumet son jeu en donnant l'adresse de sa fiche.
-- Vérifications automatiques (fiche valide, domaines tiers déclarés).
+- Page « Ajouter un jeu » dans le launcher, pour ceux qui ne connaissent pas GitHub.
 - Les parents notent : est-ce que ça marche, est-ce que c'est sain, est-ce que l'enfant a accroché, a-t-il appris.
 - Un jeu validé par assez de parents est mis en avant.

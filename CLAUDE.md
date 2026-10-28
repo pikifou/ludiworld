@@ -18,10 +18,15 @@ Porteur : Julien (pikifou). Les premiers jeux sont ceux qu'il a faits pour son f
   - `docs/kit/ludi.js` : le kit, chargé par les jeux.
   - `docs/jeux/index.json` : la liste des fiches ; `docs/jeux/<id>.json` : une fiche par jeu.
   - `docs/sw.js` : service worker (incrémenter `VERSION` à chaque publication).
-- `tools/valider.js` : valide les fiches.
+- `tools/valider.js` : valide les fiches. `tools/importer.js <adresse>` : importe la fiche d'un jeu publié ailleurs.
+- `LUDIWORLD.md` : guide qu'un créateur donne à son IA pour rendre son jeu compatible et le proposer.
+- `.github/ISSUE_TEMPLATE/proposer-un-jeu.yml` + `.github/workflows/proposer-un-jeu.yml` : soumission par issue, vérification automatique, pull request à valider (voir `spec/fiche.md`, « Proposer un jeu »).
 - `tests/` : `node --test tests/*.test.js` (kit et fiches) ; `python3 tests/captures.py <sortie> [<dossier des clones des jeux>]` (navigateur sans réseau : captures téléphone et ordinateur, retour Android, dialogue avec un faux jeu qui utilise le kit).
 
-## Les jeux (dépôts séparés, tous sur pikifou.github.io, même origine que le launcher)
+## Principe : Ludiworld n'héberge pas les jeux
+Chaque créateur héberge son jeu (GitHub Pages de préférence) avec `ludi.json` à la racine. Le catalogue garde une copie validée de chaque fiche ; le jeu se charge depuis le site du créateur. Ne jamais copier le code d'un jeu dans ce dépôt.
+
+## Les jeux de Julien (dépôts séparés)
 - La Tour aux Aimants : https://github.com/pikifou/tour-aimants
 - Chasseur de Dragons : https://github.com/pikifou/chasseur-dragons
 - Du Feu à la Fusée : https://github.com/pikifou/du-feu-a-la-fusee

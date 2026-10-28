@@ -30,6 +30,8 @@ function validate(f, domains = knownDomains()) {
   url('url', f.url); url('icon', f.icon);
   if (f.color !== undefined && !/^#[0-9a-f]{6}$/i.test(f.color)) err.push('color : #rrggbb');
   if (!f.author || !f.author.name) err.push('author.name requis');
+  else if (f.author.url !== undefined) url('author.url', f.author.url);
+  if (f.embed !== undefined && typeof f.embed !== 'boolean') err.push('embed : true ou false');
   if (!Array.isArray(f.languages) || !f.languages.length) err.push('languages : au moins une langue');
   const a = f.age || {};
   if (!(Number.isInteger(a.min) && Number.isInteger(a.max) && a.min >= 2 && a.min <= a.max && a.max <= 18)) err.push('age : min et max entiers, 2 ≤ min ≤ max ≤ 18');

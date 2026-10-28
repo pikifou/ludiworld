@@ -1,0 +1,31 @@
+name: Proposer un jeu / Submit a game
+description: Ajouter un jeu à Ludiworld / Add a game to Ludiworld
+title: "Jeu : "
+labels: ["nouveau-jeu"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **FR** · Votre jeu doit être publié (GitHub Pages de préférence) avec sa fiche `ludi.json` à côté de `index.html`. Pas encore prêt ? Donnez [ce guide](https://github.com/pikifou/ludiworld/blob/main/LUDIWORLD.md) à votre IA. Un robot vérifie la fiche et répond ici en une minute ; ensuite quelqu'un joue au jeu et le valide.
+
+        **EN** · Your game must be published (GitHub Pages preferred) with its `ludi.json` card next to `index.html`. Not ready yet? Give [this guide](https://github.com/pikifou/ludiworld/blob/main/LUDIWORLD.md) to your AI. A bot checks the card and answers here within a minute; then a person plays the game and validates it.
+  - type: input
+    id: adresse
+    attributes:
+      label: Adresse du jeu / Game address
+      description: "Ex. https://votre-nom.github.io/votre-jeu/"
+      placeholder: https://
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Un mot sur le jeu (facultatif) / A word about the game (optional)
+      description: Pour qui vous l'avez fait, ce que votre enfant en pense… / Who you made it for, what your child thinks…
+  - type: checkboxes
+    id: charte
+    attributes:
+      label: Engagements / Commitments
+      options:
+        - label: "Pas de pub, rien à acheter, pas d'abonnement, pas de « reviens demain », aucune donnée envoyée. / No ads, nothing to buy, no subscription, no \"come back tomorrow\", no data sent."
+          required: true

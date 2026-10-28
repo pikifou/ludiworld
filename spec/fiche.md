@@ -5,8 +5,10 @@ Chaque jeu Ludiworld est décrit par une fiche. C'est elle que le parent lit ava
 Règle d'or : **la fiche dit la vérité, y compris quand elle est moins flatteuse**. Un jeu d'action qui apprend peu le dit ; un jeu qui charge une police chez Google le dit. La confiance des parents vient de là.
 
 ## Où elle vit
-- v0 : dans ce dépôt, `docs/jeux/<id>.json`, listées dans `docs/jeux/index.json`.
-- Plus tard : à la racine du jeu (`https://…/mon-jeu/ludi.json`). Le catalogue ne garde que l'adresse.
+- **Chez le créateur** : à la racine du site publié, à côté de `index.html` (`https://<nom>.github.io/<jeu>/ludi.json`). Le jeu (`url`) doit être sur le même site que sa fiche.
+- **Dans le catalogue** : une copie validée, `docs/jeux/<id>.json`, listée dans `docs/jeux/index.json`. La copie protège le catalogue : un site qui tombe ne le casse pas, et une fiche modifiée après validation doit être proposée à nouveau.
+
+Comment un jeu entre dans le catalogue : voir `LUDIWORLD.md` (guide à donner à son IA) et la section « Proposer un jeu » plus bas.
 
 ## Champs
 
@@ -33,6 +35,8 @@ Les textes destinés aux gens sont bilingues : `{ "fr": "…", "en": "…" }`. L
 | `healthy` | oui | La checklist de la charte (`spec/charte.md`). |
 | `third_parties` | oui | Domaines extérieurs que le jeu contacte (`[]` si aucun). |
 | `kit` | oui | `true` si le jeu utilise `ludi.js`. |
+| `embed` | non | Ajouté à l'import : `false` si le site du jeu interdit l'affichage dans un cadre (le launcher ouvre alors un nouvel onglet). |
+| `source` | non | Ajouté à l'import : `{ "card": "<adresse de la fiche>", "imported": "AAAA-MM-JJ" }`. |
 | `status` | oui | `draft` (fiche pas encore relue par l'auteur) ou `published`. |
 
 ### `learning`
@@ -60,3 +64,12 @@ Voir `docs/jeux/pluie-de-cochons.json`.
 
 ## Validation
 `node tools/valider.js` vérifie toutes les fiches du catalogue. Les tests le lancent aussi.
+
+## Proposer un jeu
+1. Le créateur publie son jeu (GitHub Pages de préférence) avec `ludi.json` à la racine. `LUDIWORLD.md` explique tout à son IA.
+2. Il ouvre une issue avec le formulaire « Proposer un jeu » et colle l'adresse du site.
+3. Le workflow `.github/workflows/proposer-un-jeu.yml` lance `tools/importer.js` : il lit la fiche, la vérifie (format, charte, jeu sur le même site, identifiant libre, jeu et icône qui répondent, cadre autorisé ou non) et répond sur l'issue.
+4. Si tout va bien, il ouvre une demande d'ajout (pull request) avec la copie de la fiche. Julien joue au jeu, relit, et fusionne : le jeu apparaît dans Ludiworld. La fusion ferme l'issue.
+5. Pour mettre à jour une fiche : republier `ludi.json`, puis modifier l'issue ou en ouvrir une nouvelle avec la même adresse.
+
+À la main : `node tools/importer.js https://<nom>.github.io/<jeu>/`.

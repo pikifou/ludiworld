@@ -1,0 +1,71 @@
+# Quand quelqu'un propose un jeu (issue « Proposer un jeu »), on lit sa fiche ludi.json,
+# on la vérifie, et on ouvre une demande d'ajout (pull request) que Julien valide en la fusionnant.
+# Réglage nécessaire : Settings → Actions → General → « Allow GitHub Actions to create and approve pull requests ».
+name: Proposer un jeu
+
+on:
+  issues:
+    types: [opened, edited, reopened]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+concurrency:
+  group: proposer-${{ github.event.issue.number }}
+  cancel-in-progress: true
+
+jobs:
+  importer:
+    if: contains(github.event.issue.labels.*.name, 'nouveau-jeu') && github.event.issue.state == 'open'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Lire et vérifier la fiche
+        id: imp
+        env:
+          ISSUE_BODY: ${{ github.event.issue.body }}
+        run: |
+          node tools/importer.js --issue || true
+          [ -f rapport.md ] || echo "La vérification a échoué de façon inattendue. Julien va regarder." > rapport.md
+
+      - name: Ouvrir la demande d'ajout
+        if: steps.imp.outputs.ok == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ID: ${{ steps.imp.outputs.id }}
+          TITLE: ${{ steps.imp.outputs.title }}
+          ISSUE: ${{ github.event.issue.number }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          BRANCH="jeu/$ID"
+          git checkout -B "$BRANCH"
+          git add docs/jeux
+          if git diff --cached --quiet; then
+            printf '\nLa fiche est identique à celle du catalogue : rien à changer.\n' >> rapport.md
+            exit 0
+          fi
+          git commit -q -m "Jeu : $TITLE ($ID)" -m "Proposé dans #$ISSUE"
+          git push -q -f origin "$BRANCH"
+          { cat rapport.md; printf '\n---\nPour valider : jouer au jeu, relire la fiche, puis fusionner.\n\nCloses #%s\n' "$ISSUE"; } > pr.md
+          PR=$(gh pr list --head "$BRANCH" --state open --json url --jq '.[0].url')
+          if [ -z "$PR" ]; then
+            PR=$(gh pr create --head "$BRANCH" --base main --title "Jeu : $TITLE" --body-file pr.md)
+          else
+            gh pr edit "$PR" --body-file pr.md
+          fi
+          printf '\nDemande d’ajout : %s\n' "$PR" >> rapport.md
+
+      - name: Répondre sur l'issue
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE: ${{ github.event.issue.number }}
+        run: '[ -f rapport.md ] && gh issue comment "$ISSUE" --body-file rapport.md'

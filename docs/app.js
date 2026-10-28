@@ -39,6 +39,8 @@
       oursTotal: 'En tout : {t} en {n} partie(s)',
       draft: 'Fiche en cours de relecture par son auteur.',
       code: 'Voir le jeu sur GitHub',
+      newTab: 'S’ouvre dans un nouvel onglet : le temps de jeu n’y est pas compté.',
+      source: 'Fiche vérifiée le {d}.',
       kitOn: 'Ce jeu partage ses scores avec Ludiworld.',
       kitOff: 'Le temps de jeu est mesuré par Ludiworld ; les scores arriveront quand le jeu utilisera le kit.',
       loadError: 'Impossible de charger les jeux. Vérifie la connexion et réessaie.',
@@ -93,6 +95,8 @@
       oursTotal: 'In total: {t} over {n} session(s)',
       draft: 'This card is being reviewed by its author.',
       code: 'See the game on GitHub',
+      newTab: 'Opens in a new tab: play time isn’t counted there.',
+      source: 'Card checked on {d}.',
       kitOn: 'This game shares its scores with Ludiworld.',
       kitOff: 'Play time is measured by Ludiworld; scores will come once the game uses the kit.',
       loadError: 'Couldn’t load the games. Check the connection and try again.',
@@ -273,6 +277,7 @@
       ]),
       el('p', { class: 'pitch', text: pick(g.pitch) }),
       el('button', { type: 'button', class: 'play', onclick: function () { play(g); } }, [playIcon, t('play')]),
+      g.embed === false ? el('p', { class: 'newtab', text: t('newTab') }) : null,
       el('dl', { class: 'facts' }, [
         fact(t('age'), t('ages', { a: g.age.min, b: g.age.max })),
         fact(t('reading'), t('read.' + g.reading)),
@@ -292,6 +297,7 @@
       el('div', { class: 'meta' }, [
         el('p', { text: (stats && stats.kit) || g.kit ? t('kitOn') : t('kitOff') }),
         g.status === 'draft' ? el('p', { text: t('draft') }) : null,
+        g.source && g.source.imported ? el('p', { text: t('source', { d: new Date(g.source.imported).toLocaleDateString(lang) }) }) : null,
         g.author.url ? el('p', null, [el('a', { href: g.author.url, target: '_blank', rel: 'noopener', text: t('code') })]) : null
       ])
     ]);
@@ -329,6 +335,8 @@
     if (playing) return;
     var stats = gameStats(g.id);
     stats.sessions += 1; saveStore();
+    // Site qui interdit l'affichage dans un cadre : le jeu s'ouvre dans un nouvel onglet.
+    if (g.embed === false) { window.open(g.url, '_blank', 'noopener'); return; }
     playing = { game: g, origin: new URL(g.url, location.href).origin, kit: false, since: Date.now(), sheet: sheet.open };
     // La fiche est une fenêtre modale (au-dessus de tout) : on la cache pendant la partie.
     if (sheet.open) { if (typeof sheet.close === 'function') sheet.close(); else sheet.removeAttribute('open'); }
