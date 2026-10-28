@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Ludiworld</title>
+  <meta name="description" content="Des petits jeux faits maison par des parents, qui font apprendre, sans pub, sans achat, sans pièges.">
+  <meta name="theme-color" content="#cbe6f7" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#16233f" media="(prefers-color-scheme: dark)">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/icon-180.png">
+  <link rel="preload" href="fonts/baloo2-800.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="top">
+    <div class="brand">
+      <h1 class="wordmark">Ludiworld</h1>
+      <p class="tagline" data-t="tagline"></p>
+    </div>
+    <div class="top-side">
+      <div class="langs" role="group" aria-label="Langue / Language">
+        <button type="button" data-lang="fr" lang="fr">FR</button>
+        <button type="button" data-lang="en" lang="en">EN</button>
+      </div>
+      <p class="week" id="week"></p>
+    </div>
+  </header>
+
+  <main id="shelves" class="shelves" aria-live="polite"></main>
+
+  <footer class="foot">
+    <p data-t="footer"></p>
+    <p><a href="https://github.com/pikifou/ludiworld/blob/main/spec/fiche.md" data-t="addGame"></a></p>
+    <p><button type="button" class="linklike" id="install" hidden data-t="install"></button></p>
+  </footer>
+
+  <dialog id="sheet" class="sheet" aria-labelledby="sheet-title"></dialog>
+
+  <div id="player" class="player" hidden>
+    <button type="button" class="player-back" id="player-back"></button>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

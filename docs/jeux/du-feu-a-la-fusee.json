@@ -1,0 +1,43 @@
+{
+  "ludi": 1,
+  "id": "du-feu-a-la-fusee",
+  "status": "draft",
+  "title": { "fr": "Du Feu à la Fusée", "en": "From Fire to Rocket" },
+  "pitch": {
+    "fr": "Un petit village qui traverse l'histoire. On construit, on découvre le feu, les outils, l'agriculture, et le village grandit tout seul sous ses yeux. La démo va jusqu'au néolithique.",
+    "en": "A small village travelling through history. Build, discover fire, tools and farming, and watch the village grow. The demo goes up to the Neolithic."
+  },
+  "url": "https://pikifou.github.io/du-feu-a-la-fusee/",
+  "icon": "https://pikifou.github.io/du-feu-a-la-fusee/icone-512.png",
+  "color": "#e9dcc4",
+  "author": { "name": "Julien", "url": "https://github.com/pikifou/du-feu-a-la-fusee" },
+  "languages": ["fr"],
+  "age": { "min": 6, "max": 11 },
+  "reading": "none",
+  "learning": {
+    "level": "core",
+    "domains": ["histoire.prehistoire", "histoire.techniques", "gestion.ressources"],
+    "what": {
+      "fr": "La vraie histoire des techniques, dans l'ordre réel (feu, outils de pierre, agriculture, élevage, poterie…), ce que chacune a changé dans la vie des gens, et de vrais lieux (Lascaux, Carnac, Stonehenge…).",
+      "en": "The real history of techniques, in their real order (fire, stone tools, farming, herding, pottery…), what each one changed in people's lives, and real places (Lascaux, Carnac, Stonehenge…)."
+    },
+    "how": {
+      "fr": "Chaque découverte ouvre une grande page illustrée lue à voix haute (avant / maintenant, « Le savais-tu ? »). On voit les habitants travailler, dormir, chasser. Se joue sans savoir lire.",
+      "en": "Each discovery opens a big illustrated page read aloud (before / after, \"Did you know?\"). Villagers can be seen working, sleeping, hunting. Playable without reading."
+    }
+  },
+  "session": { "minutes": [10, 20], "natural_end": true, "total_hours": 2 },
+  "content": {
+    "fr": "Jeu calme, sans ennemis. La chasse aux lapins et aux mammouths est montrée de loin.",
+    "en": "Calm game with no enemies. Rabbit and mammoth hunting is shown from afar."
+  },
+  "devices": ["phone", "tablet", "computer"],
+  "offline": true,
+  "healthy": {
+    "no_ads": true, "no_purchases": true, "no_subscription": true, "no_loot_boxes": true,
+    "no_daily_pressure": true, "no_notifications": true, "no_strangers": true, "no_tracking": true,
+    "natural_stops": true
+  },
+  "third_parties": ["fonts.googleapis.com"],
+  "kit": false
+}

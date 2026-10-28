@@ -1,0 +1,43 @@
+{
+  "ludi": 1,
+  "id": "chasseur-dragons",
+  "status": "draft",
+  "title": { "fr": "Chasseur de Dragons", "en": "Dragon Hunter" },
+  "pitch": {
+    "fr": "Un jeune archer affronte dix dragons, de salle en salle jusqu'au Roi Dragon. Il tire tout seul quand il s'arrête ; entre deux salles, il choisit un pouvoir.",
+    "en": "A young archer faces ten dragons, room after room up to the Dragon King. He shoots by himself when he stands still; between rooms, he picks a power."
+  },
+  "url": "https://pikifou.github.io/chasseur-dragons/",
+  "icon": "https://pikifou.github.io/chasseur-dragons/icon-512.png",
+  "color": "#07050c",
+  "author": { "name": "Julien", "url": "https://github.com/pikifou/chasseur-dragons" },
+  "languages": ["fr", "en"],
+  "age": { "min": 6, "max": 12 },
+  "reading": "none",
+  "learning": {
+    "level": "side",
+    "domains": ["motricite.reflexes", "strategie.choix"],
+    "what": {
+      "fr": "Surtout un jeu pour le plaisir. On y travaille les réflexes, la lecture des attaques d'un boss, le choix de ses pouvoirs et la persévérance.",
+      "en": "Mostly a game for fun. It trains reflexes, reading a boss's attacks, choosing powers, and perseverance."
+    },
+    "how": {
+      "fr": "Chaque dragon a des phases annoncées ; on apprend à reconnaître ses attaques et à esquiver. Trois modes de difficulté, du plus exigeant (on recommence tout) au plus doux (on reprend la salle).",
+      "en": "Each dragon has telegraphed phases; players learn to recognise attacks and dodge. Three difficulty modes, from demanding (start over) to gentle (retry the room)."
+    }
+  },
+  "session": { "minutes": [10, 25], "natural_end": true, "total_hours": 3 },
+  "content": {
+    "fr": "Combat fantastique : des flèches contre des dragons, sans sang. Musique douce qui donne du courage.",
+    "en": "Fantasy combat: arrows against dragons, no blood. Gentle, encouraging music."
+  },
+  "devices": ["phone", "tablet", "computer"],
+  "offline": true,
+  "healthy": {
+    "no_ads": true, "no_purchases": true, "no_subscription": true, "no_loot_boxes": true,
+    "no_daily_pressure": true, "no_notifications": true, "no_strangers": true, "no_tracking": true,
+    "natural_stops": true
+  },
+  "third_parties": [],
+  "kit": false
+}
