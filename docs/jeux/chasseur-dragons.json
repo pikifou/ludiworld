@@ -22,8 +22,8 @@
       "en": "Accepting defeat and starting all over again. Most games say “well done” at every step; this one is tough. There is no second chance: losing sends you back to room 1 and every dragon has to be beaten again. It trains handling frustration and perseverance, and along the way reflexes and reading a boss's attacks."
     },
     "how": {
-      "fr": "Chaque dragon a des attaques annoncées : on progresse en comprenant pourquoi on a perdu, pas par chance. La victoire sur le Roi Dragon se mérite. Trois difficultés, toujours sans continue : facile (5 cœurs et un bouclier possible), moyen (3 cœurs, sans bouclier), difficile (3 cœurs, sans bonus, et un cœur regagné seulement quand un dragon est vaincu).",
-      "en": "Each dragon telegraphs its attacks: you get better by understanding why you lost, not by luck. Beating the Dragon King has to be earned. Three difficulty levels, never with continues: easy (5 hearts and a possible shield), medium (3 hearts, no shield), hard (3 hearts, no bonus, and a heart is won back only when a dragon is beaten)."
+      "fr": "Chaque dragon a des attaques annoncées : on progresse en comprenant pourquoi on a perdu, pas par chance. La victoire sur le Roi Dragon se mérite. Trois difficultés, toujours sans continue : facile (5 cœurs et un bouclier possible), moyen (3 cœurs, sans bouclier), difficile (3 cœurs, aucun pouvoir entre les salles, et un cœur regagné seulement quand un dragon est vaincu).",
+      "en": "Each dragon telegraphs its attacks: you get better by understanding why you lost, not by luck. Beating the Dragon King has to be earned. Three difficulty levels, never with continues: easy (5 hearts and a possible shield), medium (3 hearts, no shield), hard (3 hearts, no powers between rooms, and a heart is won back only when a dragon is beaten)."
     }
   },
   "session": { "minutes": [10, 25], "natural_end": true, "total_hours": 3 },
