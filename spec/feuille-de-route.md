@@ -14,13 +14,20 @@ Avancer petit, publier, en parler, laisser venir.
 - [ ] Intégrer `ludi.js` dans chaque jeu (une ligne + quelques appels ; Pluie de Cochons en premier, il a déjà une grille de maîtrise).
 - [ ] Mettre `ludi.json` à la racine de chaque jeu.
 
-## v1 : la famille
-- Espace parent (code ou geste simple pour y entrer).
-- Profils enfants (pseudo, tranche d'âge), plusieurs enfants par appareil.
-- Sélection de la semaine : le parent choisit les jeux visibles.
-- Temps de jeu par jour, décidé par le parent, appliqué par le launcher (`ludi:pause`).
-- Tableau de suivi : temps, records, notions vues et sues.
-- Comptes et synchro entre appareils (Supabase, UE).
+## v1 : la famille (première version le 30 octobre 2026, à éprouver)
+- [x] Direction artistique « Le soleil de Ludiworld » : île en papier découpé, soleil qui descend avec le temps de jeu, marmotte qui s'endort.
+- [x] Première ouverture : le parent prépare Ludiworld (pseudo, âge, jeux, temps, code).
+- [x] Carnet parent derrière un code (appui long sur « Parents ») : aujourd'hui, jeux (recherche, filtres âge / notion / lecture), temps, réglages.
+- [x] Temps par jour (jours d'école et sans école), limite par jeu, +10 min ou « fini pour aujourd'hui ».
+- [x] Fin douce (attend `Ludi.checkpoint`, délai max) ou fin nette ; prévenir 5 min avant (`ludi:wrapup`).
+- [x] Tableau de suivi : temps du jour et de la semaine, notions acquises et à revoir, records.
+- [x] Vitrine `docs/decouvrir/` : ce qu'est Ludiworld, pour les parents qui découvrent.
+- [x] Plusieurs enfants par appareil : chacun ses jeux, son temps, son suivi ; « Pas toi ? » (code parent par défaut).
+- [x] Heures de jeu (pas de jeu avant / après), vacances scolaires, jeu réservé aux jours sans école.
+- [x] Code parent : 3 erreurs = 30 s de pause ; « code oublié » = 30 min d'attente pendant lesquelles on ne joue pas.
+- [x] Kit 0.2.0 (`checkpoint`, `onWrapUp`) dans les quatre jeux de Julien (clones à côté, non publiés).
+- [ ] Le suivi des jeux eux-mêmes (`ludi.v1.<jeu>`) est partagé entre les enfants d'une même tablette : à traiter si les profils servent.
+- Comptes et synchro entre appareils (Supabase, UE) : le parent règle depuis son téléphone.
 
 ## Ouverture aux autres créateurs (avancé dès la v0)
 - [x] `LUDIWORLD.md` : guide à donner à son IA (charte, cadre, fiche, kit, GitHub Pages, soumission).

@@ -15,5 +15,7 @@
 
 ## Développement
 - `docs/` est le site (GitHub Pages, branche `main`, dossier `/docs`), sans build.
-- `node --test tests/*.test.js` lance les tests du kit et valide les fiches.
+- `python3 tools/dev.py` : le launcher et les jeux clonés à côté de ce dépôt, servis depuis le disque sur http://localhost:7357/ludiworld/ (jeux reconstruits à la volée, pas de cache). Chaque jeu reste jouable seul sur http://localhost:7357/<jeu>/.
+- `node --test tests/*.test.js` lance les tests du kit, des règles du temps et valide les fiches.
+- `python3 tests/captures.py <sortie> ..` : parcours complet dans un navigateur, sans réseau, avec captures.
 - Feuille de route : `spec/feuille-de-route.md`.

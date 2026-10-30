@@ -4,44 +4,73 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Ludiworld</title>
-  <meta name="description" content="Des petits jeux faits maison par des parents, qui font apprendre, sans pub, sans achat, sans pièges.">
-  <meta name="theme-color" content="#cbe6f7" media="(prefers-color-scheme: light)">
-  <meta name="theme-color" content="#16233f" media="(prefers-color-scheme: dark)">
+  <meta name="description" content="Des petits jeux faits maison par des parents, qui font apprendre. Le parent choisit les jeux et le temps de jeu, le soleil dit quand on s'arrête.">
+  <meta name="theme-color" content="#7cc6f2">
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="icon" href="icons/icon-192.png">
+  <link rel="icon" href="icons/favicon-64.png">
   <link rel="apple-touch-icon" href="icons/icon-180.png">
   <link rel="preload" href="fonts/baloo2-800.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/lexend.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header class="top">
-    <div class="brand">
-      <h1 class="wordmark">Ludiworld</h1>
-      <p class="tagline" data-t="tagline"></p>
+  <!-- Première ouverture : le parent prépare Ludiworld -->
+  <section id="v-accueil" class="accueil" hidden></section>
+
+  <!-- Côté enfant : l'île et le soleil -->
+  <section id="v-enfant" class="enfant" hidden>
+    <div class="ciel" aria-hidden="true">
+      <img class="astre soleil" src="img/soleil.webp" alt="">
+      <img class="astre lune" src="img/lune.webp" alt="">
+      <span class="etoiles"></span>
+      <img class="nuage n1" src="img/nuage-1.webp" alt="">
+      <img class="nuage n2" src="img/nuage-2.webp" alt="">
+      <img class="nuage n3" src="img/nuage-3.webp" alt="">
     </div>
-    <div class="top-side">
-      <div class="langs" role="group" aria-label="Langue / Language">
-        <button type="button" data-lang="fr" lang="fr">FR</button>
-        <button type="button" data-lang="en" lang="en">EN</button>
+    <header class="e-haut">
+      <h1 class="e-salut" id="e-salut"></h1>
+      <p class="e-temps" id="e-temps" aria-live="polite"></p>
+      <button type="button" class="e-qui" id="e-qui" hidden><svg viewBox="0 0 24 24" aria-hidden="true" class="ico"><circle cx="12" cy="8" r="4.5" fill="currentColor"/><path d="M3.5 21c1.2-4.6 4.6-7 8.5-7s7.3 2.4 8.5 7z" fill="currentColor"/></svg><span></span></button>
+    </header>
+    <div class="e-monde" aria-hidden="true">
+      <div class="ile">
+        <img class="ile-jour" src="img/ile-jour.webp" alt="">
+        <img class="ile-nuit" src="img/ile-nuit.webp" alt="">
+        <img class="marmotte" id="e-marmotte" src="img/marmotte-salut.webp" alt="">
       </div>
-      <p class="week" id="week"></p>
     </div>
-  </header>
+    <nav class="e-jeux" id="e-jeux" aria-label="Jeux"></nav>
+    <div class="e-dodo" id="e-dodo" hidden></div>
+    <button type="button" class="e-parents" id="e-parents"><svg viewBox="0 0 24 24" aria-hidden="true" class="ico"><rect x="4" y="10.5" width="16" height="11" rx="2.5" fill="currentColor"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5" fill="none" stroke="currentColor" stroke-width="2.4"/></svg><span class="e-parents-txt" data-fr="Parents" data-en="Parents">Parents</span><span class="e-parents-hint"></span></button>
+  </section>
 
-  <main id="shelves" class="shelves" aria-live="polite"></main>
-
-  <footer class="foot">
-    <p data-t="footer"></p>
-    <p><a href="https://github.com/pikifou/ludiworld/blob/main/LUDIWORLD.md" data-t="addGame"></a></p>
-    <p><button type="button" class="linklike" id="install" hidden data-t="install"></button></p>
-  </footer>
+  <!-- Le carnet parent -->
+  <section id="v-parent" class="carnet" hidden>
+    <aside class="c-rail">
+      <div class="c-marque">
+        <img src="img/marmotte-carnet.webp" alt="">
+        <div><h1 id="c-titre"></h1><p id="c-de"></p></div>
+      </div>
+      <nav class="c-nav" id="c-nav" role="tablist"></nav>
+      <button type="button" class="c-exit" id="c-exit"><svg viewBox="0 0 24 24" aria-hidden="true" class="ico"><circle cx="12" cy="12" r="5" fill="currentColor"/><g stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 1.5v3M12 19.5v3M1.5 12h3M19.5 12h3M4.6 4.6l2.1 2.1M17.3 17.3l2.1 2.1M4.6 19.4l2.1-2.1M17.3 6.7l2.1-2.1"/></g></svg><span></span></button>
+    </aside>
+    <main class="c-page" id="c-page"></main>
+  </section>
 
   <dialog id="sheet" class="sheet" aria-labelledby="sheet-title"></dialog>
+  <dialog id="gate" class="gate"></dialog>
+  <dialog id="qui" class="gate qui"></dialog>
+  <p id="toast" class="toast" role="status" hidden></p>
 
   <div id="player" class="player" hidden>
     <button type="button" class="player-back" id="player-back"></button>
+    <p class="p-reste" id="p-reste" hidden></p>
+    <div class="p-bandeau" id="p-bandeau" role="status" hidden></div>
+    <div class="p-rideau" id="p-rideau" hidden></div>
   </div>
 
+  <script src="textes.js"></script>
+  <script src="temps.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

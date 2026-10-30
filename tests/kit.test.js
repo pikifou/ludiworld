@@ -148,3 +148,30 @@ test('le nombre d\'événements gardés est plafonné', () => {
   for (let i = 0; i < 400; i++) L.skill('maths.calcul-mental', i, true);
   assert.strictEqual(L.data().events.length, 300);
 });
+
+test('checkpoint : moment où s\'arrêter, transmis au launcher', () => {
+  const w = fakeWindow({ embedded: true });
+  const L = createLudi(w.win, { now: clock() }).init({ game: 'jeu' });
+  L.checkpoint('fin-de-course');
+  const last = w.sent[w.sent.length - 1].msg;
+  assert.strictEqual(last.type, 'ludi:event');
+  assert.strictEqual(last.event.kind, 'checkpoint');
+  assert.strictEqual(last.event.label, 'fin-de-course');
+});
+
+test('checkpoint ouvert seul : rien n\'est posté', () => {
+  const w = fakeWindow();
+  createLudi(w.win, { now: clock() }).init({ game: 'jeu' }).checkpoint();
+  assert.strictEqual(w.sent.length, 0);
+});
+
+test('fin de temps annoncée par le launcher (wrapup)', () => {
+  const w = fakeWindow({ embedded: true });
+  const L = createLudi(w.win, { now: clock() }).init({ game: 'jeu' });
+  let got = 'rien';
+  L.onWrapUp((min) => { got = min; });
+  w.message({ type: 'ludi:wrapup', minutes: 5 }, 'https://evil.example');
+  assert.strictEqual(got, 'rien');
+  w.message({ type: 'ludi:wrapup', minutes: 5 });
+  assert.strictEqual(got, 5);
+});

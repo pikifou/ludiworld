@@ -1,5 +1,5 @@
 /*!
- * Ludiworld kit (ludi.js) v0.1.0
+ * Ludiworld kit (ludi.js) v0.2.0
  * Temps de jeu, scores, progression et notions apprises, pour les jeux Ludiworld.
  * N'envoie rien sur le réseau. Ne parle qu'au launcher Ludiworld qui a ouvert le jeu.
  * Spec : https://github.com/pikifou/ludiworld/blob/main/spec/kit.md
@@ -7,7 +7,7 @@
 (function () {
   'use strict';
 
-  var VERSION = '0.1.0';
+  var VERSION = '0.2.0';
   var DEFAULT_LAUNCHERS = ['https://pikifou.github.io'];
   var LOCAL_ORIGIN = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
   var MAX_EVENTS = 300;
@@ -102,6 +102,9 @@
       } else if (m.type === 'ludi:pause') {
         flush();
         st.pauseFns.forEach(function (fn) { try { fn(m.reason || null); } catch (err) { warn(err); } });
+      } else if (m.type === 'ludi:wrapup') {
+        var min = Number(m.minutes);
+        st.wrapFns.forEach(function (fn) { try { fn(isFinite(min) ? min : null); } catch (err) { warn(err); } });
       }
     }
 
@@ -122,7 +125,7 @@
         var data = load(key) || emptyData();
         var t = now();
         st = {
-          game: game, key: key, data: data, player: null, pauseFns: [],
+          game: game, key: key, data: data, player: null, pauseFns: [], wrapFns: [],
           launcher: findLauncher(o.launchers),
           sessionId: t, activeSince: visible() ? t : null
         };
@@ -171,6 +174,13 @@
         record({ kind: 'skill', domain: String(domain), item: item === undefined ? null : item, success: !!success });
       },
 
+      // Moment où l'enfant peut s'arrêter sans rien perdre (fin de niveau, de course, de série).
+      // Le launcher s'en sert pour fermer le jeu en douceur quand le temps du jour est écoulé.
+      checkpoint: function (label) {
+        if (!ready('checkpoint')) return;
+        record({ kind: 'checkpoint', label: label === undefined || label === null ? null : String(label).slice(0, 60) });
+      },
+
       player: function () { return st && st.player ? { name: st.player.name } : null; },
 
       data: function () {
@@ -180,6 +190,9 @@
       },
 
       onPause: function (fn) { if (ready('onPause') && typeof fn === 'function') st.pauseFns.push(fn); },
+
+      // Le launcher prévient que le temps de jeu touche à sa fin : le jeu peut inviter à finir la manche.
+      onWrapUp: function (fn) { if (ready('onWrapUp') && typeof fn === 'function') st.wrapFns.push(fn); },
 
       inLauncher: function () { return !!(st && st.launcher); },
 

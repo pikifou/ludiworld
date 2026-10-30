@@ -46,8 +46,20 @@ Renvoie `{ name }` si le launcher a donné un pseudo, sinon `null`. Le jeu peut 
 ### `Ludi.data()`
 Ce que le kit a gardé localement pour ce jeu : temps de jeu, scores, progression, notions.
 
+### `Ludi.checkpoint(label?)` (recommandé)
+L'enfant vient d'atteindre un moment où il peut s'arrêter sans rien perdre : fin de niveau, de course, de série. C'est ce qui permet au launcher la **fin douce** : quand le temps du jour est écoulé, il attend le prochain `checkpoint` (au plus le délai choisi par le parent) au lieu de couper au milieu d'une partie. Sans `checkpoint`, le jeu n'a que 3 minutes pour finir.
+```js
+Ludi.checkpoint("fin-de-course");
+```
+
 ### `Ludi.onPause(fn)` (facultatif)
 Le launcher peut demander une pause (temps de jeu écoulé, parent qui reprend la main). Le jeu qui veut être poli s'y abonne.
+
+### `Ludi.onWrapUp(fn)` (facultatif)
+Le launcher prévient que le temps de jeu touche à sa fin : `fn(minutes)` reçoit les minutes qui restent (0 : c'est l'heure, finir la partie en cours). Le jeu peut par exemple ne plus proposer « encore une partie ». Le launcher affiche de toute façon son propre message.
+
+### `Ludi.inLauncher()`
+`true` quand le jeu est ouvert depuis Ludiworld. Le jeu cache alors ce qui ferait sortir l'enfant du cadre choisi par le parent (bouton ou conseil « installer l'appli », liens vers d'autres sites) et laisse libre le coin en haut à gauche (bouton retour de Ludiworld, environ 120 × 44 px).
 
 ## Dialogue avec le launcher
 
@@ -57,8 +69,11 @@ Messages `postMessage`, toujours avec une origine cible précise (jamais `*`).
 |---|---|---|
 | jeu → launcher | `ludi:hello` | `{ game, kit }` (version du kit) |
 | launcher → jeu | `ludi:welcome` | `{ player: { name } }` |
-| jeu → launcher | `ludi:event` | `{ game, event }`, où `event` est `{ kind, at, … }` avec `kind` parmi `session`, `score`, `progress`, `skill` |
+| jeu → launcher | `ludi:event` | `{ game, event }`, où `event` est `{ kind, at, … }` avec `kind` parmi `session`, `score`, `progress`, `skill`, `checkpoint` |
+| launcher → jeu | `ludi:wrapup` | `{ minutes }` (temps qui reste, 0 : finir la partie en cours) |
 | launcher → jeu | `ludi:pause` | `{ reason }` |
+
+Le launcher mesure lui-même le temps passé dans le jeu (c'est ce qui fait foi pour la limite du jour) ; les tranches `session` servent au jeu ouvert seul.
 
 Les sessions sont envoyées par tranches (au plus toutes les 30 s et quand la page se cache), pour que le launcher ait un temps juste même si le jeu est fermé brutalement.
 

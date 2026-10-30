@@ -1,10 +1,14 @@
 // Service worker du launcher Ludiworld. Incrémenter VERSION à chaque publication.
 // Les jeux ont chacun leur propre service worker (autre dossier) : on ne s'en occupe pas.
-const VERSION = 'ludiworld-0.2.0';
+const VERSION = 'ludiworld-0.3.0';
 const SHELL = [
-  './', 'index.html', 'style.css', 'app.js', 'manifest.webmanifest', 'kit/ludi.js',
+  './', 'index.html', 'style.css', 'app.js', 'textes.js', 'temps.js', 'manifest.webmanifest', 'kit/ludi.js',
   'fonts/baloo2-500.woff2', 'fonts/baloo2-700.woff2', 'fonts/baloo2-800.woff2',
-  'icons/icon-192.png', 'icons/icon-512.png'
+  'fonts/lexend.woff2', 'fonts/fraunces.woff2', 'fonts/fraunces-italic.woff2',
+  'img/ile-jour.webp', 'img/ile-nuit.webp', 'img/soleil.webp', 'img/lune.webp',
+  'img/nuage-1.webp', 'img/nuage-2.webp', 'img/nuage-3.webp',
+  'img/marmotte-salut.webp', 'img/marmotte-baille.webp', 'img/marmotte-dodo.webp', 'img/marmotte-carnet.webp',
+  'icons/icon-192.png', 'icons/icon-512.png', 'icons/favicon-64.png'
 ];
 
 self.addEventListener('install', (e) => {

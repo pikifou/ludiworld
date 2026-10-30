@@ -39,5 +39,5 @@
     "natural_stops": true
   },
   "third_parties": [],
-  "kit": false
+  "kit": true
 }

@@ -105,7 +105,7 @@ Full reference: https://github.com/pikifou/ludiworld/blob/main/spec/fiche.md
 
 ## 4. Optional: the kit
 
-The kit lets the launcher show records and what the child practised. It sends nothing over the network and only talks to the Ludiworld launcher. The game must behave exactly the same when opened on its own.
+The kit lets the launcher show records and what the child practised, and stop the game gently when the parent's daily time is up (at the end of a level rather than in the middle). It sends nothing over the network and only talks to the Ludiworld launcher. The game must behave exactly the same when opened on its own.
 
 Copy https://pikifou.github.io/ludiworld/kit/ludi.js into the game (so it works offline) and load it before your code:
 
@@ -119,8 +119,11 @@ Then call, where it makes sense:
 Ludi.score("table-7", 38.4, { better: "lower" }); // a best score (time: lower is better)
 Ludi.progress("level", 5);                         // how far the child got
 Ludi.skill("maths.multiplication", "7x8", true);   // one right/wrong answer on a topic
+Ludi.checkpoint("end-of-level");                   // the child can stop here without losing anything
 Ludi.onPause(() => pauseGame());                   // the launcher may ask for a pause
 ```
+
+When `Ludi.inLauncher()` is true, hide anything that would take the child out of the frame the parent chose: "install this app" buttons or hints, links to other sites. Also keep the top-left corner free (the launcher's back button, about 120 × 44 px).
 
 Full reference: https://github.com/pikifou/ludiworld/blob/main/spec/kit.md
 

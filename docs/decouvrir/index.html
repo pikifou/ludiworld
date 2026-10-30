@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Ludiworld</title>
+  <meta name="description" content="De petits jeux faits par des parents, sans pub, sans achat, sans pièges. Vous choisissez, votre enfant joue, le soleil dit quand on s'arrête.">
+  <meta name="theme-color" content="#16204a">
+  <link rel="icon" href="../icons/icon-192.png">
+  <link rel="apple-touch-icon" href="../icons/icon-180.png">
+  <link rel="preload" href="../fonts/fraunces.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="../fonts/lexend.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="../img/salon.webp" as="image" type="image/webp">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <a class="skip" href="#probleme" data-t="skip">Aller au contenu</a>
+
+  <div class="bar">
+    <a class="wordmark" href="./" aria-label="Ludiworld">Ludi<span>world</span></a>
+    <div class="bar-side">
+      <a class="bar-app" href="../" data-t="barApp">Ouvrir l'app</a>
+      <div class="langs" role="group" aria-label="Langue / Language">
+        <button type="button" data-lang="fr" lang="fr" aria-pressed="true">FR</button>
+        <button type="button" data-lang="en" lang="en" aria-pressed="false">EN</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 1. Ouverture -->
+  <header class="hero">
+    <div class="hero-pic">
+      <img class="hero-img" src="../img/salon.webp" width="1600" height="893" fetchpriority="high"
+           alt="Le soir dans un salon, un parent et son enfant sur le canapé. Une petite île flotte au-dessus de la tablette."
+           data-t-alt="heroAlt">
+    </div>
+    <div class="hero-copy">
+      <div class="arc" aria-hidden="true">
+        <span class="arc-path"></span>
+        <span class="pivot"><img class="sun" src="../img/soleil.webp" width="420" height="422" alt=""></span>
+        <span class="horizon"></span>
+      </div>
+      <h1 class="hero-title">
+        <span class="l1" data-t="h1a">Le soleil dit</span>
+        <span class="l2" data-t="h1b">quand on s'arrête.</span>
+      </h1>
+      <p class="lede" data-t="lede">De petits jeux faits par des parents. Vous choisissez, votre enfant joue, le soleil donne le rythme.</p>
+      <div class="ctas">
+        <a class="btn btn-sun" href="../" data-t="cta">Ouvrir Ludiworld</a>
+        <a class="btn-ghost" href="#comment"><span data-t="how">Comment ça marche</span> <span aria-hidden="true">↓</span></a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- 2. Le problème -->
+    <section class="sec probleme" id="probleme" aria-labelledby="pb-title">
+      <div class="pb-grid">
+        <div class="pb-head">
+          <p class="kicker" data-t="pbKick">Le problème</p>
+          <h2 id="pb-title" data-t="pbTitle">Sur la tablette, la plupart des jeux sont faits pour qu'on ne la lâche pas.</h2>
+        </div>
+        <div class="hooks">
+          <p class="hooks-title" data-t="hooksTitle">Les hameçons habituels</p>
+          <ul>
+            <li><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2v11a5 5 0 1 1-10 0v-2l3 3"/><circle cx="14" cy="2.5" r="1.5"/></svg><span data-t="hook1">Une pub entre deux niveaux.</span></li>
+            <li><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2v11a5 5 0 1 1-10 0v-2l3 3"/><circle cx="14" cy="2.5" r="1.5"/></svg><span data-t="hook2">Quelque chose à acheter, «&nbsp;juste une fois&nbsp;».</span></li>
+            <li><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2v11a5 5 0 1 1-10 0v-2l3 3"/><circle cx="14" cy="2.5" r="1.5"/></svg><span data-t="hook3">«&nbsp;Reviens demain&nbsp;», sinon la série est perdue.</span></li>
+            <li><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2v11a5 5 0 1 1-10 0v-2l3 3"/><circle cx="14" cy="2.5" r="1.5"/></svg><span data-t="hook4">Des niveaux qui ne finissent jamais.</span></li>
+          </ul>
+        </div>
+        <p class="pb-end" data-t="pbEnd">Et le soir, il faut se fâcher pour l'éteindre.</p>
+        <p class="pb-turn" data-t="pbTurn">Ludiworld part de l'autre bout&nbsp;: peu de jeux, choisis par vous, et une fin prévue d'avance.</p>
+      </div>
+    </section>
+
+    <!-- 3. Comment ça marche : une journée -->
+    <section class="sec journee" id="comment" aria-labelledby="j-title">
+      <img class="cloud c1" src="../img/nuage-2.webp" width="460" height="288" alt="">
+      <img class="cloud c2" src="../img/nuage-3.webp" width="307" height="191" alt="">
+      <div class="j-head">
+        <p class="kicker" data-t="jKick">Comment ça marche</p>
+        <h2 id="j-title" data-t="jTitle">Une journée, le long du soleil</h2>
+        <p data-t="jIntro">Le temps de jeu, c'est le soleil qui traverse le ciel. Votre enfant le voit descendre, sans avoir à lire l'heure.</p>
+      </div>
+
+      <div class="steps-wrap">
+        <svg class="j-arc" viewBox="0 0 1000 320" preserveAspectRatio="none" aria-hidden="true">
+          <path d="M10 310 C 220 -60, 780 -60, 990 310"/>
+        </svg>
+        <ol class="steps">
+          <li class="step s1">
+            <div class="badge">
+              <svg viewBox="0 0 64 40" aria-hidden="true"><circle class="sb" cx="20" cy="30" r="9"/><path class="ray" d="M20 14v-5M8 22l-4-3M32 22l4-3"/><path class="hz" d="M2 32h60"/></svg>
+              <span data-t="t1">Matin</span>
+            </div>
+            <img class="mascot" src="../img/marmotte-carnet.webp" width="469" height="775" alt="" loading="lazy">
+            <h3 data-t="s1Title">Le parent prépare</h3>
+            <p data-t="s1Text">Vous ouvrez le carnet des parents, protégé par un code. Vous choisissez les jeux avec des filtres&nbsp;:</p>
+            <ul class="chips">
+              <li data-t="f1">l'âge</li>
+              <li data-t="f2">ce que le jeu apprend</li>
+              <li data-t="f3">s'il faut savoir lire</li>
+            </ul>
+            <p data-t="s1Time">Puis vous réglez le temps&nbsp;: un pour les jours d'école, un pour les jours sans école, et si vous voulez une limite par jeu.</p>
+          </li>
+          <li class="step s2">
+            <div class="badge">
+              <svg viewBox="0 0 64 40" aria-hidden="true"><circle class="sb" cx="32" cy="14" r="9"/><path class="ray" d="M18 14h-5M46 14h5M22 4l-3-3M42 4l3-3"/><path class="hz" d="M2 32h60"/></svg>
+              <span data-t="t2">Après-midi</span>
+            </div>
+            <img class="mascot" src="../img/marmotte-salut.webp" width="520" height="756" alt="" loading="lazy">
+            <h3 data-t="s2Title">L'enfant joue</h3>
+            <p data-t="s2Text">Il ne voit que les jeux que vous avez choisis. Pas de magasin, pas de pub, rien d'autre à ouvrir.</p>
+            <p data-t="s2Sun">Pendant qu'il joue, le soleil descend dans le ciel. Il sait où il en est d'un coup d'œil.</p>
+          </li>
+          <li class="step s3">
+            <div class="badge">
+              <svg viewBox="0 0 64 40" aria-hidden="true"><circle class="sb late" cx="46" cy="32" r="9"/><path class="ray" d="M46 17v-4M34 24l-4-2M58 24l4-2"/><path class="hz" d="M2 32h60"/></svg>
+              <span data-t="t3">Soir</span>
+            </div>
+            <img class="mascot" src="../img/marmotte-baille.webp" width="461" height="775" alt="" loading="lazy">
+            <h3 data-t="s3Title">On s'arrête, sans surprise</h3>
+            <p data-t="s3Text">Cinq minutes avant la fin, la marmotte baille. Vous choisissez comment ça finit&nbsp;:</p>
+            <dl class="ends">
+              <div class="end-soft">
+                <dt><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 14c3-5 6-5 9 0s6 5 9 0"/></svg><span data-t="softT">Fin douce</span></dt>
+                <dd data-t="softD">attend la fin de la course ou du niveau en cours, pour les jeux qui le permettent.</dd>
+              </div>
+              <div class="end-hard">
+                <dt><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4v16M18 4v16"/></svg><span data-t="hardT">Fin nette</span></dt>
+                <dd data-t="hardD">s'arrête à la minute près.</dd>
+              </div>
+            </dl>
+            <p data-t="s3Sleep">Puis l'île s'endort. Pour aujourd'hui, c'est fini.</p>
+          </li>
+        </ol>
+      </div>
+
+      <aside class="note" aria-labelledby="note-title">
+        <p class="note-title" id="note-title" data-t="noteTitle">À savoir, honnêtement</p>
+        <p data-t="noteText">Une app web ne peut pas verrouiller une tablette à elle seule. Associez-la à l'épinglage d'écran d'Android ou à Family Link, ou à l'Accès guidé sur iPad. L'app explique comment faire.</p>
+      </aside>
+    </section>
+
+    <!-- 4. Les jeux -->
+    <section class="sec jeux" id="jeux" aria-labelledby="jeux-title">
+      <div class="jeux-grid">
+        <div class="jeux-head">
+          <p class="kicker" data-t="gKick">Les jeux</p>
+          <h2 id="jeux-title" data-t="gTitle">Peu de jeux, et chacun dit la vérité.</h2>
+          <p data-t="gIntro">Chaque jeu a une fiche honnête&nbsp;: l'âge, ce qu'on y apprend, la durée d'une partie. Même quand c'est moins flatteur.</p>
+          <ul class="legend" aria-label="Légende" data-t-aria="legend">
+            <li class="goal goal-core"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1" class="fill"/></svg><span data-t="goalCore">Apprendre est le but</span></li>
+            <li class="goal goal-side"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" class="fill"/></svg><span data-t="goalSide">On apprend en passant</span></li>
+            <li class="goal goal-none"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.4 6.7 19.4l1.2-6L3.4 9.3l6-.7z"/></svg><span data-t="goalNone">Pour le plaisir</span></li>
+          </ul>
+        </div>
+        <div class="jeux-list" id="jeux-list" aria-live="polite">
+          <p class="jeux-wait" data-t="gLoading">Les fiches arrivent…</p>
+        </div>
+      </div>
+      <p class="jeux-more"><a class="btn btn-ink" href="../" data-t="gMore">Voir les jeux dans Ludiworld</a></p>
+    </section>
+
+    <!-- 5. La charte -->
+    <section class="sec charte" id="charte" aria-labelledby="ch-title">
+      <div class="ch-grid">
+        <div class="ch-head">
+          <p class="kicker" data-t="cKick">La charte</p>
+          <h2 id="ch-title" data-t="cTitle">Ce que les jeux s'engagent à ne pas faire</h2>
+          <p data-t="cIntro">Chaque jeu le déclare dans sa fiche. Les parents le vérifient en jouant.</p>
+        </div>
+        <ul class="promises">
+          <li><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/></svg><span data-t="p1">Pas de pub</span></li>
+          <li><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/></svg><span data-t="p2">Rien à acheter</span></li>
+          <li><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/></svg><span data-t="p3">Pas d'abonnement</span></li>
+          <li><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/></svg><span data-t="p4">Pas de récompense tirée au hasard</span></li>
+          <li><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/></svg><span data-t="p5">Pas de «&nbsp;reviens demain&nbsp;»</span></li>
+          <li><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/></svg><span data-t="p6">Pas de notification</span></li>
+          <li><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/></svg><span data-t="p7">Pas d'inconnus</span></li>
+          <li><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/></svg><span data-t="p8">Aucune donnée envoyée</span></li>
+          <li class="yes"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12.5l5 5L20 6.5"/></svg><span data-t="p9">Et toujours des moments où s'arrêter sans rien perdre</span></li>
+        </ul>
+        <div class="donnees">
+          <svg viewBox="0 0 48 48" aria-hidden="true"><rect x="9" y="5" width="30" height="38" rx="4"/><path d="M21 38h6"/><path d="M17 20l5 5 9-10"/></svg>
+          <div>
+            <p class="donnees-title" data-t="dTitle">Les données restent sur la tablette.</p>
+            <p data-t="dText">Les réglages et le temps de jeu sont gardés dans le navigateur. Rien ne part sur un serveur. Si un jeu contacte un autre site, pour une police de caractères par exemple, sa fiche le dit.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. À regarder aussi -->
+    <section class="sec series" id="series" aria-labelledby="se-title">
+      <div class="se-grid">
+        <div class="se-head">
+          <p class="kicker" data-t="sKick">Loin des jeux</p>
+          <h2 id="se-title" data-t="sTitle">À regarder aussi</h2>
+          <p data-t="sIntro">Des séries calmes et curieuses, quand ce n'est pas l'heure de jouer.</p>
+        </div>
+        <dl class="carnet">
+          <div><dt>Puffin Rock</dt><dd data-t="se1">Une petite macareux et sa famille sur une île. La nature, à un rythme très doux.</dd></div>
+          <div><dt data-t="se2t">Ada Twist, scientifique</dt><dd data-t="se2">Une fille qui pose plein de questions et fait des expériences pour y répondre.</dd></div>
+          <div><dt>Petit Malabar</dt><dd data-t="se3">De courts épisodes qui répondent aux grandes questions d'un enfant curieux.</dd></div>
+          <div><dt>Storybots</dt><dd data-t="se4">De petits robots cherchent les réponses aux questions des enfants, souvent en chanson.</dd></div>
+          <div><dt data-t="se5t">Il était une fois… la Vie</dt><dd data-t="se5">Le classique qui raconte le corps humain de l'intérieur.</dd></div>
+          <div><dt data-t="se6t">Le laboratoire d'Emily</dt><dd data-t="se6">Des expériences de sciences simples, faites avec des enfants, à refaire à la maison.</dd></div>
+          <div><dt>C'est pas sorcier</dt><dd data-t="se7">L'émission qui explique les sciences et le monde avec des maquettes. Plutôt pour les plus grands.</dd></div>
+          <div><dt>Kididocs</dt><dd data-t="se8">Des documentaires courts pour les plus jeunes, sur des sujets de tous les jours.</dd></div>
+        </dl>
+      </div>
+    </section>
+
+    <!-- 7. Pour les parents qui font des jeux -->
+    <section class="sec makers" id="createurs" aria-labelledby="mk-title">
+      <div class="ticket">
+        <h2 id="mk-title" data-t="mTitle">Vous faites un jeu pour votre enfant avec Claude Code, ChatGPT… ?</h2>
+        <p data-t="mText">Ludiworld est fait pour ça. Donnez le guide à votre IA&nbsp;: il explique comment rendre le jeu compatible et écrire sa fiche honnête. Ensuite, proposez-le. Une vérification automatique, puis Julien y joue et relit la fiche avant de l'ajouter.</p>
+        <p class="ticket-small" data-t="mSmall">Votre jeu reste chez vous&nbsp;: Ludiworld n'héberge pas les jeux, seulement leur fiche.</p>
+        <div class="ticket-links">
+          <a class="btn btn-ink" href="https://github.com/pikifou/ludiworld/blob/main/LUDIWORLD.md" data-t="mGuide">Le guide pour votre IA</a>
+          <a class="btn btn-paper" href="https://github.com/pikifou/ludiworld/issues/new?template=proposer-un-jeu.yml" data-t="mPropose">Proposer un jeu</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8. La nuit -->
+    <section class="sec nuit" id="nuit" aria-labelledby="n-title">
+      <img class="moon" src="../img/lune.webp" width="380" height="415" alt="" loading="lazy">
+      <div class="n-grid">
+        <div class="n-island">
+          <img class="island" src="../img/ile-nuit.webp" width="1100" height="994" loading="lazy"
+               alt="L'île de Ludiworld la nuit, ses fenêtres allumées." data-t-alt="islandAlt">
+        </div>
+        <div class="n-copy">
+          <img class="dodo" src="../img/marmotte-dodo.webp" width="520" height="557" loading="lazy"
+               alt="La marmotte dort, enroulée dans son écharpe." data-t-alt="dodoAlt">
+          <h2 id="n-title" data-t="nTitle">L'île dort. Elle se réveille quand vous l'ouvrez.</h2>
+          <a class="btn btn-sun" href="../" data-t="cta">Ouvrir Ludiworld</a>
+          <p class="install" data-t="install">Sur la tablette, ouvrez le menu du navigateur et choisissez «&nbsp;Ajouter à l'écran d'accueil&nbsp;»&nbsp;: Ludiworld s'ouvre alors comme une app.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <p><span data-t="foot">Fait par Julien (pikifou), d'abord pour son fils.</span> <a href="https://github.com/pikifou/ludiworld" data-t="footCode">Le code sur GitHub</a></p>
+  </footer>
+
+  <script src="site.js" defer></script>
+</body>
+</html>
