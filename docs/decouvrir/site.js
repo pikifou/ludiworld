@@ -19,7 +19,7 @@
         'maths.multiplication': 'Tables de multiplication', 'sciences.magnetisme': 'Magnétisme',
         'logique.puzzle': 'Logique', 'histoire.prehistoire': 'Préhistoire',
         'histoire.techniques': 'Histoire des techniques', 'gestion.ressources': 'Gestion',
-        'motricite.reflexes': 'Réflexes', 'strategie.choix': 'Stratégie',
+        'motricite.reflexes': 'Réflexes', 'strategie.choix': 'Stratégie', 'emotions.frustration': 'Gérer la frustration',
         'memoire.sequences': 'Mémoire', 'sciences.physique': 'Physique',
         'maths.calcul-mental': 'Calcul mental'
       }
@@ -89,7 +89,7 @@
         'maths.multiplication': 'Times tables', 'sciences.magnetisme': 'Magnetism',
         'logique.puzzle': 'Logic', 'histoire.prehistoire': 'Prehistory',
         'histoire.techniques': 'History of techniques', 'gestion.ressources': 'Resource management',
-        'motricite.reflexes': 'Reflexes', 'strategie.choix': 'Strategy',
+        'motricite.reflexes': 'Reflexes', 'strategie.choix': 'Strategy', 'emotions.frustration': 'Handling frustration',
         'memoire.sequences': 'Memory', 'sciences.physique': 'Physics',
         'maths.calcul-mental': 'Mental maths'
       },

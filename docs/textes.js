@@ -253,7 +253,8 @@ window.LudiTextes = {
       'sciences.magnetisme': 'Magnétisme', 'sciences.physique': 'Physique',
       'histoire.prehistoire': 'Préhistoire', 'histoire.techniques': 'Histoire des techniques',
       'logique.puzzle': 'Logique', 'memoire.sequences': 'Mémoire', 'gestion.ressources': 'Gestion',
-      'motricite.reflexes': 'Réflexes', 'strategie.choix': 'Stratégie'
+      'motricite.reflexes': 'Réflexes', 'strategie.choix': 'Stratégie',
+      'emotions.frustration': 'Gérer la frustration'
     }
   },
 
@@ -504,7 +505,8 @@ window.LudiTextes = {
       'sciences.magnetisme': 'Magnetism', 'sciences.physique': 'Physics',
       'histoire.prehistoire': 'Prehistory', 'histoire.techniques': 'History of techniques',
       'logique.puzzle': 'Logic', 'memoire.sequences': 'Memory', 'gestion.ressources': 'Resource management',
-      'motricite.reflexes': 'Reflexes', 'strategie.choix': 'Strategy'
+      'motricite.reflexes': 'Reflexes', 'strategie.choix': 'Strategy',
+      'emotions.frustration': 'Handling frustration'
     }
   }
 };

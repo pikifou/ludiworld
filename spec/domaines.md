@@ -15,5 +15,6 @@ Utilisé dans les fiches (`learning.domains`) et par `Ludi.skill`. Format `famil
 | `gestion.ressources` | Produire, dépenser, prévoir |
 | `motricite.reflexes` | Réflexes, précision, esquive |
 | `strategie.choix` | Choisir entre des options et en voir les effets |
+| `emotions.frustration` | Accepter de perdre, gérer la frustration, recommencer sans abandonner |
 
 Pistes à venir : `histoire.egypte`, `histoire.grece`, `mythologie.grecque`.

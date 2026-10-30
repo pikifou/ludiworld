@@ -15,21 +15,21 @@
   "age": { "min": 6, "max": 12 },
   "reading": "none",
   "learning": {
-    "level": "side",
-    "domains": ["motricite.reflexes", "strategie.choix"],
+    "level": "core",
+    "domains": ["emotions.frustration", "motricite.reflexes", "strategie.choix"],
     "what": {
-      "fr": "Surtout un jeu pour le plaisir. On y travaille les réflexes, la lecture des attaques d'un boss, le choix de ses pouvoirs et la persévérance.",
-      "en": "Mostly a game for fun. It trains reflexes, reading a boss's attacks, choosing powers, and perseverance."
+      "fr": "Accepter de perdre et tout recommencer. La plupart des jeux disent « bravo » à chaque pas ; celui-ci est exigeant. Dans le mode proposé d'emblée (Hardcore), il n'y a pas de seconde chance : une défaite renvoie à la salle 1 et il faut refaire tous les dragons. On y travaille la gestion de la frustration et la persévérance, et au passage les réflexes et la lecture des attaques d'un boss.",
+      "en": "Accepting defeat and starting all over again. Most games say “well done” at every step; this one is tough. In the default mode (Hardcore) there is no second chance: losing sends you back to room 1 and every dragon has to be beaten again. It trains handling frustration and perseverance, and along the way reflexes and reading a boss's attacks."
     },
     "how": {
-      "fr": "Chaque dragon a des phases annoncées ; on apprend à reconnaître ses attaques et à esquiver. Trois modes de difficulté, du plus exigeant (on recommence tout) au plus doux (on reprend la salle).",
-      "en": "Each dragon has telegraphed phases; players learn to recognise attacks and dodge. Three difficulty modes, from demanding (start over) to gentle (retry the room)."
+      "fr": "Chaque dragon a des attaques annoncées : on progresse en comprenant pourquoi on a perdu, pas par chance. La victoire sur le Roi Dragon se mérite. Le menu du jeu propose aussi deux modes plus doux (3 vies, ou reprendre la salle perdue) : à vous de dire à votre enfant lequel utiliser.",
+      "en": "Each dragon telegraphs its attacks: you get better by understanding why you lost, not by luck. Beating the Dragon King has to be earned. The game menu also offers two gentler modes (3 lives, or retry the lost room): it's up to you to tell your child which one to use."
     }
   },
   "session": { "minutes": [10, 25], "natural_end": true, "total_hours": 3 },
   "content": {
-    "fr": "Combat fantastique : des flèches contre des dragons, sans sang. Musique douce qui donne du courage.",
-    "en": "Fantasy combat: arrows against dragons, no blood. Gentle, encouraging music."
+    "fr": "Combat fantastique : des flèches contre des dragons, sans sang. Musique douce qui donne du courage. Peut frustrer, et c'est voulu : les premières fois, mieux vaut être à côté pour en parler.",
+    "en": "Fantasy combat: arrows against dragons, no blood. Gentle, encouraging music. It can be frustrating, on purpose: the first few times, it helps to be nearby to talk about it."
   },
   "devices": ["phone", "tablet", "computer"],
   "offline": true,
