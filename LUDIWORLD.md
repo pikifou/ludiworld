@@ -123,7 +123,7 @@ Ludi.checkpoint("end-of-level");                   // the child can stop here wi
 Ludi.onPause(() => pauseGame());                   // the launcher may ask for a pause
 ```
 
-When `Ludi.inLauncher()` is true, hide anything that would take the child out of the frame the parent chose: "install this app" buttons or hints, links to other sites. Also keep the top-left corner free (the launcher's back button, about 120 × 44 px).
+When `Ludi.inLauncher()` is true, hide anything that would take the child out of the frame the parent chose: "install this app" buttons or hints, links to other sites. Also hide your fullscreen button and never call `requestFullscreen`: inside Ludiworld, full screen is decided by Ludiworld (games are not allowed to go full screen there). Also keep the top-left corner free (the launcher's back button, about 120 × 44 px).
 
 Full reference: https://github.com/pikifou/ludiworld/blob/main/spec/kit.md
 

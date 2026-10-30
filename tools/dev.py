@@ -5,7 +5,7 @@
 
 Par défaut, le dossier des jeux est le parent de ce dépôt (les clones sont à côté de ludiworld/).
   http://localhost:7357/ludiworld/   le launcher (docs/ de ce dépôt)
-  http://localhost:7357/<jeu>/       un jeu ouvert seul (docs/ de son clone)
+  http://localhost:7357/<jeu>/       un jeu ouvert seul (docs/ de son clone, ou la racine du clone s'il est publié tel quel)
 
 Dans le launcher, un jeu de https://pikifou.github.io/<jeu>/ qui a un clone local s'ouvre depuis le disque :
 la fiche servie est le ludi.json du clone (sinon la copie du catalogue), avec ses adresses réécrites vers ce
@@ -40,9 +40,14 @@ TYPES = {
 verrou = threading.Lock()
 
 
+def publie(d):
+    """Le dossier publié d'un clone : docs/ (jeu construit par build.py), sinon la racine (jeu publié tel quel)."""
+    return d / 'docs' if (d / 'docs/index.html').is_file() else d
+
+
 def clones(games):
-    """Les jeux clonés à côté : un dossier avec docs/index.html."""
-    return {d.name: d for d in games.iterdir() if d.name != 'ludiworld' and (d / 'docs/index.html').is_file()}
+    """Les jeux clonés à côté : un dossier avec docs/index.html, ou index.html à la racine."""
+    return {d.name: d for d in games.iterdir() if d.is_dir() and d.name != 'ludiworld' and (publie(d) / 'index.html').is_file()}
 
 
 def dernier_changement(d):
@@ -62,7 +67,7 @@ def dernier_changement(d):
 
 def reconstruire_si_besoin(nom, d):
     """None si tout va bien, sinon le message d'erreur du build."""
-    if not (d / 'build.py').is_file(): return None
+    if not (d / 'build.py').is_file() or not (d / 'docs/index.html').is_file(): return None
     with verrou:
         if dernier_changement(d) <= (d / 'docs/index.html').stat().st_mtime: return None
         print(f'[dev] {nom} : sources modifiées, build.py --pwa docs', flush=True)
@@ -88,7 +93,7 @@ class Dev(BaseHTTPRequestHandler):
 
     def fiche(self, jeu, locaux):
         """Fiche du catalogue vue par le launcher : celle du clone si elle existe, adresses vers ce serveur."""
-        f = locaux[jeu] / 'docs/ludi.json' if jeu in locaux and (locaux[jeu] / 'docs/ludi.json').is_file() else ROOT / 'docs/jeux' / (jeu + '.json')
+        f = publie(locaux[jeu]) / 'ludi.json' if jeu in locaux and (publie(locaux[jeu]) / 'ludi.json').is_file() else ROOT / 'docs/jeux' / (jeu + '.json')
         if not f.is_file(): return None
         texte = f.read_text(encoding='utf-8')
         ici = 'http://' + (self.headers.get('Host') or 'localhost')
@@ -102,6 +107,7 @@ class Dev(BaseHTTPRequestHandler):
         site, reste = parts[0], parts[1] if len(parts) > 1 else ''
         locaux = clones(self.games)
         if not site: return self.envoyer(302, b'', Location='/ludiworld/')
+        if any(x.startswith('.') for x in chemin.split('/')): return self.envoyer(404, b'')  # .git et compagnie
         if site != 'ludiworld' and site not in locaux: return self.envoyer(404, f'Pas de clone « {site} » dans {self.games}'.encode())
         if not reste and not chemin.endswith('/'): return self.envoyer(302, b'', Location=f'/{site}/')
         if reste.endswith('sw.js'): return self.envoyer(200, SW_VIDE, TYPES['.js'])
@@ -111,7 +117,7 @@ class Dev(BaseHTTPRequestHandler):
         if site == 'ludiworld':
             base = ROOT / 'docs'
         else:
-            base = locaux[site] / 'docs'
+            base = publie(locaux[site])
             if reste in ('', 'index.html'):
                 err = reconstruire_si_besoin(site, locaux[site])
                 if err: return self.envoyer(500, ('Le build a échoué :\n\n' + err).encode('utf-8'))

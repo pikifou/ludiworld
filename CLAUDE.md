@@ -34,9 +34,9 @@ Chaque créateur héberge son jeu (GitHub Pages de préférence) avec `ludi.json
 - Chasseur de Dragons : https://github.com/pikifou/chasseur-dragons
 - Du Feu à la Fusée : https://github.com/pikifou/du-feu-a-la-fusee
 - Pluie de Cochons : https://github.com/pikifou/pluie-de-cochons
-- Simon : dépôt à retrouver
+- Simon des Monstres : https://github.com/pikifou/simon-des-monstres (publié depuis la racine du dépôt, sans build)
 
-Chaque jeu se construit avec `python3 build.py --pwa docs` dans son dépôt. Intégrer le kit = l'ajouter au build du jeu et appeler `Ludi.init` + quelques `Ludi.score/progress/skill` ; ne rien changer au comportement du jeu quand il est ouvert seul.
+Chaque jeu se construit avec `python3 build.py --pwa docs` dans son dépôt (la Tour : `python3 build.py` ; le Simon : pas de build). Intégrer le kit = l'ajouter au build du jeu et appeler `Ludi.init` + quelques `Ludi.score/progress/skill` ; ne rien changer au comportement du jeu quand il est ouvert seul.
 
 ## L'appli en bref
 - Première ouverture : le parent prépare Ludiworld (pseudo et âge de l'enfant, jeux, temps par jour, fin douce ou nette, code à 4 chiffres).

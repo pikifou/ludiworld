@@ -7,7 +7,7 @@ Avancer petit, publier, en parler, laisser venir.
 - [x] Kit `ludi.js` (mode local + dialogue avec le launcher), testé.
 - [x] Fiches des jeux de Julien (brouillons à relire).
 - [x] Launcher : catalogue, fiche parent, jeu en plein cadre, temps de jeu et records, FR/EN, installable.
-- [ ] Fiche du Simon (lien à récupérer).
+- [x] Fiche du Simon des Monstres, kit intégré.
 - [ ] Traduire en anglais la Tour aux Aimants, Du Feu à la Fusée et Pluie de Cochons (seul Chasseur de Dragons est bilingue aujourd'hui).
 - [ ] Polices de la Tour et de Du Feu : les intégrer au jeu au lieu de Google Fonts (`third_parties` redevient vide).
 - [ ] Julien relit les fiches (âges, durées, ce qu'on apprend) et les passe en `published`.
@@ -25,7 +25,8 @@ Avancer petit, publier, en parler, laisser venir.
 - [x] Plusieurs enfants par appareil : chacun ses jeux, son temps, son suivi ; « Pas toi ? » (code parent par défaut).
 - [x] Heures de jeu (pas de jeu avant / après), vacances scolaires, jeu réservé aux jours sans école.
 - [x] Code parent : 3 erreurs = 30 s de pause ; « code oublié » = 30 min d'attente pendant lesquelles on ne joue pas.
-- [x] Kit 0.2.0 (`checkpoint`, `onWrapUp`) dans les quatre jeux de Julien (clones à côté, non publiés).
+- [x] Kit 0.2.0 (`checkpoint`, `onWrapUp`) dans les cinq jeux de Julien (clones à côté, non publiés).
+- [x] Plein écran décidé par Ludiworld (réglage du carnet) ; les jeux n'y ont pas droit dans l'appli et cachent leur bouton.
 - [ ] Le suivi des jeux eux-mêmes (`ludi.v1.<jeu>`) est partagé entre les enfants d'une même tablette : à traiter si les profils servent.
 - Comptes et synchro entre appareils (Supabase, UE) : le parent règle depuis son téléphone.
 

@@ -59,7 +59,7 @@ Le launcher peut demander une pause (temps de jeu écoulé, parent qui reprend l
 Le launcher prévient que le temps de jeu touche à sa fin : `fn(minutes)` reçoit les minutes qui restent (0 : c'est l'heure, finir la partie en cours). Le jeu peut par exemple ne plus proposer « encore une partie ». Le launcher affiche de toute façon son propre message.
 
 ### `Ludi.inLauncher()`
-`true` quand le jeu est ouvert depuis Ludiworld. Le jeu cache alors ce qui ferait sortir l'enfant du cadre choisi par le parent (bouton ou conseil « installer l'appli », liens vers d'autres sites) et laisse libre le coin en haut à gauche (bouton retour de Ludiworld, environ 120 × 44 px).
+`true` quand le jeu est ouvert depuis Ludiworld. Le jeu cache alors ce qui ferait sortir l'enfant du cadre choisi par le parent (bouton ou conseil « installer l'appli », liens vers d'autres sites), cache son bouton plein écran et n'appelle jamais `requestFullscreen` (dans Ludiworld, c'est Ludiworld qui décide du plein écran ; le cadre du jeu ne l'autorise pas) et laisse libre le coin en haut à gauche (bouton retour de Ludiworld, environ 120 × 44 px).
 
 ## Dialogue avec le launcher
 

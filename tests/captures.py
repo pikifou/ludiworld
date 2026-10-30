@@ -183,6 +183,7 @@ def run():
         page.goto(BASE + "/ludiworld/")
         page.locator(".tuile", has_text="Jeu kit").click()
         game = page.frame_locator("#player iframe")
+        assert "fullscreen" not in (page.get_attribute("#player iframe", "allow") or ""), "le plein écran se décide dans Ludiworld, pas dans le jeu"
         game.locator("#b").click()
         page.wait_for_timeout(300)
         st = page.evaluate("JSON.parse(localStorage.getItem('ludiworld.v1')).famille.enfants[0].games['jeu-kit']")

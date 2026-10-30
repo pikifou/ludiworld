@@ -1029,6 +1029,16 @@
         installEvt.prompt(); installEvt.userChoice.finally(function () { installEvt = null; renderParent(); });
       } }) : null
     ], 'encadre'));
+    out.appendChild(section(t('parent.fullscreen'), [
+      el('label', { class: 'step-libre' }, [
+        el('input', { type: 'checkbox', checked: pleinEcranVoulu(), onchange: function (e) {
+          foyer().pleinEcran = e.target.checked; saveFam();
+          if (!e.target.checked && document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(function () {});
+        } }),
+        el('span', { text: t('parent.fullscreenOn') })
+      ]),
+      el('p', { class: 'c-note', text: t('parent.fullscreenText') })
+    ]));
     out.appendChild(section(t('parent.pin'), [el('button', { type: 'button', class: 'btn-ghost', text: t('parent.pinChange'), onclick: function () {
       openGate(function () { toast(t('parent.pinChanged')); }, 'set');
     } })]));
@@ -1137,7 +1147,7 @@
     if (g.embed === false) { window.open(g.url, '_blank', 'noopener'); return; }
     playing = { game: g, origin: new URL(g.url, location.href).origin, kit: false, essai: !!o.essai, last: Date.now(), phase: 'jouer', avertie: false, sheet: sheet.open };
     if (sheet.open) { if (typeof sheet.close === 'function') sheet.close(); else sheet.removeAttribute('open'); }
-    frame = el('iframe', { title: pick(g.title), src: g.url, allow: 'fullscreen; autoplay; screen-wake-lock; gamepad' });
+    frame = el('iframe', { title: pick(g.title), src: g.url, allow: 'autoplay; screen-wake-lock; gamepad' }); // pas de plein écran pour le jeu : c'est Ludiworld qui décide
     player.insertBefore(frame, player.firstChild);
     player.hidden = false;
     bandeau.hidden = true; pastille.hidden = true; rideau.hidden = true;
@@ -1158,7 +1168,6 @@
     bandeau.hidden = true; pastille.hidden = true; rideau.hidden = true;
     clearTimeout(bandeauTimer);
     document.body.style.overflow = '';
-    if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(function () {});
     if (!fromHistory && history.state && history.state.ludi === 'play') { ignorePop++; history.back(); }
     if (wasEssai && current && backToSheet) openSheet(current, true);
     render();
@@ -1176,12 +1185,7 @@
   }
 
   var bandeauTimer = null;
-  // Un jeu passé en plein écran cacherait les messages de Ludiworld : on en sort avant de parler à l'enfant.
-  function sortirPleinEcran() {
-    if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(function () {});
-  }
   function montrerBandeau(img, titre, texte, reste) {
-    sortirPleinEcran();
     bandeau.textContent = '';
     bandeau.appendChild(el('img', { src: img, alt: '' }));
     bandeau.appendChild(el('div', null, [el('b', { text: titre }), el('span', { text: texte })]));
@@ -1247,7 +1251,6 @@
 
   function arreter(cause) {
     playing.phase = 'arrete';
-    sortirPleinEcran();
     pastille.hidden = true; bandeau.hidden = true;
     postToGame({ type: 'ludi:pause', reason: 'temps' });
     var f = fam();
@@ -1331,6 +1334,17 @@
     if (playing) { stop(true); return; }
     if (sheet.open) closeSheet(true);
   });
+
+  // ---------- Plein écran ----------
+  // Réglage du foyer (oui par défaut). Le navigateur n'accepte le plein écran qu'après un geste :
+  // on le demande donc au premier toucher côté enfant (y compris en touchant une tuile pour jouer).
+  function pleinEcranVoulu() { var h = foyer(); return !!(h && h.pleinEcran !== false); }
+  document.addEventListener('pointerdown', function () {
+    if (vue !== 'enfant' || !pleinEcranVoulu() || document.fullscreenElement) return;
+    var d = document.documentElement, f = d.requestFullscreen || d.webkitRequestFullscreen;
+    if (!f) return;
+    try { var p = f.call(d, { navigationUI: 'hide' }); if (p && p.catch) p.catch(function () {}); } catch (e) { /* refusé : tant pis */ }
+  }, true);
 
   // ---------- Installation ----------
   window.addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); installEvt = e; if (vue === 'parent' && tab === 'settings') renderParent(); });
