@@ -37,7 +37,7 @@ Ludi.onPause(function(r){document.getElementById('msg').textContent='pause '+r})
 FAKE_CARD = {
     "ludi": 1, "id": "jeu-kit", "status": "draft",
     "title": {"fr": "Jeu kit", "en": "Kit game"}, "pitch": {"fr": "Test.", "en": "Test."},
-    "url": BASE + "/jeu-kit/", "icon": BASE + "/ludiworld/icons/icon-512.png", "color": "#334455",
+    "url": BASE + "/jeu-kit/", "icon": BASE + "/ludiworld/icons/marmotte-512.png", "color": "#334455",
     "author": {"name": "Test"}, "languages": ["fr"], "age": {"min": 6, "max": 9}, "reading": "none",
     "learning": {"level": "core", "domains": ["maths.multiplication"]},
     "session": {"minutes": [1, 2], "natural_end": True},
