@@ -248,7 +248,7 @@ window.LudiTextes = {
     },
     domains: {
       'maths.multiplication': 'Tables de multiplication', 'maths.calcul-mental': 'Calcul mental',
-      'sciences.magnetisme': 'Magnétisme', 'sciences.physique': 'Physique',
+      'sciences.magnetisme': 'Magnétisme', 'sciences.physique': 'Physique', 'geographie.pays': 'Pays du monde',
       'histoire.prehistoire': 'Préhistoire', 'histoire.techniques': 'Histoire des techniques',
       'logique.puzzle': 'Logique', 'memoire.sequences': 'Mémoire', 'gestion.ressources': 'Gestion',
       'motricite.reflexes': 'Réflexes', 'strategie.choix': 'Stratégie',
@@ -497,7 +497,7 @@ window.LudiTextes = {
     },
     domains: {
       'maths.multiplication': 'Times tables', 'maths.calcul-mental': 'Mental maths',
-      'sciences.magnetisme': 'Magnetism', 'sciences.physique': 'Physics',
+      'sciences.magnetisme': 'Magnetism', 'sciences.physique': 'Physics', 'geographie.pays': 'Countries of the world',
       'histoire.prehistoire': 'Prehistory', 'histoire.techniques': 'History of techniques',
       'logique.puzzle': 'Logic', 'memoire.sequences': 'Memory', 'gestion.ressources': 'Resource management',
       'motricite.reflexes': 'Reflexes', 'strategie.choix': 'Strategy',

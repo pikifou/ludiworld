@@ -6,6 +6,7 @@
 Par défaut, le dossier des jeux est le parent de ce dépôt (les clones sont à côté de ludiworld/).
   http://localhost:7357/ludiworld/   le launcher (docs/ de ce dépôt)
   http://localhost:7357/<jeu>/       un jeu ouvert seul (docs/ de son clone, ou la racine du clone s'il est publié tel quel)
+  http://localhost:7357/<depot>/<jeu>/   un jeu d'un dépôt qui en regroupe plusieurs (ludigames : un dossier par jeu)
 
 Dans le launcher, un jeu de https://pikifou.github.io/<jeu>/ qui a un clone local s'ouvre depuis le disque :
 la fiche servie est le ludi.json du clone (sinon la copie du catalogue), avec ses adresses réécrites vers ce
@@ -45,9 +46,16 @@ def publie(d):
     return d / 'docs' if (d / 'docs/index.html').is_file() else d
 
 
+def jeux_du_depot(d):
+    """Les jeux d'un dépôt qui en regroupe plusieurs : chaque sous-dossier avec index.html et ludi.json."""
+    if (publie(d) / 'index.html').is_file(): return []
+    return sorted(j.name for j in d.iterdir() if j.is_dir() and (j / 'index.html').is_file() and (j / 'ludi.json').is_file())
+
+
 def clones(games):
-    """Les jeux clonés à côté : un dossier avec docs/index.html, ou index.html à la racine."""
-    return {d.name: d for d in games.iterdir() if d.is_dir() and d.name != 'ludiworld' and (publie(d) / 'index.html').is_file()}
+    """Les jeux clonés à côté : un dossier avec docs/index.html, index.html à la racine, ou un dossier par jeu."""
+    return {d.name: d for d in games.iterdir()
+            if d.is_dir() and d.name != 'ludiworld' and ((publie(d) / 'index.html').is_file() or jeux_du_depot(d))}
 
 
 def dernier_changement(d):
@@ -93,7 +101,12 @@ class Dev(BaseHTTPRequestHandler):
 
     def fiche(self, jeu, locaux):
         """Fiche du catalogue vue par le launcher : celle du clone si elle existe, adresses vers ce serveur."""
-        f = publie(locaux[jeu]) / 'ludi.json' if jeu in locaux and (publie(locaux[jeu]) / 'ludi.json').is_file() else ROOT / 'docs/jeux' / (jeu + '.json')
+        f = ROOT / 'docs/jeux' / (jeu + '.json')
+        if jeu in locaux and (publie(locaux[jeu]) / 'ludi.json').is_file():
+            f = publie(locaux[jeu]) / 'ludi.json'
+        else:
+            for d in locaux.values():
+                if jeu in jeux_du_depot(d): f = d / jeu / 'ludi.json'
         if not f.is_file(): return None
         texte = f.read_text(encoding='utf-8')
         ici = 'http://' + (self.headers.get('Host') or 'localhost')
@@ -138,7 +151,8 @@ def main():
     a.add_argument('--port', type=int, default=7357)
     o = a.parse_args()
     Dev.games = pathlib.Path(o.games).resolve()
-    jeux = sorted(clones(Dev.games))
+    locaux = clones(Dev.games)
+    jeux = sorted([f'{d}/{j}' for d in locaux for j in jeux_du_depot(locaux[d])] + [d for d in locaux if not jeux_du_depot(locaux[d])])
     print(f'Launcher : http://localhost:{o.port}/ludiworld/')
     for j in jeux: print(f'  {j} seul : http://localhost:{o.port}/{j}/')
     if not jeux: print(f'  (aucun clone de jeu trouvé dans {Dev.games})')

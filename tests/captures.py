@@ -5,6 +5,7 @@ Usage : python3 tests/captures.py <dossier_de_sortie> [<dossier_des_jeux>]
 Toutes les requêtes vers https://pikifou.github.io/ sont servies depuis le disque :
   /ludiworld/...  -> docs/ de ce dépôt
   /<jeu>/...      -> <dossier_des_jeux>/<jeu>/docs/ (clones des dépôts des jeux), sinon une page vide
+  /<depot>/<jeu>/ -> <dossier_des_jeux>/<depot>/<jeu>/ (dépôt qui regroupe plusieurs jeux, comme ludigames)
 Un faux jeu /jeu-kit/ utilise ludi.js pour vérifier le dialogue appli <-> kit (scores, fin douce).
 """
 import datetime
@@ -64,6 +65,8 @@ def serve(route):
         base = ROOT / "docs"
     elif GAMES and (GAMES / parts[0] / "docs").is_dir():
         base = GAMES / parts[0] / "docs"
+    elif GAMES and (GAMES / parts[0]).is_dir() and not (GAMES / parts[0] / "index.html").is_file():
+        base = GAMES / parts[0]
     else:
         return route.fulfill(body=f"<h1 style='font:40px sans-serif'>{parts[0]}</h1>", content_type="text/html")
     f = base / (rest or "index.html")
@@ -393,6 +396,41 @@ def run():
         assert page.inner_text("#e-salut").startswith("Salut Petit Loup")
         assert "10" in page.inner_text("#e-temps"), "Petit Loup garde son propre temps : " + page.inner_text("#e-temps")
         ctx.close()
+
+        # 10. Un jeu d'un dépôt qui en regroupe plusieurs (ludigames) : le Monde à la craie, une manche jusqu'au bout
+        if GAMES and (GAMES / "ludigames/monde-a-la-craie/index.html").is_file():
+            store = famille()
+            store["famille"]["jeux"]["monde-a-la-craie"] = {"max": None}
+            ctx = contexte(browser, store, **formats["tablette"])
+            page = ctx.new_page()
+            page.on("pageerror", lambda e: errors.append(str(e)))
+            page.goto(BASE + "/ludiworld/")
+            page.locator(".tuile", has_text="Le Monde à la craie").click()
+            page.wait_for_function("document.querySelector('#player iframe')?.contentWindow?.jeu?.pret", timeout=15000)
+            cadre = next(fr for fr in page.frames if "/ludigames/monde-a-la-craie/" in fr.url)
+            assert cadre.evaluate("Ludi.inLauncher()"), "le kit sait qu'il est dans Ludiworld"
+            cadre.wait_for_function("jeu.app.joueur === 'Petit Loup'", timeout=3000)
+            page.screenshot(path=str(OUT / "tablette-16-monde-a-la-craie.png"))
+            cadre.click('[data-zone="europe"]')
+            cadre.click('[data-action="jouer"]')
+            cadre.wait_for_function("jeu.carte && jeu.carte.zone.id === 'europe'")
+            boite = page.locator("#player iframe").bounding_box()
+            derniere = None
+            while not cadre.evaluate("jeu.manche.finie"):
+                q = cadre.evaluate("jeu.manche.question")
+                if q != derniere:
+                    cadre.evaluate("jeu.carte.vueEntiere()")
+                    derniere = q
+                x, y = cadre.evaluate("c => jeu.carte.ancreEcran(c)", q)
+                page.mouse.click(boite["x"] + x, boite["y"] + y)
+                page.wait_for_timeout(60)
+            cadre.wait_for_selector(".fin", timeout=3000)
+            page.wait_for_timeout(300)
+            page.screenshot(path=str(OUT / "tablette-17-monde-a-la-craie-fin.png"))
+            st = page.evaluate("JSON.parse(localStorage.getItem('ludiworld.v1')).famille.enfants[0].games['monde-a-la-craie']")
+            notions = [k for k in st["skills"] if k.startswith("geographie.pays/")]
+            assert st["kit"] is True and len(notions) == 12, st
+            ctx.close()
         browser.close()
     if errors:
         raise SystemExit("Erreurs JS : " + " | ".join(errors))

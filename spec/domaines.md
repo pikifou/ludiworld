@@ -8,6 +8,7 @@ Utilisé dans les fiches (`learning.domains`) et par `Ludi.skill`. Format `famil
 | `maths.calcul-mental` | Calcul mental en général |
 | `sciences.magnetisme` | Aimants, pôles, matériaux attirés, électroaimant |
 | `sciences.physique` | Forces, poids, mouvement |
+| `geographie.pays` | Pays du monde : les situer sur une carte, leur nom |
 | `histoire.prehistoire` | Âge de pierre, néolithique |
 | `histoire.techniques` | Inventions et leur ordre (feu, outils, agriculture…) |
 | `logique.puzzle` | Résoudre un problème en plusieurs étapes |
