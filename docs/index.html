@@ -11,6 +11,7 @@
   <link rel="apple-touch-icon" href="icons/icon-180.png">
   <link rel="preload" href="fonts/baloo2-800.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="fonts/lexend.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="site/barre.css">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -44,8 +45,9 @@
     <button type="button" class="e-parents" id="e-parents"><svg viewBox="0 0 24 24" aria-hidden="true" class="ico"><rect x="4" y="10.5" width="16" height="11" rx="2.5" fill="currentColor"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5" fill="none" stroke="currentColor" stroke-width="2.4"/></svg><span class="e-parents-txt" data-fr="Parents" data-en="Parents">Parents</span><span class="e-parents-hint"></span></button>
   </section>
 
-  <!-- Le carnet parent -->
+  <!-- Le carnet parent : « Mon Ludiworld », un onglet du site -->
   <section id="v-parent" class="carnet" hidden>
+    <div class="c-barre" id="c-barre"></div>
     <aside class="c-rail">
       <div class="c-marque">
         <img src="img/marmotte-carnet.webp" alt="">
@@ -69,6 +71,7 @@
     <div class="p-rideau" id="p-rideau" hidden></div>
   </div>
 
+  <script src="site/barre.js"></script>
   <script src="textes.js"></script>
   <script src="temps.js"></script>
   <script src="app.js"></script>

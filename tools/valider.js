@@ -63,6 +63,40 @@ function catalogue() {
   return index.games.map((g) => path.join(dir, g));
 }
 
+// « Ludiworld aime bien » : séries, films et applis (docs/aime-bien/fiches.json, spec/aime-bien.md).
+// Une fiche peut être partielle (incomplete) : seuls l'identité, le type, le statut, le titre et le pitch sont requis.
+const RECO_TYPES = ['serie', 'film', 'appli'];
+const RECO_STATUS = ['valide', 'propose'];
+const RECO_TEXTES = ['format', 'learn', 'why', 'watch_out', 'where'];
+const AIME_BIEN = path.join(ROOT, 'docs/aime-bien/fiches.json');
+
+function validateRecos(doc) {
+  const err = [];
+  const bi = (k, v) => {
+    if (!v || typeof v.fr !== 'string' || !v.fr.trim() || typeof v.en !== 'string' || !v.en.trim()) err.push(`${k} : texte fr et en requis`);
+  };
+  if (!doc || doc.ludi !== 1 || !Array.isArray(doc.items)) return ['fiches.json : { "ludi": 1, "items": [...] } attendu'];
+  const ids = new Set();
+  doc.items.forEach((r, i) => {
+    const at = `items[${i}]${r && r.id ? ` (${r.id})` : ''}`;
+    if (!r || typeof r !== 'object') { err.push(`${at} : fiche illisible`); return; }
+    if (!/^[a-z0-9][a-z0-9-]{0,60}$/.test(r.id || '')) err.push(`${at} id : minuscules, chiffres et tirets`);
+    else if (ids.has(r.id)) err.push(`${at} id : déjà pris`);
+    ids.add(r.id);
+    if (!RECO_TYPES.includes(r.type)) err.push(`${at} type : ${RECO_TYPES.join(', ')}`);
+    if (!RECO_STATUS.includes(r.status)) err.push(`${at} status : ${RECO_STATUS.join(' ou ')}`);
+    if (!r.by || typeof r.by !== 'string') err.push(`${at} by : qui recommande (prénom ou pseudo)`);
+    bi(`${at} title`, r.title); bi(`${at} pitch`, r.pitch);
+    RECO_TEXTES.forEach((k) => { if (r[k] !== undefined) bi(`${at} ${k}`, r[k]); });
+    if (r.age !== undefined && !(Number.isInteger(r.age.min) && Number.isInteger(r.age.max) && r.age.min >= 0 && r.age.min <= r.age.max && r.age.max <= 18)) err.push(`${at} age : min et max entiers, 0 ≤ min ≤ max ≤ 18`);
+    if (r.languages !== undefined && (!Array.isArray(r.languages) || !r.languages.length)) err.push(`${at} languages : liste non vide`);
+    if (r.incomplete !== undefined && typeof r.incomplete !== 'boolean') err.push(`${at} incomplete : true ou false`);
+    // Une fiche recommandée sans « à savoir » ni « où » doit le dire : elle est partielle.
+    if (r.status === 'valide' && !r.incomplete && RECO_TEXTES.some((k) => r[k] === undefined)) err.push(`${at} : fiche recommandée incomplète, compléter ${RECO_TEXTES.filter((k) => r[k] === undefined).join(', ')} ou mettre "incomplete": true`);
+  });
+  return err;
+}
+
 if (require.main === module) {
   const files = process.argv.length > 2 ? process.argv.slice(2) : catalogue();
   const domains = knownDomains();
@@ -73,7 +107,13 @@ if (require.main === module) {
     if (errors.length) { bad++; console.log(`✗ ${path.basename(file)}`); errors.forEach((e) => console.log(`   - ${e}`)); }
     else console.log(`✓ ${path.basename(file)}`);
   }
+  if (process.argv.length <= 2) {
+    let errors;
+    try { errors = validateRecos(JSON.parse(fs.readFileSync(AIME_BIEN, 'utf8'))); } catch (e) { errors = [`JSON invalide : ${e.message}`]; }
+    if (errors.length) { bad++; console.log('✗ aime-bien/fiches.json'); errors.forEach((e) => console.log(`   - ${e}`)); }
+    else console.log('✓ aime-bien/fiches.json');
+  }
   process.exit(bad ? 1 : 0);
 }
 
-module.exports = { validate, catalogue, knownDomains };
+module.exports = { validate, catalogue, knownDomains, validateRecos, AIME_BIEN };

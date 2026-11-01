@@ -1,0 +1,233 @@
+{
+  "ludi": 1,
+  "items": [
+    {
+      "id": "puffin-rock",
+      "type": "serie",
+      "status": "valide",
+      "by": "Julien",
+      "title": { "fr": "Puffin Rock", "en": "Puffin Rock" },
+      "pitch": {
+        "fr": "Oona, une jeune macareux, son petit frère Baba et leurs amis sur une île au large de l'Irlande. La nature au fil des saisons, à un rythme très doux.",
+        "en": "Oona, a young puffin, her little brother Baba and their friends on an island off the coast of Ireland. Nature through the seasons, at a very gentle pace."
+      },
+      "age": { "min": 2, "max": 6 },
+      "format": { "fr": "Épisodes de 7 min", "en": "7-minute episodes" },
+      "learn": {
+        "fr": "Les animaux, les saisons, la mer ; l'entraide et les petites émotions du quotidien.",
+        "en": "Animals, seasons, the sea; helping each other and the small emotions of everyday life."
+      },
+      "why": {
+        "fr": "Calme, beau, sans cris ni surenchère : une série qui apaise au lieu d'exciter.",
+        "en": "Calm, beautiful, no shouting and no one-upmanship: a series that soothes instead of winding kids up."
+      },
+      "watch_out": {
+        "fr": "Pensée pour les tout-petits : les plus grands la trouvent vite trop lente.",
+        "en": "Made for little ones: older kids soon find it too slow."
+      },
+      "where": {
+        "fr": "Selon les pays et les périodes : plateformes de streaming, chaîne YouTube officielle. À vérifier chez vous.",
+        "en": "Depends on country and period: streaming platforms, official YouTube channel. Check where you live."
+      },
+      "languages": ["fr", "en"]
+    },
+    {
+      "id": "ada-twist",
+      "type": "serie",
+      "status": "valide",
+      "by": "Julien",
+      "title": { "fr": "Ada Twist, scientifique", "en": "Ada Twist, Scientist" },
+      "pitch": {
+        "fr": "Ada se pose des questions sur tout. Avec ses amis Rosie Revere et Iggy Peck, elle mène l'enquête et fait des expériences pour trouver les réponses.",
+        "en": "Ada wonders about everything. With her friends Rosie Revere and Iggy Peck, she investigates and runs experiments to find the answers."
+      },
+      "age": { "min": 4, "max": 8 },
+      "format": { "fr": "Épisodes courts, deux histoires chacun", "en": "Short episodes, two stories each" },
+      "learn": {
+        "fr": "La démarche scientifique : observer, faire une hypothèse, tester, et recommencer quand ça rate.",
+        "en": "The scientific method: observe, make a hypothesis, test it, and try again when it fails."
+      },
+      "why": {
+        "fr": "Montre que se tromper fait partie de la science, avec une héroïne curieuse et des amis inventeurs.",
+        "en": "Shows that getting it wrong is part of science, with a curious heroine and inventor friends."
+      },
+      "watch_out": {
+        "fr": "Abonnement Netflix. L'épisode suivant se lance tout seul : coupez la lecture automatique dans les réglages du profil.",
+        "en": "Netflix subscription. The next episode starts on its own: turn off autoplay in the profile settings."
+      },
+      "where": { "fr": "Netflix.", "en": "Netflix." },
+      "languages": ["fr", "en"]
+    },
+    {
+      "id": "petit-malabar",
+      "type": "serie",
+      "status": "valide",
+      "by": "Julien",
+      "incomplete": true,
+      "title": { "fr": "Petit Malabar", "en": "Petit Malabar" },
+      "pitch": {
+        "fr": "De courts épisodes qui répondent aux grandes questions d'un enfant curieux.",
+        "en": "Short episodes that answer a curious child's big questions."
+      },
+      "format": { "fr": "Épisodes très courts", "en": "Very short episodes" },
+      "learn": {
+        "fr": "Des sciences du quotidien, à hauteur d'enfant.",
+        "en": "Everyday science, at a child's level."
+      },
+      "languages": ["fr"]
+    },
+    {
+      "id": "storybots",
+      "type": "serie",
+      "status": "valide",
+      "by": "Julien",
+      "title": { "fr": "StoryBots", "en": "StoryBots" },
+      "pitch": {
+        "fr": "De petits robots qui vivent dans les ordinateurs partent chercher la réponse à la question d'un enfant : pourquoi le ciel est bleu, comment marche la digestion…",
+        "en": "Little robots living inside computers go looking for the answer to a child's question: why is the sky blue, how does digestion work…"
+      },
+      "age": { "min": 3, "max": 8 },
+      "format": { "fr": "Épisodes d'environ 25 min", "en": "Episodes of about 25 min" },
+      "learn": {
+        "fr": "Le corps, l'espace, la nature, la technologie : une question par épisode, creusée à fond.",
+        "en": "The body, space, nature, technology: one question per episode, explored in depth."
+      },
+      "why": {
+        "fr": "Drôle et plein de chansons qui restent en tête, avec les réponses dedans.",
+        "en": "Funny and full of catchy songs, with the answers inside them."
+      },
+      "watch_out": {
+        "fr": "Rythme très rapide et beaucoup de stimulations : à doser pour les plus petits. Abonnement Netflix, lecture automatique à couper.",
+        "en": "Very fast pace and lots of stimulation: go easy with the youngest. Netflix subscription, turn off autoplay."
+      },
+      "where": {
+        "fr": "Netflix. Des chansons aussi sur la chaîne YouTube officielle.",
+        "en": "Netflix. Some songs on the official YouTube channel too."
+      },
+      "languages": ["fr", "en"]
+    },
+    {
+      "id": "il-etait-une-fois",
+      "type": "serie",
+      "status": "valide",
+      "by": "Julien",
+      "title": { "fr": "Il était une fois…", "en": "Once Upon a Time…" },
+      "pitch": {
+        "fr": "Maestro, Pierrot, Psi et leurs amis traversent les séries d'Albert Barillé : le corps humain (la Vie), l'Histoire (l'Homme), l'Espace, les grands inventeurs (les Découvreurs) et les grands voyageurs (les Explorateurs).",
+        "en": "Maestro, Peter, Psi and their friends travel through Albert Barillé's series: the human body (Life), history (Man), Space, the great inventors (the Discoverers) and the great travellers (the Explorers)."
+      },
+      "age": { "min": 6, "max": 12 },
+      "format": { "fr": "Épisodes de 26 min", "en": "26-minute episodes" },
+      "learn": {
+        "fr": "Selon la série : le corps humain, l'Histoire, l'espace, les sciences et les inventions, les grandes explorations.",
+        "en": "Depending on the series: the human body, history, space, science and inventions, the great explorations."
+      },
+      "why": {
+        "fr": "Le classique qui a donné le goût des sciences à des générations de parents, et qui marche toujours.",
+        "en": "The classic that gave generations of parents a taste for science, and it still works."
+      },
+      "watch_out": {
+        "fr": "Animation datée. Quelques scènes peuvent impressionner (maladies dans la Vie, guerres dans l'Homme). La Vie est un bon début.",
+        "en": "Dated animation. Some scenes can be upsetting (illness in Life, wars in Man). Life is a good place to start."
+      },
+      "where": {
+        "fr": "Chaîne YouTube officielle et plateformes selon les périodes, DVD.",
+        "en": "Official YouTube channel and platforms depending on the period, DVD."
+      },
+      "languages": ["fr", "en"]
+    },
+    {
+      "id": "laboratoire-emily",
+      "type": "serie",
+      "status": "valide",
+      "by": "Julien",
+      "title": { "fr": "Le laboratoire d'Emily", "en": "Emily's Wonder Lab" },
+      "pitch": {
+        "fr": "Emily Calandrelli, ingénieure et vulgarisatrice, fait des expériences spectaculaires avec des enfants : couleurs, glace, bulles, réactions qui moussent.",
+        "en": "Emily Calandrelli, engineer and science communicator, does spectacular experiments with kids: colours, ice, bubbles, foaming reactions."
+      },
+      "age": { "min": 4, "max": 9 },
+      "format": { "fr": "Une seule saison, courte", "en": "A single, short season" },
+      "learn": {
+        "fr": "Des expériences de sciences simples, et l'envie de les refaire à la maison.",
+        "en": "Simple science experiments, and the urge to redo them at home."
+      },
+      "why": {
+        "fr": "Les enfants participent vraiment, et beaucoup d'expériences se refont avec ce qu'on a dans la cuisine.",
+        "en": "The kids really take part, and many experiments can be redone with what's in the kitchen."
+      },
+      "watch_out": {
+        "fr": "On en fait vite le tour. Abonnement Netflix.",
+        "en": "You get through it quickly. Netflix subscription."
+      },
+      "where": { "fr": "Netflix.", "en": "Netflix." },
+      "languages": ["fr", "en"]
+    },
+    {
+      "id": "cest-pas-sorcier",
+      "type": "serie",
+      "status": "valide",
+      "by": "Julien",
+      "title": { "fr": "C'est pas sorcier", "en": "C'est pas sorcier" },
+      "pitch": {
+        "fr": "Fred, Jamy et Sabine expliquent la science et le monde avec des maquettes, des reportages et le fameux camion.",
+        "en": "A French classic: Fred, Jamy and Sabine explain science and the world with models, field reports and their famous truck."
+      },
+      "age": { "min": 8, "max": 14 },
+      "format": { "fr": "Émissions de 26 min", "en": "26-minute shows" },
+      "learn": {
+        "fr": "Sciences, nature, corps humain, techniques, géographie : des centaines de sujets.",
+        "en": "Science, nature, the human body, technology, geography: hundreds of topics."
+      },
+      "why": {
+        "fr": "Clair, vivant, jamais condescendant. Les maquettes de Jamy rendent les idées concrètes.",
+        "en": "Clear, lively, never condescending. Jamy's models make ideas concrete."
+      },
+      "watch_out": {
+        "fr": "Sur YouTube : publicités, et des vidéos suivantes proposées sans fin. Lancez l'émission vous-même et restez à côté. Certaines émissions ont vieilli (chiffres, technologies).",
+        "en": "On YouTube: ads, and endless suggested videos. Start the show yourself and stay nearby. Some shows have aged (figures, technology)."
+      },
+      "where": { "fr": "Chaîne YouTube officielle, gratuite.", "en": "Official YouTube channel, free." },
+      "languages": ["fr"]
+    },
+    {
+      "id": "kididocs",
+      "type": "serie",
+      "status": "valide",
+      "by": "Julien",
+      "incomplete": true,
+      "title": { "fr": "Kididocs", "en": "Kididocs" },
+      "pitch": {
+        "fr": "Des documentaires courts pour les plus jeunes, sur des sujets de tous les jours.",
+        "en": "Short documentaries for younger kids, in French, about everyday topics."
+      },
+      "languages": ["fr"]
+    },
+    {
+      "id": "todo-math",
+      "type": "appli",
+      "status": "valide",
+      "by": "Julien",
+      "title": { "fr": "Todo Math", "en": "Todo Math" },
+      "pitch": {
+        "fr": "Des centaines de petites activités de maths en forme de jeux : compter, additionner, lire l'heure, la monnaie, les formes.",
+        "en": "Hundreds of small maths activities shaped like games: counting, adding, telling time, money, shapes."
+      },
+      "age": { "min": 3, "max": 8 },
+      "format": { "fr": "Activités de quelques minutes", "en": "Activities of a few minutes" },
+      "learn": {
+        "fr": "Les bases des maths de la maternelle au début du primaire : nombres, calcul, mesure, géométrie.",
+        "en": "Maths basics from preschool to early primary school: numbers, arithmetic, measuring, geometry."
+      },
+      "why": {
+        "fr": "Progressif et bien dosé, pensé aussi pour les enfants qui ont du mal. On sent le travail de pédagogues.",
+        "en": "Gradual and well paced, designed for children who struggle too. You can feel the teachers behind it."
+      },
+      "watch_out": {
+        "fr": "Son modèle économique a changé avec le temps : vérifiez au téléchargement s'il y a un achat ou un abonnement. C'est une appli à part, hors de Ludiworld : son temps n'est pas compté ici.",
+        "en": "Its business model has changed over time: check for a purchase or subscription when you download it. It is a separate app, outside Ludiworld: its time is not counted here."
+      },
+      "where": { "fr": "App Store et Google Play.", "en": "App Store and Google Play." }
+    }
+  ]
+}

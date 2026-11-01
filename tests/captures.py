@@ -108,12 +108,40 @@ def run():
             "tablette": dict(viewport={"width": 1180, "height": 820}),
         }
 
-        # 1. Première ouverture : le parent prépare Ludiworld
+        # 0. Le site : rien de préparé, l'adresse de Ludiworld mène à l'accueil ; chaque page s'affiche
         for name, opts in formats.items():
             ctx = contexte(browser, **opts)
             page = ctx.new_page()
             page.on("pageerror", lambda e: errors.append(str(e)))
             page.goto(BASE + "/ludiworld/")
+            page.wait_for_url("**/decouvrir/")
+            page.wait_for_selector("#jeux-list .jeu")
+            page.wait_for_selector("#aime-apercu dt")
+            assert page.get_attribute(".lw-onglet[aria-current=page]", "class").endswith("lw-accueil"), "pas encore préparé : premier onglet « Accueil »"
+            assert page.get_attribute(".lw-action", "href").endswith("#demarrer")
+            page.wait_for_timeout(2500)
+            page.screenshot(path=str(OUT / f"{name}-0-site-accueil.png"))
+            for onglet, cle, attendu in [("Les jeux", "jeux", "#fiches-jeux .fiche"), ("Créer un jeu", "creer", ".etape"), ("Ludiworld aime bien", "aime", "#ab-valides .reco")]:
+                page.locator(".lw-onglet", has_text=onglet).click()
+                page.wait_for_selector(attendu)
+                assert page.get_attribute(".lw-onglet[aria-current=page]", "class").endswith("lw-" + cle)
+                page.wait_for_timeout(1200)
+                page.screenshot(path=str(OUT / f"{name}-0-site-{cle}.png"), full_page=True)
+            page.locator("[data-filtre=appli]").click()
+            assert page.locator("#ab-valides .reco").count() == page.locator("#ab-valides .reco-appli").count() >= 1, "le filtre ne garde que les applis"
+            page.locator(".lw-langs button", has_text="EN").click()
+            assert page.inner_text("h1").startswith("Learning can be fun"), page.inner_text("h1")
+            page.locator(".lw-langs button", has_text="FR").click()
+            page.locator(".lw-action").click()
+            page.wait_for_selector(".a-bienvenue")
+            ctx.close()
+
+        # 1. Première ouverture : le parent prépare Ludiworld
+        for name, opts in formats.items():
+            ctx = contexte(browser, **opts)
+            page = ctx.new_page()
+            page.on("pageerror", lambda e: errors.append(str(e)))
+            page.goto(BASE + "/ludiworld/#demarrer")
             page.wait_for_selector(".a-bienvenue")
             page.wait_for_timeout(2500)
             page.screenshot(path=str(OUT / f"{name}-1-bienvenue.png"))
@@ -174,6 +202,38 @@ def run():
         assert page.locator("#sheet[open]").count() == 0, "le 2e retour ferme la fiche"
         page.get_by_role("tab", name="Temps").click()
         page.screenshot(path=str(OUT / "tablette-8-carnet-temps.png"))
+        # Le carnet est un onglet du site : on va lire une autre page et on revient sans redonner le code
+        assert page.get_attribute(".lw-onglet[aria-current=page]", "class").endswith("lw-moi")
+        page.locator(".lw-onglet", has_text="Ludiworld aime bien").click()
+        page.wait_for_selector("#ab-valides .reco")
+        assert page.locator(".lw-action", has_text="Côté enfant").count() == 1
+        page.locator(".lw-onglet", has_text="Mon Ludiworld").click()
+        page.wait_for_selector(".carnet:not([hidden])")
+        assert page.locator("#gate[open]").count() == 0, "le code n'est pas redemandé tout de suite"
+        # « Côté enfant » depuis le site : retour aux jeux, et le carnet redemande le code
+        page.locator(".lw-onglet", has_text="Les jeux").click()
+        page.wait_for_selector("#fiches-jeux .fiche")
+        page.locator(".lw-action").click()
+        page.wait_for_selector(".tuile")
+        page.goto(BASE + "/ludiworld/#carnet")
+        page.wait_for_selector("#gate[open]")
+        ctx.close()
+
+        # 2 bis. Sur un téléphone préparé : le carnet et la barre du site tiennent dans l'écran
+        ctx = contexte(browser, famille(), **formats["telephone"])
+        page = ctx.new_page()
+        page.on("pageerror", lambda e: errors.append(str(e)))
+        page.goto(BASE + "/ludiworld/")
+        page.wait_for_selector(".tuile")
+        page.focus("#e-parents")
+        page.keyboard.press("Enter")
+        code(page, PIN)
+        page.wait_for_selector(".carnet:not([hidden])")
+        page.wait_for_timeout(400)
+        page.screenshot(path=str(OUT / "telephone-7-carnet.png"))
+        assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1"), "rien ne dépasse en largeur"
+        assert page.evaluate("document.getElementById('c-page').getBoundingClientRect().right <= window.innerWidth + 1"), "la page du carnet tient dans l'écran"
+        assert page.locator(".lw-langs").is_visible() and page.locator(".c-exit").is_visible(), "langue et retour côté enfant visibles"
         ctx.close()
 
         # 3. Fin douce : on prévient, on attend la fin de manche, puis la nuit tombe

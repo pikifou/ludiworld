@@ -134,7 +134,7 @@ window.LudiTextes = {
       codeChanged: 'Le code parent a été changé ({d}) après un « code oublié ».',
       freeOnly: 'Seulement les jours sans école',
       fullscreen: 'Plein écran',
-      fullscreenOn: 'Côté enfant, Ludiworld passe en plein écran',
+      fullscreenOn: 'Côté enfant, Ludiworld passe en plein écran (au doigt, pas à la souris)',
       fullscreenText: 'Les barres de la tablette disparaissent dès que l’enfant touche l’écran. Les jeux ne peuvent pas passer en plein écran eux-mêmes\u00a0: c’est Ludiworld qui décide, pour que la marmotte et la fin de partie restent toujours visibles.',
       kids: 'Les enfants',
       kidsText: 'Chaque enfant a ses jeux, son temps et son suivi. Sur l’écran de l’enfant, « Pas toi\u00a0? » permet de changer.',
@@ -201,9 +201,7 @@ window.LudiTextes = {
       dataText: 'Tout reste sur cette tablette : rien n’est envoyé sur internet. Les jeux ne reçoivent que le pseudo.',
       erase: 'Tout effacer',
       eraseConfirm: 'Tout effacer ? Les réglages, le temps de jeu et les records de cette tablette seront perdus.',
-      links: 'Ludiworld',
       site: 'C’est quoi, Ludiworld ?',
-      addGame: 'Ajouter un jeu (créateurs)',
       saved: 'Enregistré'
     },
 
@@ -387,7 +385,7 @@ window.LudiTextes = {
       codeChanged: 'The parent code was changed ({d}) after a “forgot the code”.',
       freeOnly: 'Days off school only',
       fullscreen: 'Full screen',
-      fullscreenOn: 'On the child side, Ludiworld goes full screen',
+      fullscreenOn: 'On the child side, Ludiworld goes full screen (touch only, not with a mouse)',
       fullscreenText: 'The tablet’s bars disappear as soon as the child touches the screen. Games can’t go full screen by themselves: Ludiworld decides, so the marmot and the end of play always stay visible.',
       kids: 'Children',
       kidsText: 'Each child has their own games, time and progress. On the child screen, “Not you?” switches child.',
@@ -454,9 +452,6 @@ window.LudiTextes = {
       dataText: 'Everything stays on this tablet: nothing is sent over the internet. Games only receive the nickname.',
       erase: 'Erase everything',
       eraseConfirm: 'Erase everything? Settings, play time and records on this tablet will be lost.',
-      links: 'Ludiworld',
-      site: 'What is Ludiworld?',
-      addGame: 'Add a game (creators)',
       saved: 'Saved'
     },
 

@@ -1,0 +1,48 @@
+name: Recommander une série, un film ou une appli / Recommend a series, film or app
+description: Pour « Ludiworld aime bien » / For "Ludiworld likes"
+title: "Recommandation : "
+labels: ["recommandation"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **FR** · Une série, un film ou une appli qui rend votre enfant curieux&nbsp;? Une phrase suffit pour commencer. La fiche entre d'abord dans « Proposé », puis passe en « Recommandé » une fois relue.
+
+        **EN** · A series, film or app that makes your child curious? One sentence is enough to start. The card first goes into "Suggested", then into "Recommended" once reviewed.
+  - type: input
+    id: titre
+    attributes:
+      label: Titre / Title
+    validations:
+      required: true
+  - type: dropdown
+    id: type
+    attributes:
+      label: Type
+      options:
+        - Série / Series
+        - Film
+        - Appli / App
+    validations:
+      required: true
+  - type: textarea
+    id: pourquoi
+    attributes:
+      label: Pourquoi vous l'aimez / Why you like it
+      description: Ce que votre enfant y apprend, ce qui vous a plu. / What your child learns, what you liked.
+    validations:
+      required: true
+  - type: input
+    id: age
+    attributes:
+      label: Pour quel âge (facultatif) / Which ages (optional)
+      placeholder: "4 à 8 ans / ages 4 to 8"
+  - type: input
+    id: ou
+    attributes:
+      label: Où le regarder ou le trouver (facultatif) / Where to watch or get it (optional)
+  - type: textarea
+    id: attention
+    attributes:
+      label: À savoir (facultatif) / Worth knowing (optional)
+      description: Pubs, achats, lecture automatique, scènes qui peuvent faire peur… / Ads, purchases, autoplay, scary scenes…

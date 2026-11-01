@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Les jeux · Ludiworld</title>
+  <meta name="description" content="Les jeux de Ludiworld et leurs fiches honnêtes : l'âge, ce qu'on y apprend vraiment, la durée d'une partie, ce que le jeu s'engage à ne pas faire.">
+  <meta name="theme-color" content="#16204a">
+  <link rel="icon" href="../icons/icon-192.png">
+  <link rel="apple-touch-icon" href="../icons/icon-180.png">
+  <link rel="preload" href="../fonts/fraunces.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="../fonts/lexend.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="../site/barre.css">
+  <link rel="stylesheet" href="../site/site.css">
+</head>
+<body data-page="jeux">
+  <a class="skip" href="#contenu" data-t="skip">Aller au contenu</a>
+  <div id="lw-barre"></div>
+
+  <header class="page-tete">
+    <p class="kicker" data-t="kick">Les jeux</p>
+    <h1 data-t="h1">Chaque jeu a sa fiche, et la fiche dit la vérité.</h1>
+    <p class="lede" data-t="lede">Faits par des parents, d'abord pour leurs enfants. Le créateur écrit la fiche, un robot la vérifie, puis un parent joue au jeu et la relit avant qu'il entre dans Ludiworld. Un jeu qui apprend peu le dit.</p>
+    <ul class="legend legend-clair" aria-label="Légende" data-t-aria="legend">
+      <li class="goal goal-core"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1" class="fill"/></svg><span data-t="goalCore">Apprendre est le but</span></li>
+      <li class="goal goal-side"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" class="fill"/></svg><span data-t="goalSide">On apprend en passant</span></li>
+      <li class="goal goal-none"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.4 6.7 19.4l1.2-6L3.4 9.3l6-.7z"/></svg><span data-t="goalNone">Pour le plaisir</span></li>
+    </ul>
+  </header>
+
+  <main id="contenu" class="page-corps">
+    <div class="fiches" id="fiches-jeux" aria-live="polite">
+      <p class="jeux-wait" data-t="loading">Les fiches arrivent…</p>
+    </div>
+
+    <aside class="relais">
+      <h2 data-t="moreTitle">Vous faites un jeu pour votre enfant ?</h2>
+      <p data-t="moreText">Il a peut-être sa place ici. Pas besoin de savoir coder : une IA écrit le code avec vous.</p>
+      <a class="btn btn-sun" href="../creer/" data-t="moreGo">Créer un jeu, pas à pas</a>
+    </aside>
+  </main>
+
+  <footer class="foot" id="lw-pied"></footer>
+
+  <script src="../site/barre.js" defer></script>
+  <script src="../site/site.js" defer></script>
+  <script src="en.js" defer></script>
+</body>
+</html>

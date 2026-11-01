@@ -574,7 +574,7 @@
     btn.addEventListener('pointerdown', function (e) {
       if (e.button > 0) return;
       btn.classList.add('hold');
-      timer = setTimeout(function () { cancel(); openGate(function () { show('parent'); }); }, 1200);
+      timer = setTimeout(function () { cancel(); openGate(ouvrirCarnet); }, 1200);
     });
     ['pointerup', 'pointerleave', 'pointercancel'].forEach(function (ev) {
       btn.addEventListener(ev, function () {
@@ -584,8 +584,11 @@
     });
     btn.addEventListener('contextmenu', function (e) { e.preventDefault(); });
     // Au clavier (pas d'appui long possible) : on ouvre directement le code.
-    btn.addEventListener('click', function (e) { if (e.detail === 0) openGate(function () { show('parent'); }); });
+    btn.addEventListener('click', function (e) { if (e.detail === 0) openGate(ouvrirCarnet); });
   })();
+  // Le carnet est un onglet du site : le code donné, le parent peut lire les autres pages sans le redonner.
+  function ouvrirCarnet() { LudiBarre.ouvrirParent(); show('parent'); }
+  function fermerCarnet() { LudiBarre.fermerParent(); show('enfant'); }
 
   // « Qui joue ? » : les enfants du foyer, chacun avec son initiale sur sa couleur.
   var quiDlg = document.getElementById('qui');
@@ -700,6 +703,7 @@
     document.getElementById('c-titre').textContent = t('parent.title');
     document.getElementById('c-de').textContent = t('parent.of', { n: f.enfant.nom });
     document.getElementById('c-exit').lastChild.textContent = t('parent.exit');
+    LudiBarre.rendre(document.getElementById('c-barre'), { base: '', actif: 'moi', lang: lang, onLang: setLang, action: false });
     var nav = document.getElementById('c-nav');
     nav.textContent = '';
     ['today', 'games', 'time', 'settings'].forEach(function (k) {
@@ -721,7 +725,7 @@
     else if (tab === 'time') page.appendChild(pageTime(f));
     else page.appendChild(pageSettings(f));
   }
-  document.getElementById('c-exit').addEventListener('click', function () { show('enfant'); });
+  document.getElementById('c-exit').addEventListener('click', fermerCarnet);
 
   function section(title, kids, cls) { return el('section', { class: 'c-sec ' + (cls || '') }, [title ? el('h3', { text: title }) : null].concat(kids)); }
 
@@ -1052,10 +1056,6 @@
         show('accueil');
       } }, [icon('warn'), t('parent.erase')])
     ]));
-    out.appendChild(section(t('parent.links'), [el('ul', { class: 'liens' }, [
-      el('li', null, [el('a', { href: 'decouvrir/', text: t('parent.site') })]),
-      el('li', null, [el('a', { href: 'https://github.com/pikifou/ludiworld/blob/main/LUDIWORLD.md', target: '_blank', rel: 'noopener', text: t('parent.addGame') })])
-    ])]));
     return out;
   }
 
@@ -1270,13 +1270,15 @@
   function boucle() { compter(); evaluer(false); }
   var CARNET_INACTIF = 90000;
   var derniereActivite = Date.now();
-  ['pointerdown', 'keydown', 'input', 'scroll'].forEach(function (ev) { document.addEventListener(ev, function () { derniereActivite = Date.now(); }, true); });
+  ['pointerdown', 'keydown', 'input', 'scroll'].forEach(function (ev) {
+    document.addEventListener(ev, function () { derniereActivite = Date.now(); if (vue === 'parent') LudiBarre.ouvrirParent(); }, true);
+  });
   setInterval(function () {
     if (playing) boucle();
     else if (vue === 'enfant') renderEnfantSiChange();
     else if (vue === 'parent' && Date.now() - derniereActivite > CARNET_INACTIF) {
       // Carnet laissé ouvert : on revient côté enfant (le parent a sans doute rendu la tablette).
-      closeSheet(); closeGate(); show('enfant');
+      closeSheet(); closeGate(); fermerCarnet();
     }
   }, 1000);
   window.addEventListener('storage', function (e) {
@@ -1338,9 +1340,10 @@
   // ---------- Plein écran ----------
   // Réglage du foyer (oui par défaut). Le navigateur n'accepte le plein écran qu'après un geste :
   // on le demande donc au premier toucher côté enfant (y compris en touchant une tuile pour jouer).
+  // Au doigt seulement : à la souris (ordinateur), le plein écran à chaque clic gêne plus qu'il n'aide.
   function pleinEcranVoulu() { var h = foyer(); return !!(h && h.pleinEcran !== false); }
-  document.addEventListener('pointerdown', function () {
-    if (vue !== 'enfant' || !pleinEcranVoulu() || document.fullscreenElement) return;
+  document.addEventListener('pointerdown', function (e) {
+    if (e.pointerType === 'mouse' || vue !== 'enfant' || !pleinEcranVoulu() || document.fullscreenElement) return;
     var d = document.documentElement, f = d.requestFullscreen || d.webkitRequestFullscreen;
     if (!f) return;
     try { var p = f.call(d, { navigationUI: 'hide' }); if (p && p.catch) p.catch(function () {}); } catch (e) { /* refusé : tant pis */ }
@@ -1351,10 +1354,27 @@
   if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(function () {});
 
   // ---------- Démarrage ----------
+  // Rien de préparé sur cet appareil : on arrive sur le site, sauf si l'on vient y préparer la tablette (#demarrer).
+  // Préparé : côté enfant ; #carnet (onglet « Mon Ludiworld » du site) ouvre le carnet, avec le code s'il le faut.
   document.documentElement.lang = lang;
+  var arrivee = location.hash;
+  var prepare = !!(fam() && foyer().pin);
+  if (!prepare && arrivee !== '#demarrer') { location.replace('decouvrir/'); return; }
+  if (arrivee === '#carnet' || arrivee === '#enfant' || (prepare && arrivee === '#demarrer')) history.replaceState(history.state, '', location.pathname + location.search);
   loadCatalogue().then(function () {
     // Un jeu choisi qui a disparu du catalogue n'est plus proposé (on garde son choix au cas où il revient).
-    show(fam() && foyer().pin ? 'enfant' : 'accueil');
+    if (!prepare) { show('accueil'); return; }
+    if (arrivee === '#carnet' && LudiBarre.parentOuvert()) { show('parent'); return; }
+    LudiBarre.fermerParent();
+    show('enfant');
+    if (arrivee === '#carnet') openGate(ouvrirCarnet);
+  });
+  // « Mon Ludiworld » cliqué sans quitter la page (onglet du carnet, adresse tapée) : même règle.
+  window.addEventListener('hashchange', function () {
+    if (location.hash !== '#carnet' || !prepare) return;
+    history.replaceState(history.state, '', location.pathname + location.search);
+    if (vue === 'parent' || playing) return;
+    if (LudiBarre.parentOuvert()) show('parent'); else openGate(ouvrirCarnet);
   });
 
   // Pour les tests et la démo : avancer le temps de jeu d'aujourd'hui sans attendre (console).

@@ -1,0 +1,25 @@
+/* Ludiworld, la page « Ludiworld aime bien » : les textes en anglais (le français est dans index.html). */
+LudiSite.en({
+  docTitle: 'Ludiworld likes',
+  metaDesc: 'Series, films and apps that make children curious, recommended by parents. So screen time makes sense.',
+  skip: 'Skip to content',
+  kick: 'Ludiworld likes',
+  h1a: 'Learning can be fun.',
+  h1b: 'The proof, away from games.',
+  lede: 'Series, films and apps that spark curiosity, picked by parents. This is not the heart of Ludiworld: it is our address book, so screen time makes sense even when it is not play time.',
+  ruleTitle: 'How a card gets validated',
+  okT: 'Recommended',
+  okD: 'A parent watched or used it with their child, and the card was reviewed.',
+  waitT: 'Suggested',
+  waitD: 'Someone pointed it out. The card may be incomplete: it is waiting to be checked.',
+  votes: 'Soon, parents will be able to vote and share their opinion. For now, Julien validates.',
+  filter: 'Filter',
+  fAll: 'All', fSerie: 'Series', fFilm: 'Films', fAppli: 'Apps',
+  okTitle: 'Recommended',
+  waitTitle: 'Suggested, waiting',
+  loading: 'Loading the cards…',
+  moreTitle: 'A series, a film or an app that makes your child curious?',
+  moreText: 'Suggest it. One sentence is enough to start: the card fills in with other parents.',
+  moreGo: 'Suggest a recommendation',
+  moreNote: 'For now this goes through a GitHub form (free account). A simpler way will come with voting.'
+});

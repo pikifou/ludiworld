@@ -1,8 +1,9 @@
 // Service worker du launcher Ludiworld. Incrémenter VERSION à chaque publication.
 // Les jeux ont chacun leur propre service worker (autre dossier) : on ne s'en occupe pas.
-const VERSION = 'ludiworld-0.3.0';
+const VERSION = 'ludiworld-0.4.0';
 const SHELL = [
   './', 'index.html', 'style.css', 'app.js', 'textes.js', 'temps.js', 'manifest.webmanifest', 'kit/ludi.js',
+  'site/barre.js', 'site/barre.css',
   'fonts/baloo2-500.woff2', 'fonts/baloo2-700.woff2', 'fonts/baloo2-800.woff2',
   'fonts/lexend.woff2', 'fonts/fraunces.woff2', 'fonts/fraunces-italic.woff2',
   'img/ile-jour.webp', 'img/ile-nuit.webp', 'img/soleil.webp', 'img/lune.webp',

@@ -11,20 +11,22 @@ Porteur : Julien (pikifou). Les premiers jeux sont ceux qu'il a faits pour son f
 - `spec/kit.md` : l'API de `ludi.js` et le dialogue launcher ↔ jeu.
 - `spec/donnees.md` : règles sur les données d'enfants.
 - `spec/domaines.md` : vocabulaire commun des notions apprises.
+- `spec/aime-bien.md` : les fiches « Ludiworld aime bien » (séries, films, applis).
 
 ## Organisation
 - `docs/` : le site publié (GitHub Pages, branche `main`, dossier `/docs`). Pas de build : on édite directement.
   - `docs/index.html` + `docs/app.js` + `docs/style.css` : l'appli (accueil du parent, côté enfant, carnet parent, jeu en plein cadre).
   - `docs/textes.js` : tous les textes FR / EN. `docs/temps.js` : les règles du temps de jeu (limites, heures, fin douce / nette), sans DOM, testées.
   - `docs/img/` : la direction artistique « Le soleil de Ludiworld » (île en papier découpé jour / nuit, soleil, lune, nuages, marmotte). Générées avec Arcads, détourées, en WebP.
-  - `docs/decouvrir/` : la vitrine pour les parents qui découvrent Ludiworld (lien depuis l'appli).
+  - Le site, une page par dossier, même barre d'onglets partout (`docs/site/barre.js` + `barre.css`, aussi chargés par l'appli) : `docs/decouvrir/` (accueil), `docs/les-jeux/` (fiches complètes), `docs/creer/` (créer un jeu pas à pas), `docs/aime-bien/` (séries, films, applis ; fiches dans `fiches.json`, format dans `spec/aime-bien.md`). Styles et script communs : `docs/site/site.css`, `docs/site/site.js` ; le français est dans chaque `index.html` (`data-t`), l'anglais dans le `en.js` à côté.
+  - Aiguillage : l'adresse de Ludiworld sur un appareil non préparé mène au site (`decouvrir/`) ; `#demarrer` lance la préparation ; appareil préparé : côté enfant. Le carnet parent est l'onglet « Mon Ludiworld » du site (`#carnet`) : après le code, le parent lit les autres pages sans le redonner pendant 5 min d'activité (`sessionStorage`).
   - `docs/kit/ludi.js` : le kit, chargé par les jeux.
   - `docs/jeux/index.json` : la liste des fiches ; `docs/jeux/<id>.json` : une fiche par jeu.
   - `docs/sw.js` : service worker (incrémenter `VERSION` à chaque publication).
 - `tools/valider.js` : valide les fiches. `tools/importer.js <adresse>` : importe la fiche d'un jeu publié ailleurs. `tools/dev.py` : version de dev locale (launcher + jeux clonés à côté, port 7357, jamais 8000).
 - `LUDIWORLD.md` : guide qu'un créateur donne à son IA pour rendre son jeu compatible et le proposer.
-- `.github/ISSUE_TEMPLATE/proposer-un-jeu.yml` + `.github/workflows/proposer-un-jeu.yml` : soumission par issue, vérification automatique, pull request à valider (voir `spec/fiche.md`, « Proposer un jeu »).
-- `tests/` : `node --test tests/*.test.js` (kit, fiches, règles du temps) ; `python3 tests/captures.py <sortie> [<dossier des clones des jeux>]` (navigateur sans réseau : préparation par le parent, code, recherche, retour Android, fin douce et nette, limite par jeu, heures de jeu, dialogue avec un faux jeu qui utilise le kit).
+- `.github/ISSUE_TEMPLATE/proposer-un-jeu.yml` + `.github/workflows/proposer-un-jeu.yml` : soumission par issue, vérification automatique, pull request à valider (voir `spec/fiche.md`, « Proposer un jeu »). `recommander.yml` : proposer une série, un film ou une appli (relu à la main).
+- `tests/` : `node --test tests/*.test.js` (kit, fiches, règles du temps) ; `python3 tests/captures.py <sortie> [<dossier des clones des jeux>]` (navigateur sans réseau : pages du site, aller-retour carnet / site, préparation par le parent, code, recherche, retour Android, fin douce et nette, limite par jeu, heures de jeu, dialogue avec un faux jeu qui utilise le kit).
 
 ## Principe : Ludiworld n'héberge pas les jeux
 Chaque créateur héberge son jeu (GitHub Pages de préférence) avec `ludi.json` à la racine. Le catalogue garde une copie validée de chaque fiche ; le jeu se charge depuis le site du créateur. Ne jamais copier le code d'un jeu dans ce dépôt.

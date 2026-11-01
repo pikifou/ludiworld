@@ -1,0 +1,73 @@
+/* Ludiworld : la barre du site (pages du site et carnet parent). Les polices sont chargées par la page. */
+.lw-barre {
+  --lw-nuit: #16204a;
+  --lw-papier: #fbf7ee;
+  --lw-soleil: #ffc83d;
+  --lw-soleil-fonce: #e0a400;
+  --lw-encre: #1d2b4f;
+  --lw-doux: #c9d2ee;
+  position: relative; z-index: 20;
+  display: flex; align-items: center; gap: 10px 26px;
+  min-height: 64px; padding: 8px clamp(16px, 4.5vw, 64px);
+  padding-top: max(8px, env(safe-area-inset-top));
+  background: var(--lw-nuit); color: var(--lw-papier);
+  font-family: "Lexend", "Segoe UI", sans-serif;
+  box-shadow: 0 2px 0 rgba(0, 0, 0, .18);
+}
+.lw-marque {
+  flex: none; font-family: "Baloo 2", "Trebuchet MS", sans-serif; font-weight: 800; font-size: 1.55rem; line-height: 1;
+  color: var(--lw-papier); text-decoration: none; letter-spacing: -.01em;
+}
+.lw-marque span { color: var(--lw-soleil); }
+
+.lw-onglets { display: flex; gap: 4px; min-width: 0; }
+.lw-onglet {
+  position: relative; display: inline-flex; align-items: center; gap: 6px;
+  padding: 10px 12px; white-space: nowrap;
+  font-weight: 500; font-size: .98rem; line-height: 1.1; text-decoration: none; color: var(--lw-doux);
+  border-radius: 12px 16px 10px 14px;
+}
+.lw-onglet:hover { color: var(--lw-papier); background: rgba(255, 255, 255, .07); }
+/* L'onglet de la page : un rayon de soleil dessous, en plus de la couleur (pas seulement la couleur). */
+.lw-onglet[aria-current="page"] { color: var(--lw-papier); font-weight: 700; }
+.lw-onglet[aria-current="page"]::after {
+  content: ""; position: absolute; left: 12px; right: 12px; bottom: 2px; height: 4px;
+  background: var(--lw-soleil); border-radius: 3px 5px 2px 4px;
+}
+.lw-moi { color: var(--lw-soleil); font-weight: 700; }
+.lw-aime { font-style: italic; } /* annexe : ça se voit jusque dans la barre */
+.lw-ico { width: 16px; height: 16px; flex: none; }
+
+.lw-cote { margin-left: auto; display: flex; align-items: center; gap: 12px; flex: none; }
+.lw-langs { display: flex; background: rgba(255, 255, 255, .1); padding: 3px; border-radius: 12px 16px 10px 14px; }
+.lw-langs button {
+  font: 700 .85rem/1 "Baloo 2", "Trebuchet MS", sans-serif; color: var(--lw-papier); background: none; border: 0;
+  min-width: 38px; min-height: 34px; border-radius: 9px 12px 8px 11px; cursor: pointer;
+}
+.lw-langs button[aria-pressed="true"] { background: var(--lw-papier); color: var(--lw-encre); }
+.lw-action {
+  display: inline-flex; align-items: center; gap: 8px; padding: 9px 16px 8px; white-space: nowrap;
+  font-family: "Baloo 2", "Trebuchet MS", sans-serif; font-weight: 800; font-size: 1rem; line-height: 1;
+  color: var(--lw-encre); background: var(--lw-soleil); text-decoration: none;
+  border-radius: 14px 18px 12px 16px; box-shadow: 0 3px 0 var(--lw-soleil-fonce);
+}
+.lw-action:hover { transform: translateY(-1px); }
+.lw-barre a:focus-visible, .lw-barre button:focus-visible { outline: 3px solid var(--lw-soleil); outline-offset: 2px; }
+
+/* Téléphone et tablette en portrait : la marque et les boutons en haut, les onglets dessous, qu'on fait défiler. */
+@media (max-width: 1080px) {
+  .lw-barre { flex-wrap: wrap; padding-bottom: 0; }
+  .lw-onglets {
+    order: 3; width: calc(100% + 2 * clamp(16px, 4.5vw, 64px)); margin: 0 calc(-1 * clamp(16px, 4.5vw, 64px));
+    padding: 0 clamp(10px, 4.5vw, 58px) 4px; overflow-x: auto; scrollbar-width: none;
+  }
+  .lw-onglets::-webkit-scrollbar { display: none; }
+}
+@media (max-width: 480px) {
+  .lw-barre { column-gap: 8px; }
+  .lw-cote { gap: 8px; }
+  .lw-langs button { min-width: 32px; }
+  .lw-action { padding: 8px 11px 7px; font-size: .9rem; }
+  .lw-action .lw-ico { display: none; }
+  .lw-marque { font-size: 1.35rem; }
+}

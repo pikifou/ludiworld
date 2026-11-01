@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Créer un jeu · Ludiworld</title>
+  <meta name="description" content="Créer un jeu pour son enfant avec une IA, sans savoir coder, puis le proposer à Ludiworld. Le chemin pas à pas, de l'idée à la publication.">
+  <meta name="theme-color" content="#16204a">
+  <link rel="icon" href="../icons/icon-192.png">
+  <link rel="apple-touch-icon" href="../icons/icon-180.png">
+  <link rel="preload" href="../fonts/fraunces.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="../fonts/lexend.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="../site/barre.css">
+  <link rel="stylesheet" href="../site/site.css">
+</head>
+<body data-page="creer">
+  <a class="skip" href="#contenu" data-t="skip">Aller au contenu</a>
+  <div id="lw-barre"></div>
+
+  <header class="page-tete tete-creer">
+    <img class="tete-mascotte" src="../img/marmotte-carnet.webp" width="469" height="775" alt="">
+    <p class="kicker" data-t="kick">Créer un jeu</p>
+    <h1 data-t="h1">Votre enfant a une passion. Faites-en un jeu.</h1>
+    <p class="lede" data-t="lede">Pas besoin de savoir coder&nbsp;: une IA écrit le code avec vous. Comptez une soirée pour un premier jeu, quelques soirées pour qu'il soit bien. Voici le chemin, de l'idée jusqu'à Ludiworld.</p>
+    <ul class="besoins" aria-label="Ce qu'il vous faut" data-t-aria="needs">
+      <li><b data-t="need1">Une idée</b> <span data-t="need1b">née de votre enfant</span></li>
+      <li><b data-t="need2">Une IA</b> <span data-t="need2b">Claude, ChatGPT…</span></li>
+      <li><b data-t="need3">Une soirée</b> <span data-t="need3b">pour commencer</span></li>
+    </ul>
+  </header>
+
+  <main id="contenu" class="page-corps creer">
+    <ol class="chemin">
+      <li class="etape">
+        <p class="etape-num" aria-hidden="true">1</p>
+        <div class="etape-corps">
+          <h2 data-t="e1t">Partir de votre enfant</h2>
+          <p data-t="e1">Ce qu'il adore (les dragons, les fusées, les cochons) et ce qu'il doit apprendre (les tables, lire l'heure, l'ordre des inventions). Le meilleur jeu marie les deux. Pluie de Cochons est né comme ça&nbsp;: des tables de multiplication, et des cochons qui tombent du ciel.</p>
+          <p class="astuce" data-t="e1tip">Écrivez trois phrases&nbsp;: pour qui, ce qu'il apprend, comment on gagne. Et prévoyez une fin&nbsp;: une partie courte, qui se termine vraiment.</p>
+        </div>
+      </li>
+      <li class="etape">
+        <p class="etape-num" aria-hidden="true">2</p>
+        <div class="etape-corps">
+          <h2 data-t="e2t">Choisir son IA</h2>
+          <p data-t="e2">Pour commencer sans rien installer&nbsp;: Claude ou ChatGPT, dans le navigateur. On écrit ce qu'on veut, l'IA fabrique le jeu dans une page qu'on essaie tout de suite.</p>
+          <p data-t="e2b">Pour aller plus loin, des outils comme Claude Code ou Cursor travaillent dans les fichiers de votre ordinateur&nbsp;: plus puissants, un peu plus techniques. Les versions gratuites suffisent souvent pour un premier essai&nbsp;; pour un jeu plus riche, un abonnement aide.</p>
+        </div>
+      </li>
+      <li class="etape">
+        <p class="etape-num" aria-hidden="true">3</p>
+        <div class="etape-corps">
+          <h2 data-t="e3t">Le premier jet</h2>
+          <p data-t="e3">Décrivez le jeu comme à un ami développeur. Par exemple&nbsp;:</p>
+          <figure class="consigne">
+            <blockquote id="consigne-jeu" data-t="prompt1">Fais un jeu web pour mon fils de 7 ans qui adore les dragons, pour réviser les tables de 2 à 5. Il joue sur une tablette, au doigt. Une partie dure 5 minutes et se termine par un écran de fin. Pas de pub, rien à acheter, pas de son trop fort. En français.</blockquote>
+            <button type="button" class="copier" data-copier="consigne-jeu" data-t="copy">Copier</button>
+          </figure>
+          <p data-t="e3b">Puis corrigez au fil de l'eau, en mots simples&nbsp;: «&nbsp;les boutons sont trop petits&nbsp;», «&nbsp;c'est trop dur au début&nbsp;», «&nbsp;ajoute un dragon qui fait la fête quand il gagne&nbsp;».</p>
+        </div>
+      </li>
+      <li class="etape">
+        <p class="etape-num" aria-hidden="true">4</p>
+        <div class="etape-corps">
+          <h2 data-t="e4t">Tester avec lui</h2>
+          <p data-t="e4">Regardez-le jouer sans l'aider. Ce qu'il ne comprend pas, ce qui l'ennuie, ce qui le fait rire&nbsp;: tout est bon à prendre. Demandez-vous surtout&nbsp;: est-ce qu'il apprend vraiment, ou est-ce qu'il clique au hasard&nbsp;?</p>
+          <p class="astuce" data-t="e4tip">Apprendre doit rester fun. Si c'est un exercice déguisé, il le sentira tout de suite.</p>
+        </div>
+      </li>
+      <li class="etape">
+        <p class="etape-num" aria-hidden="true">5</p>
+        <div class="etape-corps">
+          <h2 data-t="e5t">Le rendre compatible Ludiworld</h2>
+          <p data-t="e5">Donnez le guide à votre IA. Il lui explique tout&nbsp;: vérifier que le jeu respecte la charte, écrire sa fiche honnête (l'âge, ce qu'on y apprend, la durée d'une partie), et si vous voulez, ajouter le petit kit qui envoie les scores à Ludiworld.</p>
+          <figure class="consigne">
+            <blockquote id="consigne-guide" data-t="prompt2">Lis https://raw.githubusercontent.com/pikifou/ludiworld/main/LUDIWORLD.md et rends mon jeu compatible Ludiworld, puis aide-moi à le publier sur GitHub Pages.</blockquote>
+            <button type="button" class="copier" data-copier="consigne-guide" data-t="copy">Copier</button>
+          </figure>
+          <p class="astuce" data-t="e5tip">Si votre IA ne sait pas ouvrir les liens, ouvrez le guide vous-même et copiez-lui son contenu.</p>
+        </div>
+      </li>
+      <li class="etape">
+        <p class="etape-num" aria-hidden="true">6</p>
+        <div class="etape-corps">
+          <h2 data-t="e6t">Le publier, gratuitement</h2>
+          <p data-t="e6">Ludiworld n'héberge pas les jeux&nbsp;: chacun garde le sien chez lui. Le plus simple est GitHub Pages, gratuit. Créez un compte sur github.com, et laissez votre IA vous guider clic par clic&nbsp;: créer un dépôt, y déposer les fichiers du jeu, activer Pages. Quelques minutes après, le jeu a son adresse, du genre <code>https://votre-nom.github.io/votre-jeu/</code>.</p>
+          <p class="honnete" data-t="e6honest">Honnêtement&nbsp;: c'est l'étape la plus technique. Une façon de proposer un jeu sans GitHub est prévue plus tard.</p>
+        </div>
+      </li>
+      <li class="etape">
+        <p class="etape-num" aria-hidden="true">7</p>
+        <div class="etape-corps">
+          <h2 data-t="e7t">Le proposer</h2>
+          <p data-t="e7">Collez l'adresse du jeu dans le formulaire. Un robot vérifie la fiche et vous répond en une minute. Ensuite Julien joue au jeu, la fiche sous les yeux. Si tout est juste, le jeu entre dans Ludiworld, et des enfants que vous ne connaissez pas apprendront avec.</p>
+          <p class="etape-liens">
+            <a class="btn btn-sun" href="https://github.com/pikifou/ludiworld/issues/new?template=proposer-un-jeu.yml" data-t="propose">Proposer un jeu</a>
+            <a class="lien-encre" href="https://github.com/pikifou/ludiworld/blob/main/LUDIWORLD.md" data-t="guide">Lire le guide</a>
+          </p>
+        </div>
+      </li>
+    </ol>
+
+    <section class="refus" aria-labelledby="refus-titre">
+      <h2 id="refus-titre" data-t="refusTitle">Ce qui sera refusé, même dans un super jeu</h2>
+      <ul>
+        <li data-t="r1">La pub, même discrète.</li>
+        <li data-t="r2">Quelque chose à acheter, ou un abonnement.</li>
+        <li data-t="r3">Les récompenses tirées au hasard.</li>
+        <li data-t="r4">«&nbsp;Reviens demain&nbsp;», les séries à ne pas perdre, les notifications.</li>
+        <li data-t="r5">Parler à des inconnus.</li>
+        <li data-t="r6">Envoyer des données sur l'enfant, où que ce soit.</li>
+        <li data-t="r7">Une partie sans fin, sans moment où s'arrêter.</li>
+      </ul>
+      <p><a class="lien-clair" href="../decouvrir/#charte" data-t="refusMore">La charte complète</a></p>
+    </section>
+
+    <section class="faq" aria-labelledby="faq-titre">
+      <h2 id="faq-titre" data-t="faqTitle">Les questions qu'on se pose</h2>
+      <details>
+        <summary data-t="q1">Combien ça coûte&nbsp;?</summary>
+        <p data-t="a1">Ludiworld et GitHub Pages&nbsp;: rien. L'IA&nbsp;: gratuite pour essayer, payante si vous y passez du temps.</p>
+      </details>
+      <details>
+        <summary data-t="q2">Mon jeu reste à moi&nbsp;?</summary>
+        <p data-t="a2">Oui. Il est publié chez vous, sous votre nom. Ludiworld garde seulement une copie de sa fiche. Vous pouvez le modifier ou le retirer quand vous voulez.</p>
+      </details>
+      <details>
+        <summary data-t="q3">Et si mon jeu apprend peu&nbsp;?</summary>
+        <p data-t="a3">Il a sa place. La fiche le dit simplement&nbsp;: «&nbsp;pour le plaisir&nbsp;». Ce qui compte, c'est qu'il soit sain et qu'il dise la vérité.</p>
+      </details>
+      <details>
+        <summary data-t="q4">Mes enfants jouent sur ma tablette. Et leurs données&nbsp;?</summary>
+        <p data-t="a4">Rien ne quitte l'appareil&nbsp;: Ludiworld garde les réglages et le temps de jeu dans le navigateur, et les jeux s'engagent à ne rien envoyer. Le jeu ne reçoit que le pseudo de l'enfant.</p>
+      </details>
+      <details>
+        <summary data-t="q5">Je n'ai pas le temps de faire un jeu, mais je veux aider.</summary>
+        <p data-t="a5">Partagez ce qui marche chez vous&nbsp;: une série, un film ou une appli qui rend votre enfant curieux. <a href="../aime-bien/">Ludiworld aime bien</a> les rassemble.</p>
+      </details>
+    </section>
+  </main>
+
+  <footer class="foot" id="lw-pied"></footer>
+
+  <script src="../site/barre.js" defer></script>
+  <script src="../site/site.js" defer></script>
+  <script src="en.js" defer></script>
+</body>
+</html>

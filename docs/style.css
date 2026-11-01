@@ -336,8 +336,10 @@ select { width: auto; min-height: 40px; padding: 4px 10px; font-size: 1rem; }
   background: var(--papier);
   background-image: repeating-linear-gradient(transparent 0 31px, rgba(29, 43, 79, .06) 31px 32px);
 }
+/* La barre du site au-dessus du carnet : le carnet est l'onglet « Mon Ludiworld ». */
+.c-barre { grid-column: 1 / -1; position: sticky; top: 0; z-index: 9; min-width: 0; }
 .c-rail {
-  position: sticky; top: 0; height: 100dvh; display: flex; flex-direction: column; gap: 22px;
+  position: sticky; top: 64px; height: calc(100dvh - 64px); display: flex; flex-direction: column; gap: 22px;
   background: var(--encre); color: var(--papier); padding: 26px 18px;
 }
 .c-marque { display: flex; align-items: center; gap: 10px; }
@@ -621,8 +623,13 @@ select { width: auto; min-height: 40px; padding: 4px 10px; font-size: 1rem; }
   .e-parents { background: rgba(255, 255, 255, .85); }
   .e-dodo { align-self: start; }
 }
+@media (max-width: 1080px) {
+  /* La barre passe sur deux lignes : elle défile avec la page, le rail reste accroché en haut. */
+  .c-barre { position: static; }
+  .c-rail { top: 0; height: 100dvh; }
+}
 @media (max-width: 900px) {
-  .carnet { grid-template-columns: 1fr; }
+  .carnet { grid-template-columns: minmax(0, 1fr); }
   .c-rail { position: sticky; z-index: 6; height: auto; flex-direction: row; flex-wrap: wrap; align-items: center; gap: 10px 14px; padding: 12px 14px; }
   .c-marque img { width: 42px; }
   .c-marque h1 { font-size: 1.4rem; }

@@ -22,6 +22,8 @@ Avancer petit, publier, en parler, laisser venir.
 - [x] Fin douce (attend `Ludi.checkpoint`, délai max) ou fin nette ; prévenir 5 min avant (`ludi:wrapup`).
 - [x] Tableau de suivi : temps du jour et de la semaine, notions acquises et à revoir, records.
 - [x] Vitrine `docs/decouvrir/` : ce qu'est Ludiworld, pour les parents qui découvrent.
+- [x] Le site autour de l'appli : accueil, les jeux (fiches complètes), créer un jeu (pas à pas pour un parent qui n'a jamais codé), « Ludiworld aime bien ». Le carnet parent devient l'onglet « Mon Ludiworld ».
+- [ ] « Ludiworld aime bien » : Julien relit les 9 fiches (Petit Malabar et Kididocs sont partielles, « où regarder » à vérifier), puis remplir la file « Proposé » (recherche de séries, films et applis).
 - [x] Plusieurs enfants par appareil : chacun ses jeux, son temps, son suivi ; « Pas toi ? » (code parent par défaut).
 - [x] Heures de jeu (pas de jeu avant / après), vacances scolaires, jeu réservé aux jours sans école.
 - [x] Code parent : 3 erreurs = 30 s de pause ; « code oublié » = 30 min d'attente pendant lesquelles on ne joue pas.
@@ -39,4 +41,5 @@ Avancer petit, publier, en parler, laisser venir.
 ## v2 : les autres parents
 - Page « Ajouter un jeu » dans le launcher, pour ceux qui ne connaissent pas GitHub.
 - Les parents notent : est-ce que ça marche, est-ce que c'est sain, est-ce que l'enfant a accroché, a-t-il appris.
+- Les votes et avis des parents font passer une recommandation de « Proposé » à « Recommandé » (« Ludiworld aime bien »).
 - Un jeu validé par assez de parents est mis en avant.

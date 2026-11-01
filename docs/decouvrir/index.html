@@ -11,21 +11,13 @@
   <link rel="preload" href="../fonts/fraunces.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="../fonts/lexend.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="../img/salon.webp" as="image" type="image/webp">
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="../site/barre.css">
+  <link rel="stylesheet" href="../site/site.css">
 </head>
-<body>
+<body data-page="accueil">
   <a class="skip" href="#probleme" data-t="skip">Aller au contenu</a>
 
-  <div class="bar">
-    <a class="wordmark" href="./" aria-label="Ludiworld">Ludi<span>world</span></a>
-    <div class="bar-side">
-      <a class="bar-app" href="../" data-t="barApp">Ouvrir l'app</a>
-      <div class="langs" role="group" aria-label="Langue / Language">
-        <button type="button" data-lang="fr" lang="fr" aria-pressed="true">FR</button>
-        <button type="button" data-lang="en" lang="en" aria-pressed="false">EN</button>
-      </div>
-    </div>
-  </div>
+  <div id="lw-barre"></div>
 
   <!-- 1. Ouverture -->
   <header class="hero">
@@ -46,7 +38,7 @@
       </h1>
       <p class="lede" data-t="lede">De petits jeux faits par des parents. Vous choisissez, votre enfant joue, le soleil donne le rythme.</p>
       <div class="ctas">
-        <a class="btn btn-sun" href="../" data-t="cta">Ouvrir Ludiworld</a>
+        <a class="btn btn-sun" href="../#demarrer" data-app data-t="cta">Ouvrir Ludiworld</a>
         <a class="btn-ghost" href="#comment"><span data-t="how">Comment ça marche</span> <span aria-hidden="true">↓</span></a>
       </div>
     </div>
@@ -160,7 +152,7 @@
           <p class="jeux-wait" data-t="gLoading">Les fiches arrivent…</p>
         </div>
       </div>
-      <p class="jeux-more"><a class="btn btn-ink" href="../" data-t="gMore">Voir les jeux dans Ludiworld</a></p>
+      <p class="jeux-more"><a class="btn btn-ink" href="../les-jeux/" data-t="gMore">Lire toutes les fiches</a></p>
     </section>
 
     <!-- 5. La charte -->
@@ -192,24 +184,16 @@
       </div>
     </section>
 
-    <!-- 6. À regarder aussi -->
+    <!-- 6. Ludiworld aime bien -->
     <section class="sec series" id="series" aria-labelledby="se-title">
       <div class="se-grid">
         <div class="se-head">
-          <p class="kicker" data-t="sKick">Loin des jeux</p>
-          <h2 id="se-title" data-t="sTitle">À regarder aussi</h2>
-          <p data-t="sIntro">Des séries calmes et curieuses, quand ce n'est pas l'heure de jouer.</p>
+          <p class="kicker" data-t="sKick">Ludiworld aime bien</p>
+          <h2 id="se-title" data-t="sTitle">Apprendre peut être fun, même loin des jeux.</h2>
+          <p data-t="sIntro">Des séries, des films et des applis qui rendent curieux, choisis par des parents. Pour que le temps d'écran ait du sens, même quand ce n'est pas l'heure de jouer.</p>
+          <p><a class="btn btn-ink" href="../aime-bien/" data-t="sMore">Toutes les recommandations</a></p>
         </div>
-        <dl class="carnet">
-          <div><dt>Puffin Rock</dt><dd data-t="se1">Une petite macareux et sa famille sur une île. La nature, à un rythme très doux.</dd></div>
-          <div><dt data-t="se2t">Ada Twist, scientifique</dt><dd data-t="se2">Une fille qui pose plein de questions et fait des expériences pour y répondre.</dd></div>
-          <div><dt>Petit Malabar</dt><dd data-t="se3">De courts épisodes qui répondent aux grandes questions d'un enfant curieux.</dd></div>
-          <div><dt>Storybots</dt><dd data-t="se4">De petits robots cherchent les réponses aux questions des enfants, souvent en chanson.</dd></div>
-          <div><dt data-t="se5t">Il était une fois… la Vie</dt><dd data-t="se5">Le classique qui raconte le corps humain de l'intérieur.</dd></div>
-          <div><dt data-t="se6t">Le laboratoire d'Emily</dt><dd data-t="se6">Des expériences de sciences simples, faites avec des enfants, à refaire à la maison.</dd></div>
-          <div><dt>C'est pas sorcier</dt><dd data-t="se7">L'émission qui explique les sciences et le monde avec des maquettes. Plutôt pour les plus grands.</dd></div>
-          <div><dt>Kididocs</dt><dd data-t="se8">Des documentaires courts pour les plus jeunes, sur des sujets de tous les jours.</dd></div>
-        </dl>
+        <dl class="carnet" id="aime-apercu" aria-live="polite"></dl>
       </div>
     </section>
 
@@ -220,8 +204,9 @@
         <p data-t="mText">Ludiworld est fait pour ça. Donnez le guide à votre IA&nbsp;: il explique comment rendre le jeu compatible et écrire sa fiche honnête. Ensuite, proposez-le. Une vérification automatique, puis Julien y joue et relit la fiche avant de l'ajouter.</p>
         <p class="ticket-small" data-t="mSmall">Votre jeu reste chez vous&nbsp;: Ludiworld n'héberge pas les jeux, seulement leur fiche.</p>
         <div class="ticket-links">
-          <a class="btn btn-ink" href="https://github.com/pikifou/ludiworld/blob/main/LUDIWORLD.md" data-t="mGuide">Le guide pour votre IA</a>
-          <a class="btn btn-paper" href="https://github.com/pikifou/ludiworld/issues/new?template=proposer-un-jeu.yml" data-t="mPropose">Proposer un jeu</a>
+          <a class="btn btn-ink" href="../creer/" data-t="mSteps">Comment faire, pas à pas</a>
+          <a class="btn btn-paper" href="https://github.com/pikifou/ludiworld/blob/main/LUDIWORLD.md" data-t="mGuide">Le guide pour votre IA</a>
+          <a class="btn-ghost encre" href="https://github.com/pikifou/ludiworld/issues/new?template=proposer-un-jeu.yml" data-t="mPropose">Proposer un jeu</a>
         </div>
       </div>
     </section>
@@ -238,17 +223,17 @@
           <img class="dodo" src="../img/marmotte-dodo.webp" width="520" height="557" loading="lazy"
                alt="La marmotte dort, enroulée dans son écharpe." data-t-alt="dodoAlt">
           <h2 id="n-title" data-t="nTitle">L'île dort. Elle se réveille quand vous l'ouvrez.</h2>
-          <a class="btn btn-sun" href="../" data-t="cta">Ouvrir Ludiworld</a>
+          <a class="btn btn-sun" href="../#demarrer" data-app data-t="cta">Ouvrir Ludiworld</a>
           <p class="install" data-t="install">Sur la tablette, ouvrez le menu du navigateur et choisissez «&nbsp;Ajouter à l'écran d'accueil&nbsp;»&nbsp;: Ludiworld s'ouvre alors comme une app.</p>
         </div>
       </div>
     </section>
   </main>
 
-  <footer class="foot">
-    <p><span data-t="foot">Fait par Julien (pikifou), d'abord pour son fils.</span> <a href="https://github.com/pikifou/ludiworld" data-t="footCode">Le code sur GitHub</a></p>
-  </footer>
+  <footer class="foot" id="lw-pied"></footer>
 
-  <script src="site.js" defer></script>
+  <script src="../site/barre.js" defer></script>
+  <script src="../site/site.js" defer></script>
+  <script src="en.js" defer></script>
 </body>
 </html>
