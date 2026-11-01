@@ -422,8 +422,11 @@ def run():
                     cadre.evaluate("jeu.carte.vueEntiere()")
                     derniere = q
                 x, y = cadre.evaluate("c => jeu.carte.ancreEcran(c)", q)
-                page.mouse.click(boite["x"] + x, boite["y"] + y)
+                page.mouse.click(boite["x"] + x, boite["y"] + y)   # une note « Le savais-tu ? » ouverte se passe au toucher suivant
                 page.wait_for_timeout(60)
+            page.wait_for_timeout(900)   # la note du dernier pays
+            if cadre.locator(".savoir:not([hidden])").count():
+                cadre.click(".savoir")
             cadre.wait_for_selector(".fin", timeout=3000)
             page.wait_for_timeout(300)
             page.screenshot(path=str(OUT / "tablette-17-monde-a-la-craie-fin.png"))
