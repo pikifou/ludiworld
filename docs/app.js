@@ -1169,6 +1169,7 @@
     clearTimeout(bandeauTimer);
     document.body.style.overflow = '';
     if (!fromHistory && history.state && history.state.ludi === 'play') { ignorePop++; history.back(); }
+    if (aRecharger) { location.reload(); return; }
     if (wasEssai && current && backToSheet) openSheet(current, true);
     render();
   }
@@ -1351,7 +1352,17 @@
 
   // ---------- Installation ----------
   window.addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); installEvt = e; if (vue === 'parent' && tab === 'settings') renderParent(); });
-  if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(function () {});
+  // Nouvelle version publiée : le nouveau service worker prend la main, on recharge pour l'afficher.
+  // Pas au tout premier passage (rien en cache), et jamais en pleine partie : on attend la fin du jeu.
+  var aRecharger = false;
+  if ('serviceWorker' in navigator && location.protocol === 'https:') {
+    var dejaServi = !!navigator.serviceWorker.controller;
+    navigator.serviceWorker.addEventListener('controllerchange', function () {
+      if (!dejaServi) { dejaServi = true; return; }
+      if (playing) aRecharger = true; else location.reload();
+    });
+    navigator.serviceWorker.register('sw.js').catch(function () {});
+  }
 
   // ---------- Démarrage ----------
   // Rien de préparé sur cet appareil : on arrive sur le site, sauf si l'on vient y préparer la tablette (#demarrer).

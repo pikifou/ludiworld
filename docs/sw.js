@@ -1,6 +1,6 @@
 // Service worker du launcher Ludiworld. Incrémenter VERSION à chaque publication.
 // Les jeux ont chacun leur propre service worker (autre dossier) : on ne s'en occupe pas.
-const VERSION = 'ludiworld-0.4.0';
+const VERSION = 'ludiworld-0.4.1';
 const SHELL = [
   './', 'index.html', 'style.css', 'app.js', 'textes.js', 'temps.js', 'manifest.webmanifest', 'kit/ludi.js',
   'site/barre.js', 'site/barre.css',
@@ -13,7 +13,8 @@ const SHELL = [
 ];
 
 self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(VERSION).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));
+  // cache: 'reload' : on redemande tout au serveur, sinon le cache du navigateur (10 min sur GitHub Pages) peut rendre l'ancienne version.
+  e.waitUntil(caches.open(VERSION).then((c) => c.addAll(SHELL.map((u) => new Request(u, { cache: 'reload' })))).then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', (e) => {

@@ -86,6 +86,16 @@
     ]));
   }
 
+  // Pages du site : quand une nouvelle version publiée prend la main, on recharge pour l'afficher.
+  // (L'appli, elle, s'en occupe dans app.js, pour ne pas couper une partie.)
+  if ('serviceWorker' in navigator && !document.getElementById('player')) {
+    var dejaServi = !!navigator.serviceWorker.controller;
+    navigator.serviceWorker.addEventListener('controllerchange', function () {
+      if (dejaServi) location.reload();
+      dejaServi = true;
+    });
+  }
+
   window.LudiBarre = {
     rendre: rendre, configure: configure, lienApp: lienApp,
     parentOuvert: parentOuvert, ouvrirParent: ouvrirParent, fermerParent: fermerParent
