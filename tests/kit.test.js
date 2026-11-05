@@ -75,6 +75,13 @@ test('temps de jeu : ne compte que quand la page est visible', () => {
   assert.strictEqual(d.events.filter((e) => e.kind === 'session').length, 1);
 });
 
+test('le launcher est reconnu sur ludiworld.app', () => {
+  const w = fakeWindow({ embedded: true, parentOrigin: 'https://ludiworld.app' });
+  const L = createLudi(w.win, { now: clock() }).init({ game: 'tour-aimants' });
+  assert.strictEqual(L.inLauncher(), true);
+  assert.ok(w.sent.every((s) => s.origin === 'https://ludiworld.app'));
+});
+
 test('dans le launcher : hello, welcome et événements postés à l\'origine exacte', () => {
   const w = fakeWindow({ embedded: true });
   const L = createLudi(w.win, { now: clock() }).init({ game: 'tour-aimants' });

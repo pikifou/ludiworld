@@ -7,8 +7,8 @@
 (function () {
   'use strict';
 
-  var VERSION = '0.2.0';
-  var DEFAULT_LAUNCHERS = ['https://pikifou.github.io'];
+  var VERSION = '0.2.1';
+  var DEFAULT_LAUNCHERS = ['https://ludiworld.app', 'https://pikifou.github.io'];
   var LOCAL_ORIGIN = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
   var MAX_EVENTS = 300;
   var FLUSH_MS = 30000;

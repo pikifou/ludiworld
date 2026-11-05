@@ -26,6 +26,7 @@ Porteur : Julien (pikifou). Les premiers jeux sont ceux qu'il a faits pour son f
   - `docs/kit/ludi.js` : le kit, chargé par les jeux.
   - `docs/jeux/index.json` : la liste des fiches ; `docs/jeux/<id>.json` : une fiche par jeu.
   - `docs/sw.js` : service worker (incrémenter `VERSION` à chaque publication).
+  - `docs/vercel.json` : les en-têtes de sécurité du site sur Vercel. Une adresse appelée par le site doit y être autorisée.
 - `supabase/` : le schéma et les règles d'accès (`migrations/`), leur vérification sur un vrai Postgres (`verifier.mjs`), la mise en service (`LISEZ-MOI.md`).
 - `tools/valider.js` : valide les fiches. `tools/importer.js <adresse>` : importe la fiche d'un jeu publié ailleurs. `tools/dev.py` : version de dev locale (launcher + jeux clonés à côté, port 7357, jamais 8000).
 - `LUDIWORLD.md` : guide qu'un créateur donne à son IA pour rendre son jeu compatible et le proposer.
