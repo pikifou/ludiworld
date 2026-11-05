@@ -1,0 +1,156 @@
+/* Ludiworld, le compte. Essayer : le jour se lève à mesure qu'on répond. Se connecter : on revient sur l'île, la nuit. */
+[hidden] { display: none !important; }
+
+.scene {
+  --ciel-aube: #f8d8b4;
+  --ciel-matin: #cbe6f7;
+  --ciel-noir: #16204a;
+  position: relative; isolation: isolate; overflow: clip; /* clip : le décor ne doit jamais défiler quand un champ prend le focus */
+  min-height: calc(100vh - 64px); min-height: calc(100svh - 64px);
+  display: flex; align-items: center;
+  padding-block: clamp(24px, 5vh, 56px);
+  padding-inline: var(--gutter);
+  background: var(--ciel-aube);
+}
+.ciel { position: absolute; inset: 0; z-index: -1; pointer-events: none; }
+.ciel-jour, .ciel-nuit { position: absolute; inset: 0; transition: opacity 1.1s ease; }
+/* Le bleu gagne par le haut, l'horizon reste chaud : un fondu à plat du pêche au bleu passerait par le gris. */
+.ciel-jour { background: linear-gradient(to bottom, #a9d9f6, var(--ciel-matin) 55%, #fdeccf); opacity: var(--avance); }
+.ciel-nuit { background: var(--ciel-noir); opacity: 0; }
+.scene[data-ciel="nuit"] .ciel-nuit { opacity: 1; }
+
+.astre { position: absolute; width: clamp(110px, 16vw, 230px); right: clamp(14%, 24vw, 30%); bottom: 26%; }
+/* Le soleil part derrière l'île et monte avec les réponses : le moment fort de la page. */
+.soleil {
+  transform: translateY(calc((1 - var(--avance)) * 28vh));
+  transition: transform 1.1s cubic-bezier(.3, .9, .3, 1), opacity .6s ease;
+  bottom: 44%;
+}
+.lune { opacity: 0; transition: opacity .8s ease; bottom: 56%; width: clamp(80px, 11vw, 150px); right: 12%; }
+.scene[data-ciel="nuit"] .soleil { opacity: 0; }
+.scene[data-ciel="nuit"] .lune { opacity: 1; }
+.nuage { position: absolute; width: clamp(130px, 20vw, 280px); right: 4%; top: 12%; opacity: calc(.35 + .55 * var(--avance)); transition: opacity 1.1s ease; }
+.scene[data-ciel="nuit"] .nuage { opacity: .12; }
+
+.ile { position: absolute; right: -4%; bottom: -5%; width: min(66vw, 980px); max-width: none; transition: opacity .8s ease; }
+.ile-nuit { opacity: 0; }
+.scene[data-ciel="nuit"] .ile-nuit { opacity: 1; }
+.scene[data-ciel="nuit"] .ile-jour { opacity: 0; }
+
+/* La feuille : à gauche, en papier découpé, jamais centrée. */
+.feuille {
+  width: min(100%, 31rem);
+  padding: clamp(24px, 4vw, 40px);
+  background: var(--carte); color: var(--encre);
+  border-radius: var(--r-paper);
+  box-shadow: var(--shadow-paper);
+}
+.feuille h1, .feuille legend {
+  font-family: var(--f-display); font-weight: 800; font-size: clamp(1.55rem, 3.4vw, 2.1rem); line-height: 1.12;
+  color: var(--encre); padding: 0; margin: 0 0 .5em; text-wrap: balance;
+}
+.feuille h1:focus, .feuille legend:focus, .espace h1:focus { outline: none; }
+.feuille legend label { font: inherit; margin: 0; }
+.feuille a { color: var(--corail-encre); text-underline-offset: 3px; }
+
+.questions fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
+.q-rang { margin: 0 0 .7em; font-size: .92rem; color: var(--encre-douce); font-weight: 500; }
+.q-aide { margin: -.3em 0 .9em; font-size: .92rem; color: var(--encre-douce); }
+
+/* Une réponse choisie : encre + coche, pas seulement la couleur. */
+.opt {
+  display: flex; align-items: center; gap: .6em; width: 100%; min-height: 50px;
+  margin: 0 0 8px; padding: .55em .9em;
+  font: 400 1rem/1.25 var(--f-body); text-align: left; color: var(--encre);
+  background: var(--papier); border: 2px solid rgba(29, 43, 79, .28); border-radius: 10px 16px 9px 14px; cursor: pointer;
+}
+.opt::before {
+  content: ""; flex: none; width: 20px; height: 20px; border: 2px solid currentColor; border-radius: 5px 7px 5px 6px; opacity: .55;
+}
+.opt:hover { border-color: var(--encre); }
+.opt[aria-pressed="true"] { background: var(--encre); color: var(--papier); border-color: var(--encre); font-weight: 500; }
+.opt[aria-pressed="true"]::before {
+  opacity: 1; border-color: var(--soleil); background: var(--soleil)
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M4.5 12.5l5 5 10-11' fill='none' stroke='%231d2b4f' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'/></svg>") center / 16px no-repeat;
+}
+.opt:focus-visible { outline: 3px solid var(--soleil-fonce); outline-offset: 2px; }
+
+.feuille form label:not(.case), .espace form label:not(.case) { display: block; margin: 0 0 4px; font-weight: 500; font-size: .96rem; }
+.feuille input[type=email], .feuille input[type=password], .feuille textarea, .espace input[type=text] {
+  width: 100%; min-height: 48px; padding: .55em .75em; margin: 0 0 14px;
+  font: 400 1rem/1.3 var(--f-body); color: var(--encre);
+  background: #fff; border: 2px solid rgba(29, 43, 79, .4); border-radius: 9px 13px 8px 12px;
+}
+.feuille textarea { resize: vertical; margin-top: .2em; }
+.feuille input:focus, .feuille textarea:focus, .espace input[type=text]:focus { outline: 3px solid var(--soleil-fonce); outline-offset: 1px; border-color: var(--encre); }
+.feuille input + .q-aide { margin-top: -8px; }
+.case { display: flex; gap: .6em; align-items: flex-start; margin: 0 0 12px; font-size: .95rem; line-height: 1.4; cursor: pointer; }
+.case input { flex: none; width: 22px; height: 22px; margin: 0; accent-color: var(--encre); }
+
+.actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 18px; margin-top: 16px; }
+.lien-doux {
+  background: none; border: 0; padding: 6px 0; cursor: pointer;
+  font: 400 .95rem/1.3 var(--f-body); color: var(--encre-douce); text-decoration: underline; text-underline-offset: 3px;
+}
+.feuille a.lien-doux { color: var(--encre-douce); }
+.lien-doux:hover, .feuille a.lien-doux:hover { color: var(--encre); }
+.btn[disabled] { opacity: .6; cursor: progress; }
+button.btn { border: 0; cursor: pointer; }
+.autre { margin: 16px 0 0; font-size: .95rem; }
+
+/* Une erreur et une réussite se distinguent par leur signe, pas seulement leur couleur. */
+.alerte, .bien { margin: 0 0 12px; padding: .55em .8em; font-size: .95rem; line-height: 1.4; border-radius: 8px 12px 8px 11px; }
+.alerte { background: #fbe4dd; color: #7c2a18; border-left: 5px solid var(--corail-encre); }
+.alerte::before { content: "! "; font-weight: 700; }
+.bien { background: #e0f0e4; color: #1f5a35; border-left: 5px solid var(--feuille); }
+.bien::before { content: "✓ "; font-weight: 700; }
+
+/* ---------- Mon espace : la page d'un carnet, dense et à plat ---------- */
+.espace { padding-block: clamp(24px, 5vw, 56px) clamp(40px, 7vw, 80px); padding-inline: var(--gutter); background: var(--papier); min-height: calc(100vh - 64px); }
+#e-corps, .e-code { max-width: 1060px; margin-inline: auto; }
+.e-code { max-width: 34rem; }
+.e-code h1, .e-tete h1 { font-family: var(--f-display); font-weight: 800; font-size: clamp(1.8rem, 4.5vw, 2.8rem); line-height: 1.05; margin-bottom: .2em; }
+.e-tete { display: flex; align-items: flex-end; gap: clamp(12px, 3vw, 28px); margin-bottom: clamp(16px, 3vw, 28px); }
+.e-tete img { width: clamp(84px, 14vw, 150px); flex: none; }
+.e-email { margin: 0; color: var(--encre-douce); overflow-wrap: anywhere; }
+.e-tete .bien { margin: .6em 0 0; }
+.e-grille { display: grid; grid-template-columns: 1.7fr 1fr; gap: 0 clamp(24px, 5vw, 64px); }
+.e-bloc { padding: 20px 0 24px; border-top: 3px solid var(--encre); min-width: 0; }
+.e-bloc h2 { font-family: var(--f-display); font-weight: 700; font-size: 1.3rem; line-height: 1.2; margin-bottom: .5em; }
+.e-bloc p { max-width: 62ch; }
+.e-bloc a { color: var(--corail-encre); text-underline-offset: 3px; }
+.e-bloc a.btn { color: var(--encre); }
+.e-large { grid-column: 1; }
+.e-grille > :nth-child(3), .e-grille > :nth-child(4) { grid-column: 2; }
+.e-grille > :nth-child(3) { grid-row: 1; }
+.e-grille > :nth-child(4) { grid-row: 2 / span 2; }
+.e-donnees { grid-row: 3; }
+.e-formule { font-size: 1.05rem; }
+.btn-ligne {
+  min-height: 44px; padding: .4em 1em; cursor: pointer; background: none; color: var(--encre);
+  font: 500 .98rem/1.2 var(--f-body); border: 2px solid var(--encre); border-radius: 10px 14px 9px 13px;
+}
+.btn-ligne:hover { background: var(--encre); color: var(--papier); }
+.e-effacer { margin-top: 18px; }
+.e-effacer summary { cursor: pointer; font-weight: 500; color: var(--corail-encre); min-height: 32px; }
+.e-effacer form { margin-top: 10px; max-width: 24rem; }
+.btn-danger {
+  min-height: 46px; padding: .4em 1.1em; cursor: pointer; border: 0; color: #fff; background: var(--corail-encre);
+  font: 700 1rem/1.2 var(--f-body); border-radius: 10px 14px 9px 13px;
+}
+.btn-danger:hover { background: #8e3320; }
+
+@media (max-width: 760px) {
+  .scene { align-items: flex-start; padding-block: 16px 34vw; }
+  .feuille { width: 100%; }
+  .ile { width: 96vw; right: -8%; bottom: -3%; }
+  .astre { right: 34%; bottom: 8%; width: 72px; }
+  .soleil { bottom: 15%; transform: translateY(calc((1 - var(--avance)) * 10vh)); }
+  .lune { bottom: 26%; right: 10%; width: 60px; }
+  .nuage { display: none; }
+  .e-grille { grid-template-columns: 1fr; }
+  .e-grille > * { grid-column: 1 !important; grid-row: auto !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .soleil, .lune, .ciel-jour, .ciel-nuit, .ile, .nuage { transition: none; }
+}

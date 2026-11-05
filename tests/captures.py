@@ -8,6 +8,7 @@ Toutes les requêtes vers https://pikifou.github.io/ sont servies depuis le disq
   /<depot>/<jeu>/ -> <dossier_des_jeux>/<depot>/<jeu>/ (dépôt qui regroupe plusieurs jeux, comme ludigames)
 Un faux jeu /jeu-kit/ utilise ludi.js pour vérifier le dialogue appli <-> kit (scores, fin douce).
 """
+import base64
 import datetime
 import json
 import mimetypes
@@ -88,9 +89,132 @@ def famille(fin="douce", max_kit=None):
         "regles": {"ecole": 30, "libre": 30, "joursLibres": [0, 3, 6], "fin": fin, "grace": 10, "bonus": None, "fini": None}}}
 
 
-def contexte(browser, store=None, **opts):
+class FauxSupabase:
+    """Un faux Supabase pour les parcours dans le navigateur : l'authentification et les fonctions de la base, en mémoire.
+    Les vraies règles d'accès sont vérifiées à part, sur un vrai Postgres : supabase/verifier.mjs."""
+    URL = "https://faux.supabase.test"
+
+    def __init__(self):
+        self.comptes = {}    # email -> {id, mdp, confirme, synchro, nouvelles, data}
+        self.envies = {}
+        self.foyer = None
+        self.version = 0
+        self.appels = []
+
+    def jeton(self, email):
+        charge = base64.urlsafe_b64encode(json.dumps({"sub": self.comptes[email]["id"], "email": email}).encode()).decode().rstrip("=")
+        return "x." + charge + ".y"
+
+    def session(self, email):
+        return {"access_token": self.jeton(email), "refresh_token": "r", "expires_in": 3600, "user": {"id": self.comptes[email]["id"], "email": email}}
+
+    def qui(self, route):
+        auth = route.request.headers.get("authorization", "")
+        if not auth.startswith("Bearer x."):
+            return None
+        charge = auth.split(".")[1]
+        return json.loads(base64.urlsafe_b64decode(charge + "=" * (-len(charge) % 4)))["email"]
+
+    def repond(self, route, corps=None, status=200):
+        route.fulfill(status=status, body="" if corps is None else json.dumps(corps), content_type="application/json",
+                      headers={"access-control-allow-origin": "*"})
+
+    def route(self, route):
+        req = route.request
+        if req.method == "OPTIONS":
+            return route.fulfill(status=204, headers={"access-control-allow-origin": "*", "access-control-allow-headers": "*", "access-control-allow-methods": "*"})
+        chemin = req.url[len(self.URL):]
+        corps = json.loads(req.post_data) if req.post_data else {}
+        self.appels.append(chemin)
+        email = self.qui(route)
+        if chemin.startswith("/auth/v1/signup"):
+            self.comptes[corps["email"]] = {"id": "u-" + str(len(self.comptes)), "mdp": corps["password"], "confirme": False, "synchro": False,
+                                            "nouvelles": corps["data"].get("nouvelles") == "true", "data": corps["data"]}
+            ei = corps["data"].get("envie_id")
+            if ei in self.envies:
+                self.envies[ei]["compte"] = corps["email"]
+            return self.repond(route, {"id": "u", "email": corps["email"]})
+        if chemin.startswith("/auth/v1/token?grant_type=password"):
+            c = self.comptes.get(corps["email"])
+            if not c or c["mdp"] != corps["password"]:
+                return self.repond(route, {"error_code": "invalid_credentials", "msg": "x"}, 400)
+            if not c["confirme"]:
+                return self.repond(route, {"error_code": "email_not_confirmed", "msg": "x"}, 400)
+            return self.repond(route, self.session(corps["email"]))
+        if chemin.startswith("/auth/v1/logout"):
+            return self.repond(route, None, 204)
+        if chemin.startswith("/auth/v1/"):
+            return self.repond(route, {})
+        if chemin.startswith("/rest/v1/comptes"):
+            c = self.comptes[email]
+            if req.method == "PATCH":
+                c.update(corps)
+                return self.repond(route, None, 204)
+            return self.repond(route, [{"id": c["id"], "synchro": c["synchro"], "nouvelles": c["nouvelles"], "langue": "fr"}])
+        if chemin.startswith("/rest/v1/foyers"):
+            return self.repond(route, [{"etat": self.foyer, "version": self.version}] if self.foyer else [])
+        if chemin.startswith("/rest/v1/envies"):
+            return self.repond(route, [])
+        fn = chemin.replace("/rest/v1/rpc/", "")
+        if fn == "enregistrer_envie":
+            self.envies[corps["p_id"]] = dict(corps, compte=None)
+            return self.repond(route, None, 204)
+        if fn == "rattacher_envie":
+            return self.repond(route, None, 204)
+        if not email:
+            return self.repond(route, {"message": "jwt"}, 401)
+        if fn == "mes_droits":
+            return self.repond(route, {"formule": "gratuit", "nom": {"fr": "Gratuit", "en": "Free"}, "droits": {"synchro": True}})
+        if fn == "est_admin":
+            return self.repond(route, email == "patron@exemple.test")
+        if fn == "poser_synchro":
+            self.comptes[email]["synchro"] = corps["p_active"]
+            if not corps["p_active"]:
+                self.foyer, self.version = None, 0
+            return self.repond(route, None, 204)
+        if fn == "pousser_foyer":
+            if corps["p_version"] != self.version:
+                return self.repond(route, None)
+            self.foyer, self.version = corps["p_etat"], self.version + 1
+            return self.repond(route, self.version)
+        if fn == "effacer_mon_compte":
+            del self.comptes[email]
+            self.foyer, self.version = None, 0
+            return self.repond(route, None, 204)
+        if fn.startswith("bureau_"):
+            if email != "patron@exemple.test":
+                return self.repond(route, {"message": "reserve au bureau"}, 403)
+            if fn == "bureau_apercu":
+                return self.repond(route, {
+                    "parcours": {"commences": 48, "termines": 31, "rattaches": 19, "comptes": 22, "confirmes": 18, "actifs_7j": 9, "synchro": 6, "nouvelles": 11},
+                    "reponses": {"envie": {"jouer": 34, "aider": 12, "creer": 7, "curieux": 5}, "profils": {"parent": 37, "enseignant": 6, "createur": 3},
+                                 "ages": {"6-8": 21, "9-10": 15, "moins6": 8, "11plus": 4}, "priorites": {"sain": 25, "apprendre": 22, "temps": 19, "plaisir": 8, "ensemble": 6},
+                                 "experience": {"jamais": 9, "un-peu": 7, "souvent": 3}},
+                    "semaines": [{"semaine": "2026-%02d-%02d" % (8 + i // 4, 3 + (i % 4) * 7), "envies": max(0, i * 2 - 3), "comptes": max(0, i - 3)} for i in range(12)],
+                    "formules": [{"id": "gratuit", "nom": {"fr": "Gratuit", "en": "Free"}, "droits": {"synchro": True}, "ouverte": True, "comptes": 22}]})
+            if fn == "bureau_envies":
+                return self.repond(route, [
+                    {"id": "1", "cree_le": "2026-11-03T10:00:00Z", "langue": "fr", "envie": ["aider", "jouer"], "profils": ["parent", "enseignant"], "ages": ["6-8"], "priorites": ["sain"], "experience": "un-peu",
+                     "message": "<img src=x onerror=\"window.XSS=1\">Un jeu sur les volcans", "termine": True, "email": "a@exemple.test", "nouvelles": True},
+                    {"id": "2", "cree_le": "2026-11-02T10:00:00Z", "langue": "en", "envie": ["creer"], "profils": ["createur"], "ages": [], "priorites": [], "experience": "souvent",
+                     "message": None, "termine": False, "email": None, "nouvelles": None}])
+            if fn == "bureau_comptes":
+                return self.repond(route, [
+                    {"id": "1", "email": "a@exemple.test", "cree_le": "2026-11-03T10:00:00Z", "confirme_le": "2026-11-03T10:05:00Z", "derniere_connexion": "2026-11-04T08:00:00Z",
+                     "formule": "gratuit", "statut": "actif", "synchro": True, "nouvelles": True, "envie": ["aider", "jouer"], "profils": ["parent", "enseignant"]},
+                    {"id": "2", "email": "b@exemple.test", "cree_le": "2026-11-01T10:00:00Z", "confirme_le": None, "derniere_connexion": None,
+                     "formule": "gratuit", "statut": "actif", "synchro": False, "nouvelles": False, "envie": None, "profils": None}])
+        return self.repond(route, {"message": "inconnu : " + chemin}, 404)
+
+
+def contexte(browser, store=None, nuage=None, **opts):
     ctx = browser.new_context(service_workers="block", locale="fr-FR", **opts)
     ctx.route(BASE + "/**", serve)
+    # Sans faux Supabase, pas de compte : ce sont les parcours de toujours, quelle que soit la configuration du site.
+    ctx.add_init_script("window.LUDI_NUAGE = %s;" % json.dumps({"url": nuage.URL, "cle": "cle-publique"} if nuage else {"url": "", "cle": ""}))
+    if nuage:
+        ctx.route(nuage.URL + "/**", nuage.route)
+    ctx.route("https://api.github.com/**", lambda r: r.fulfill(body=json.dumps([{"title": "[Jeu] Le Pont des Maths", "html_url": "https://github.com/x/1", "created_at": "2026-11-02T10:00:00Z", "labels": [{"name": "jeu"}]}]), content_type="application/json", headers={"access-control-allow-origin": "*"}))
     if store is not None:
         ctx.add_init_script("if (!sessionStorage.getItem('seed')) { localStorage.setItem('ludiworld.v1', %s); sessionStorage.setItem('seed', '1'); }" % json.dumps(json.dumps(store)))
     return ctx
@@ -434,6 +558,331 @@ def run():
             notions = [k for k in st["skills"] if k.startswith("geographie.pays/")]
             assert st["kit"] is True and len(notions) == 12, st
             ctx.close()
+
+        # 11. Sans projet Supabase configuré : aucune trace de compte, la page du compte l'explique
+        ctx = contexte(browser, **formats["tablette"])
+        page = ctx.new_page()
+        page.on("pageerror", lambda e: errors.append(str(e)))
+        page.goto(BASE + "/ludiworld/decouvrir/")
+        page.wait_for_selector(".lw-action")
+        assert page.locator(".lw-compte").count() == 0, "pas de lien de compte sans projet"
+        assert page.get_attribute(".lw-action", "href").endswith("#demarrer")
+        page.goto(BASE + "/ludiworld/compte/")
+        page.wait_for_selector("[data-vue=ferme]:not([hidden])")
+        page.goto(BASE + "/ludiworld/bureau/")
+        page.wait_for_function("document.getElementById('b-garde-p').textContent.includes('attend')")
+        ctx.close()
+
+        # 12. Comme Calm : « Essayer » pose quelques questions, puis on crée son compte ; « Se connecter » à côté
+        nuage = FauxSupabase()
+        for name, opts in formats.items():
+            ctx = contexte(browser, nuage=nuage, **opts)
+            page = ctx.new_page()
+            page.on("pageerror", lambda e: errors.append(str(e)))
+            page.goto(BASE + "/ludiworld/decouvrir/")
+            page.wait_for_selector(".lw-compte")
+            assert page.inner_text(".lw-compte") == "Se connecter"
+            assert page.inner_text(".lw-action").strip() == "Essayer", "pas de « gratuitement » : ça laisserait croire que c'est payant ensuite"
+            assert page.get_attribute(".hero-copy .btn-sun", "href").endswith("compte/#essayer")
+            page.wait_for_timeout(500)
+            page.screenshot(path=str(OUT / f"{name}-20-barre-comme-calm.png"))
+            boite = page.evaluate("[document.documentElement.scrollWidth, innerWidth]")
+            assert boite[0] <= boite[1], ("la barre déborde", name, boite)
+            page.locator(".lw-action").click()
+            page.wait_for_selector("#q-go")
+            page.wait_for_timeout(1300)
+            page.screenshot(path=str(OUT / f"{name}-21-essayer.png"))
+            assert not nuage.envies or name == "tablette", "rien n'est envoyé avant la première réponse"
+            page.click("#q-go")
+            page.wait_for_selector(".q[data-q=envie]:not([hidden])")
+            assert page.inner_text("#q-suite") == "Passer", "toujours possible de passer"
+            assert page.inner_text("#q-rang").endswith("sur 5"), "sans envie d'aider, pas de question sur l'IA"
+            page.click(".q[data-q=envie] .opt[data-val=aider]")
+            page.click(".q[data-q=envie] .opt[data-val=jouer]")
+            assert page.inner_text("#q-suite") == "Suivant"
+            page.wait_for_timeout(200)
+            page.screenshot(path=str(OUT / f"{name}-22-question.png"))
+            page.click("#q-suite")
+            for v in ["parent", "enseignant", "createur"]:
+                page.click(f".q[data-q=profils] .opt[data-val={v}]")
+            page.click(".q[data-q=profils] .opt[data-val=createur]")
+            assert page.locator(".q[data-q=profils] .opt[aria-pressed=true]").count() == 2, "on coche plusieurs profils, et on peut décocher"
+            page.click("#q-suite")
+            page.click(".q[data-q=ages] .opt[data-val='6-8']")
+            page.click("#q-suite")
+            for v in ["sain", "temps", "apprendre", "plaisir", "ensemble"]:
+                page.click(f".q[data-q=priorites] .opt[data-val={v}]")
+            assert page.locator(".q[data-q=priorites] .opt[aria-pressed=true]").count() == 5, "pas de limite"
+            page.wait_for_timeout(1200)
+            page.screenshot(path=str(OUT / f"{name}-23-le-jour-se-leve.png"))
+            page.click("#q-suite")
+            assert page.locator(".q[data-q=experience]:not([hidden])").count() == 1, "qui veut aider voit la question sur l'IA"
+            page.click(".q[data-q=experience] .opt[data-val=jamais]")
+            page.click("#q-suite")
+            page.fill("#q-message", "Un jeu sur les volcans")
+            assert page.inner_text("#q-suite") == "Créer mon compte"
+            page.click("#q-suite")
+            page.wait_for_selector("#f-creer")
+            page.wait_for_timeout(100)
+            rep = [r for r in nuage.envies.values() if r["p_termine"]][-1]
+            assert rep["p_envie"] == ["aider", "jouer"] and rep["p_profils"] == ["parent", "enseignant"] and rep["p_message"] == "Un jeu sur les volcans" and len(rep["p_priorites"]) == 5, rep
+            page.screenshot(path=str(OUT / f"{name}-24-creer.png"))
+
+            # Le formulaire refuse ce qui ne va pas, et ne coche rien à la place du parent
+            page.fill("#c-email", "pas-une-adresse")
+            page.click("#f-creer button[type=submit]")
+            assert "valide" in page.inner_text("#f-creer .alerte")
+            page.fill("#c-email", f"parent-{name}@exemple.test")
+            page.fill("#c-mdp", "court")
+            page.click("#f-creer button[type=submit]")
+            assert "8 caractères" in page.inner_text("#f-creer .alerte")
+            page.fill("#c-mdp", "un-bon-mot-de-passe")
+            page.click("#f-creer button[type=submit]")
+            assert "adulte" in page.inner_text("#f-creer .alerte")
+            assert not page.is_checked("#c-nouvelles"), "les messages ne sont pas cochés d'avance"
+            page.check("#c-adulte")
+            page.click("#f-creer button[type=submit]")
+            page.wait_for_selector("[data-vue=verifier]:not([hidden])")
+            assert page.inner_text("#v-email") == f"parent-{name}@exemple.test"
+            assert page.get_attribute("[data-vue=verifier] .btn-sun", "href") == "../#demarrer", "on peut préparer la tablette sans attendre"
+            page.screenshot(path=str(OUT / f"{name}-25-verifier.png"))
+            compte = nuage.comptes[f"parent-{name}@exemple.test"]
+            assert compte["data"]["envie_id"] == rep["p_id"], "les réponses suivent le compte"
+            assert compte["nouvelles"] is False
+
+            # Se connecter avant d'avoir confirmé : on le dit, et on propose de renvoyer le message
+            page.goto(BASE + "/ludiworld/compte/#connexion")
+            page.wait_for_selector("#f-connexion")
+            page.wait_for_timeout(1300)
+            page.screenshot(path=str(OUT / f"{name}-26-connexion.png"))
+            page.fill("#s-email", f"parent-{name}@exemple.test")
+            page.fill("#s-mdp", "mauvais")
+            page.click("#f-connexion button[type=submit]")
+            page.wait_for_function("document.querySelector('#f-connexion .alerte').textContent.includes('incorrect')")
+            page.fill("#s-mdp", "un-bon-mot-de-passe")
+            page.click("#f-connexion button[type=submit]")
+            page.wait_for_function("document.querySelector('#f-connexion .alerte').textContent.includes('confirmée')")
+            assert page.is_visible("#s-renvoyer")
+
+            # Le lien de l'e-mail : la session arrive, le jeton quitte l'adresse aussitôt
+            compte["confirme"] = True
+            page.goto(BASE + "/ludiworld/compte/#access_token=" + nuage.jeton(f"parent-{name}@exemple.test") + "&refresh_token=r&expires_in=3600&type=signup")
+            page.wait_for_selector("#e-corps:not([hidden])")
+            assert "access_token" not in page.url, page.url
+            page.wait_for_selector("#e-bienvenue:not([hidden])")
+            assert page.inner_text(".lw-compte") == "Mon compte"
+            page.wait_for_function("document.getElementById('e-formule').textContent.includes('Gratuit')")
+            assert page.is_hidden("#e-bureau-p"), "un parent ne voit pas le lien du bureau"
+            assert not page.is_checked("#e-synchro"), "la copie en ligne est coupée par défaut"
+            page.wait_for_timeout(300)
+            page.screenshot(path=str(OUT / f"{name}-27-espace.png"), full_page=True)
+            page.locator(".lw-langs button", has_text="EN").click()
+            assert page.inner_text("#e-corps h1") == "My account"
+            assert "free" in page.inner_text("#e-formule").lower()
+            page.locator(".lw-langs button", has_text="FR").click()
+            ctx.close()
+
+        # Un lien périmé le dit
+        ctx = contexte(browser, nuage=nuage, **formats["tablette"])
+        page = ctx.new_page()
+        page.on("pageerror", lambda e: errors.append(str(e)))
+        page.goto(BASE + "/ludiworld/compte/#error=access_denied&error_code=otp_expired&error_description=x")
+        page.wait_for_function("document.querySelector('#f-connexion .alerte').textContent.includes('expiré')")
+        ctx.close()
+
+        # Réseau lent : un envoi à la fois, sinon un envoi en retard écrase les réponses suivantes (vu sur le vrai serveur)
+        nuage = FauxSupabase()
+        ctx = contexte(browser, nuage=nuage)
+        retenus = []
+        ctx.route(nuage.URL + "/rest/v1/rpc/enregistrer_envie", lambda r: retenus.append(r))
+        page = ctx.new_page()
+        page.on("pageerror", lambda e: errors.append(str(e)))
+        page.goto(BASE + "/ludiworld/compte/#essayer")
+        page.click("#q-go")
+        page.click(".q[data-q=envie] .opt[data-val=curieux]")
+        page.click("#q-suite")
+        page.click(".q[data-q=profils] .opt[data-val=autre]")
+        page.click("#q-suite")
+        page.wait_for_timeout(300)
+        assert len(retenus) == 1, ("un seul envoi à la fois", len(retenus))
+        nuage.route(retenus[0])
+        page.wait_for_timeout(300)
+        assert len(retenus) == 2 and retenus[1].request.post_data_json["p_profils"] == ["autre"], "l'envoi suivant part avec les réponses récentes"
+        nuage.route(retenus[1])
+        page.wait_for_timeout(100)
+        assert list(nuage.envies.values())[0]["p_profils"] == ["autre"]
+        ctx.close()
+
+        # 13. Deux appareils : la tablette de l'enfant et le téléphone du parent
+        nuage = FauxSupabase()
+        nuage.comptes["parent@exemple.test"] = {"id": "u-1", "mdp": "un-bon-mot-de-passe", "confirme": True, "synchro": False, "nouvelles": False, "data": {}}
+        # La tablette, déjà préparée : son compte ne s'ouvre pas sans le code parent
+        tablette = contexte(browser, store=famille(), nuage=nuage, **formats["tablette"])
+        page = tablette.new_page()
+        page.on("pageerror", lambda e: errors.append(str(e)))
+        page.goto(BASE + "/ludiworld/compte/#connexion")
+        page.wait_for_selector("#f-connexion")
+        page.fill("#s-email", "parent@exemple.test")
+        page.fill("#s-mdp", "un-bon-mot-de-passe")
+        page.click("#f-connexion button[type=submit]")
+        page.wait_for_selector("#e-code:not([hidden])")
+        assert page.is_hidden("#e-corps"), "un enfant sur la tablette ne voit pas le compte"
+        assert nuage.foyer is None, "rien ne part sans geste du parent"
+        page.click("#e-code .btn-sun")
+        page.wait_for_selector("#gate[open]")
+        code(page, PIN)
+        page.wait_for_selector("#v-parent:not([hidden])")
+        page.goto(BASE + "/ludiworld/compte/#espace")
+        page.wait_for_selector("#e-corps:not([hidden])")
+        page.wait_for_function("document.getElementById('e-formule').textContent.includes('Gratuit')")
+        page.check("#e-synchro")
+        page.wait_for_function("!document.getElementById('e-synchro-etat').hidden")
+        assert nuage.foyer["enfants"][0]["enfant"]["nom"] == "Petit Loup", nuage.foyer
+
+        # Un lien piégé (le compte de quelqu'un d'autre, copie en ligne activée) : il ouvre ce compte, et ne fait rien partir
+        nuage.comptes["pirate@exemple.test"] = {"id": "u-p", "mdp": "x", "confirme": True, "synchro": True, "nouvelles": False, "data": {}}
+        version = nuage.version
+        piege = contexte(browser, store=famille(), nuage=nuage, **formats["tablette"])
+        pg = piege.new_page()
+        pg.on("pageerror", lambda e: errors.append(str(e)))
+        pg.goto(BASE + "/ludiworld/#enfant")
+        pg.wait_for_selector(".tuile")
+        pg.goto(BASE + "/ludiworld/compte/#access_token=" + nuage.jeton("pirate@exemple.test") + "&refresh_token=r&expires_in=3600&type=signup")
+        pg.wait_for_selector("#e-code:not([hidden])")
+        assert pg.evaluate("localStorage.getItem('ludiworld.synchro')") is None, "un lien ne relie pas l'appareil"
+        pg.goto(BASE + "/ludiworld/#enfant")
+        pg.wait_for_selector(".tuile")
+        pg.wait_for_timeout(1800)
+        assert nuage.version == version, "rien ne part vers le compte du lien"
+        # Sur cette tablette, un enfant ne change pas le mot de passe, même compte ouvert
+        pg.goto(BASE + "/ludiworld/compte/#nouveau")
+        pg.wait_for_selector("#e-code:not([hidden])")
+        assert pg.is_hidden("#f-nouveau")
+        piege.close()
+
+        # Une autre famille sur sa propre tablette, avec ce compte : son foyer ne part pas sans qu'on coche
+        autre = contexte(browser, store=famille(), nuage=nuage, **formats["tablette"])
+        pg = autre.new_page()
+        pg.on("pageerror", lambda e: errors.append(str(e)))
+        pg.goto(BASE + "/ludiworld/#enfant")
+        pg.wait_for_selector(".tuile")
+        pg.goto(BASE + "/ludiworld/compte/#connexion")
+        pg.wait_for_selector("#f-connexion")
+        pg.fill("#s-email", "parent@exemple.test")
+        pg.fill("#s-mdp", "un-bon-mot-de-passe")
+        pg.click("#f-connexion button[type=submit]")
+        pg.wait_for_selector("#e-code:not([hidden])")
+        assert nuage.version == version and pg.evaluate("localStorage.getItem('ludiworld.synchro')") is None
+        autre.close()
+
+        # Le téléphone, vide : se connecter suffit à tout retrouver, sans repasser par la préparation ni redonner le code au réseau
+        telephone = contexte(browser, nuage=nuage, **formats["telephone"])
+        tel = telephone.new_page()
+        tel.on("pageerror", lambda e: errors.append(str(e)))
+        tel.goto(BASE + "/ludiworld/compte/#connexion")
+        tel.wait_for_selector("#f-connexion")
+        tel.fill("#s-email", "parent@exemple.test")
+        tel.fill("#s-mdp", "un-bon-mot-de-passe")
+        tel.click("#f-connexion button[type=submit]")
+        tel.wait_for_selector("#e-code:not([hidden])")
+        fam = tel.evaluate("JSON.parse(localStorage.getItem('ludiworld.v1')).famille")
+        assert fam["enfants"][0]["enfant"]["nom"] == "Petit Loup", fam
+        # Le parent règle depuis son téléphone
+        tel.click("#e-code .btn-sun")
+        tel.wait_for_selector("#gate[open]")
+        code(tel, PIN)
+        tel.wait_for_selector("#v-parent:not([hidden])")
+        tel.locator("#c-nav button", has_text="Réglages").click()
+        tel.fill("#s-nom", "Grand Loup")
+        tel.locator("#s-nom").blur()
+        tel.wait_for_function("document.querySelector('#toast') !== null")
+        for _ in range(40):
+            if nuage.foyer["enfants"][0]["enfant"]["nom"] == "Grand Loup":
+                break
+            tel.wait_for_timeout(100)
+        assert nuage.foyer["enfants"][0]["enfant"]["nom"] == "Grand Loup", "le réglage part en ligne"
+        # La tablette le voit en revenant sur l'appli
+        page.goto(BASE + "/ludiworld/#enfant")
+        page.wait_for_selector(".tuile")
+        page.wait_for_function("document.getElementById('e-salut').textContent.includes('Grand Loup')")
+        # Pendant une partie, rien ne part : on attend la fin
+        avant = len(nuage.appels)
+        page.evaluate("ludiDemo.ajouter('pluie-de-cochons', 2)")
+        page.wait_for_timeout(200)
+        assert len(nuage.appels) == avant, "le temps de jeu ne déclenche pas d'appel réseau à chaque seconde"
+
+        # 14. Le bureau : fermé à un parent, ouvert à son adresse
+        tel.goto(BASE + "/ludiworld/bureau/")
+        tel.wait_for_function("document.getElementById('b-garde-p').textContent.includes('réservée')")
+        assert tel.is_hidden("#bureau")
+        assert not any(c.endswith("bureau_apercu") for c in nuage.appels), "aucune donnée demandée pour un parent"
+
+        nuage.comptes["patron@exemple.test"] = {"id": "u-9", "mdp": "x", "confirme": True, "synchro": False, "nouvelles": False, "data": {}}
+        for name, opts in formats.items():
+            ctx = contexte(browser, nuage=nuage, **opts)
+            b = ctx.new_page()
+            b.on("pageerror", lambda e: errors.append(str(e)))
+            b.goto(BASE + "/ludiworld/compte/#access_token=" + nuage.jeton("patron@exemple.test") + "&refresh_token=r&expires_in=3600&type=signup")
+            b.wait_for_selector("#e-bureau-p:not([hidden])")
+            b.click("#e-bureau-p a")
+            b.wait_for_selector("#ap-parcours .b-barre")
+            b.wait_for_selector("#ap-attente a")
+            assert "Sont allés au bout" in b.inner_text("#ap-parcours")
+            assert "Aider" in b.inner_text("#ap-envie")
+            b.wait_for_timeout(300)
+            b.screenshot(path=str(OUT / f"{name}-30-bureau-apercu.png"), full_page=True)
+            b.locator("#b-nav a", has_text="Les envies").click()
+            b.wait_for_selector("#en-table tbody tr")
+            assert b.evaluate("window.XSS") is None and "<img" in b.inner_text("#en-table"), "le message d'un visiteur reste du texte"
+            b.select_option("#en-filtre", "creer")
+            assert b.locator("#en-table tbody tr").count() == 1
+            b.select_option("#en-filtre", "")
+            b.screenshot(path=str(OUT / f"{name}-31-bureau-envies.png"), full_page=True)
+            with b.expect_download() as dl:
+                b.click("#en-csv")
+            assert dl.value.suggested_filename == "ludiworld-envies.csv"
+            b.locator("#b-nav a", has_text="Les comptes").click()
+            b.wait_for_selector("#co-table tbody tr")
+            assert "a@exemple.test" in b.inner_text("#co-table")
+            b.screenshot(path=str(OUT / f"{name}-32-bureau-comptes.png"), full_page=True)
+            b.locator("#b-nav a", has_text="Le catalogue").click()
+            b.wait_for_selector("#ca-jeux tbody tr")
+            b.wait_for_selector("#ca-github li")
+            assert "à relire" in b.inner_text("#ca-jeux")
+            b.screenshot(path=str(OUT / f"{name}-33-bureau-catalogue.png"), full_page=True)
+            b.locator("#b-nav a", has_text="Les formules").click()
+            b.wait_for_selector("#fo-table tbody tr")
+            assert "synchro" in b.inner_text("#fo-table")
+            ctx.close()
+
+        # 15. Tout effacer d'un geste : couper la copie, puis le compte
+        tel.goto(BASE + "/ludiworld/compte/#espace")
+        tel.wait_for_selector("#e-corps:not([hidden])")
+        tel.wait_for_function("document.getElementById('e-formule').textContent.includes('Gratuit')")
+        tel.locator(".e-effacer summary").click()
+        tel.fill("#e-mot", "non")
+        tel.click("#f-effacer button[type=submit]")
+        tel.wait_for_function("document.getElementById('e-alerte').textContent.includes('EFFACER')")
+        assert "parent@exemple.test" in nuage.comptes
+        tel.fill("#e-mot", "EFFACER")
+        tel.click("#f-effacer button[type=submit]")
+        tel.wait_for_url("**/decouvrir/")
+        assert "parent@exemple.test" not in nuage.comptes and nuage.foyer is None
+        assert tel.evaluate("localStorage.getItem('ludiworld.session')") is None
+        assert tel.evaluate("JSON.parse(localStorage.getItem('ludiworld.v1')).famille.enfants[0].enfant.nom") == "Grand Loup", "l'appareil garde ce qui est à lui"
+
+        # « Tout effacer » sur une tablette : elle ne reste liée à personne
+        page.goto(BASE + "/ludiworld/#carnet")
+        page.wait_for_selector("#gate[open]")
+        code(page, PIN)
+        page.wait_for_selector("#v-parent:not([hidden])")
+        page.locator("#c-nav button", has_text="Réglages").click()
+        page.on("dialog", lambda d: d.accept())
+        page.click(".btn-danger")
+        page.wait_for_selector("#v-accueil:not([hidden])")
+        assert page.evaluate("localStorage.getItem('ludiworld.session')") is None and page.evaluate("localStorage.getItem('ludiworld.synchro')") is None
+        telephone.close()
+        tablette.close()
         browser.close()
     if errors:
         raise SystemExit("Erreurs JS : " + " | ".join(errors))

@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Mon compte · Ludiworld</title>
+  <meta name="description" content="Essayer Ludiworld, créer son compte de parent, le retrouver sur tous ses appareils.">
+  <meta name="theme-color" content="#16204a">
+  <link rel="icon" href="../icons/marmotte-192.png">
+  <link rel="apple-touch-icon" href="../icons/marmotte-180.png">
+  <link rel="preload" href="../fonts/lexend.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="../site/barre.css">
+  <link rel="stylesheet" href="../site/site.css">
+  <link rel="stylesheet" href="compte.css">
+</head>
+<body data-page="compte">
+  <div id="lw-barre"></div>
+
+  <main id="scene" class="scene" data-ciel="aube" style="--avance:0">
+    <div class="ciel" aria-hidden="true">
+      <span class="ciel-jour"></span>
+      <span class="ciel-nuit"></span>
+      <img class="astre soleil" src="../img/soleil.webp" alt="">
+      <img class="astre lune" src="../img/lune.webp" alt="">
+      <img class="nuage" src="../img/nuage-2.webp" alt="">
+      <img class="ile ile-jour" src="../img/ile-jour.webp" alt="">
+      <img class="ile ile-nuit" src="../img/ile-nuit.webp" alt="">
+    </div>
+
+    <!-- Les comptes ne sont pas encore ouverts -->
+    <section class="feuille" data-vue="ferme" hidden>
+      <h1 tabindex="-1" data-t="fermeT">Les comptes ouvrent bientôt.</h1>
+      <p data-t="fermeP">En attendant, Ludiworld marche très bien sans compte&nbsp;: tout reste sur la tablette.</p>
+      <a class="btn btn-sun" href="../#demarrer" data-t="plusTardGo">Préparer la tablette</a>
+    </section>
+
+    <!-- Essayer : quelques questions, une par écran -->
+    <section class="feuille" data-vue="essayer" hidden>
+      <div class="intro" id="q-intro">
+        <h1 tabindex="-1" data-t="iT">Avant de commencer, qu'est-ce que vous cherchez&nbsp;?</h1>
+        <p data-t="iP">Quelques questions, moins d'une minute. Vos réponses nous disent quoi construire ensuite, et n'ont pas besoin de votre nom. Tout est facultatif.</p>
+        <div class="actions">
+          <button type="button" class="btn btn-sun" id="q-go" data-t="iGo">Répondre</button>
+          <a class="lien-doux" href="#creer" data-t="iSkip">Passer les questions</a>
+        </div>
+      </div>
+
+      <div class="questions" id="q-corps" hidden>
+        <p class="q-rang" id="q-rang" aria-live="polite"></p>
+
+        <fieldset class="q" data-q="envie" data-multi>
+          <legend tabindex="-1" data-t="q1">Qu'est-ce qui vous amène&nbsp;?</legend>
+          <p class="q-aide" data-t="plusieurs">Plusieurs réponses possibles.</p>
+          <button type="button" class="opt" data-val="jouer" data-t="q1a">Trouver de bons jeux pour un enfant</button>
+          <button type="button" class="opt" data-val="aider" data-t="q1b">Aider&nbsp;: tester des jeux, donner mon avis</button>
+          <button type="button" class="opt" data-val="creer" data-t="q1c">Faire un jeu moi-même</button>
+          <button type="button" class="opt" data-val="curieux" data-t="q1d">Je regarde, par curiosité</button>
+        </fieldset>
+
+        <fieldset class="q" data-q="profils" data-multi>
+          <legend tabindex="-1" data-t="q2">Vous êtes plutôt…</legend>
+          <p class="q-aide" data-t="plusieurs">Plusieurs réponses possibles.</p>
+          <button type="button" class="opt" data-val="parent" data-t="q2a">Parent</button>
+          <button type="button" class="opt" data-val="famille" data-t="q2b">Grand-parent, oncle, tante…</button>
+          <button type="button" class="opt" data-val="enseignant" data-t="q2c">Enseignant, animateur</button>
+          <button type="button" class="opt" data-val="createur" data-t="q2d">Créateur de jeux</button>
+          <button type="button" class="opt" data-val="autre" data-t="q2e">Autre chose</button>
+        </fieldset>
+
+        <fieldset class="q" data-q="ages" data-multi>
+          <legend tabindex="-1" data-t="q3">Quel âge ont les enfants&nbsp;?</legend>
+          <p class="q-aide" data-t="plusieurs">Plusieurs réponses possibles.</p>
+          <button type="button" class="opt" data-val="moins6" data-t="q3a">Moins de 6 ans</button>
+          <button type="button" class="opt" data-val="6-8" data-t="q3b">6 à 8 ans</button>
+          <button type="button" class="opt" data-val="9-10" data-t="q3c">9 à 10 ans</button>
+          <button type="button" class="opt" data-val="11plus" data-t="q3d">11 ans et plus</button>
+        </fieldset>
+
+        <fieldset class="q" data-q="priorites" data-multi>
+          <legend tabindex="-1" data-t="q4">Qu'est-ce qui compte le plus pour vous&nbsp;?</legend>
+          <p class="q-aide" data-t="plusieurs">Plusieurs réponses possibles.</p>
+          <button type="button" class="opt" data-val="apprendre" data-t="q4a">Qu'ils apprennent quelque chose</button>
+          <button type="button" class="opt" data-val="temps" data-t="q4b">Que le temps d'écran reste cadré</button>
+          <button type="button" class="opt" data-val="sain" data-t="q4c">Pas de pub, pas de pièges</button>
+          <button type="button" class="opt" data-val="plaisir" data-t="q4d">Qu'ils s'amusent vraiment</button>
+          <button type="button" class="opt" data-val="ensemble" data-t="q4e">Y jouer ensemble</button>
+        </fieldset>
+
+        <fieldset class="q" data-q="experience">
+          <legend tabindex="-1" data-t="q5">Avez-vous déjà fabriqué quelque chose avec une IA&nbsp;?</legend>
+          <button type="button" class="opt" data-val="jamais" data-t="q5a">Jamais</button>
+          <button type="button" class="opt" data-val="un-peu" data-t="q5b">Un peu, pour essayer</button>
+          <button type="button" class="opt" data-val="souvent" data-t="q5c">Oui, souvent</button>
+        </fieldset>
+
+        <fieldset class="q" data-q="message">
+          <legend tabindex="-1"><label for="q-message" data-t="q6">Un jeu dont vous rêvez, une idée, une question&nbsp;?</label></legend>
+          <textarea id="q-message" rows="4" maxlength="500"></textarea>
+          <p class="q-aide" data-t="q6h">Pas de nom d'enfant ici, s'il vous plaît.</p>
+        </fieldset>
+
+        <div class="actions">
+          <button type="button" class="btn btn-sun" id="q-suite"></button>
+          <button type="button" class="lien-doux" id="q-avant" data-t="avant">Question précédente</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Créer son compte -->
+    <section class="feuille" data-vue="creer" hidden>
+      <h1 tabindex="-1" data-t="cT">Créez votre compte de parent</h1>
+      <p data-t="cP">Gratuit. Il garde vos réglages et vous laisse retrouver Ludiworld sur vos autres appareils, si vous le souhaitez.</p>
+      <form id="f-creer" novalidate>
+        <label for="c-email" data-t="email">Adresse e-mail</label>
+        <input id="c-email" type="email" autocomplete="email" inputmode="email" required>
+        <label for="c-mdp" data-t="mdp">Mot de passe</label>
+        <input id="c-mdp" type="password" autocomplete="new-password" minlength="8" required>
+        <p class="q-aide" data-t="mdpH">8 caractères au moins.</p>
+        <label class="case"><input id="c-adulte" type="checkbox" required> <span data-t="adulte">Je suis un adulte et j'ai lu <a href="../confidentialite/" target="_blank" rel="noopener">ce que Ludiworld fait des données</a>.</span></label>
+        <label class="case"><input id="c-nouvelles" type="checkbox"> <span data-t="nouvelles">Écrivez-moi quand il y a du nouveau, ou pour tester un jeu. Pas plus d'un message par mois.</span></label>
+        <p class="alerte" role="alert" hidden></p>
+        <div class="actions">
+          <button type="submit" class="btn btn-sun" data-t="cGo">Créer mon compte</button>
+        </div>
+      </form>
+      <p class="autre"><span data-t="dejaCompte">Vous avez déjà un compte&nbsp;?</span> <a href="#connexion" data-t="seConnecter">Se connecter</a></p>
+      <p class="autre"><a href="../#demarrer" data-t="plusTard">Plus tard&nbsp;: préparer la tablette sans compte</a></p>
+    </section>
+
+    <!-- Vérifier sa boîte -->
+    <section class="feuille" data-vue="verifier" hidden>
+      <h1 tabindex="-1" data-t="vT">Regardez votre boîte mail</h1>
+      <p><span data-t="vP">Nous venons d'écrire à</span> <b id="v-email"></b>. <span data-t="vP2">Ouvrez le lien du message&nbsp;: votre compte sera prêt.</span></p>
+      <p class="q-aide" data-t="vH">Rien après quelques minutes&nbsp;? Regardez dans les indésirables.</p>
+      <p class="alerte" role="alert" hidden></p>
+      <div class="actions">
+        <a class="btn btn-sun" href="../#demarrer" data-t="plusTardGo2">Préparer la tablette en attendant</a>
+        <button type="button" class="lien-doux" id="v-renvoyer" data-t="vRe">Renvoyer le message</button>
+      </div>
+    </section>
+
+    <!-- Se connecter -->
+    <section class="feuille" data-vue="connexion" hidden>
+      <h1 tabindex="-1" data-t="sT">Bon retour sur l'île</h1>
+      <form id="f-connexion" novalidate>
+        <label for="s-email" data-t="email2">Adresse e-mail</label>
+        <input id="s-email" type="email" autocomplete="email" inputmode="email" required>
+        <label for="s-mdp" data-t="mdp2">Mot de passe</label>
+        <input id="s-mdp" type="password" autocomplete="current-password" required>
+        <p class="alerte" role="alert" hidden></p>
+        <button type="button" class="lien-doux" id="s-renvoyer" hidden data-t="vRe2">Renvoyer le message de confirmation</button>
+        <div class="actions">
+          <button type="submit" class="btn btn-sun" data-t="sGo">Se connecter</button>
+          <a class="lien-doux" href="#oublie" data-t="oublie">Mot de passe oublié&nbsp;?</a>
+        </div>
+      </form>
+      <p class="autre"><span data-t="pasCompte">Pas encore de compte&nbsp;?</span> <a href="#essayer" data-t="essayer">Essayer</a></p>
+    </section>
+
+    <!-- Mot de passe oublié -->
+    <section class="feuille" data-vue="oublie" hidden>
+      <h1 tabindex="-1" data-t="oT">Choisir un nouveau mot de passe</h1>
+      <p data-t="oP">Donnez votre adresse&nbsp;: nous y envoyons un lien.</p>
+      <form id="f-oublie" novalidate>
+        <label for="o-email" data-t="email3">Adresse e-mail</label>
+        <input id="o-email" type="email" autocomplete="email" inputmode="email" required>
+        <p class="alerte" role="alert" hidden></p>
+        <p class="bien" role="status" hidden data-t="oOk">Si un compte existe à cette adresse, le lien est parti.</p>
+        <div class="actions">
+          <button type="submit" class="btn btn-sun" data-t="oGo">Envoyer le lien</button>
+          <a class="lien-doux" href="#connexion" data-t="retourConnexion">Retour à la connexion</a>
+        </div>
+      </form>
+    </section>
+
+    <!-- Nouveau mot de passe -->
+    <section class="feuille" data-vue="nouveau" hidden>
+      <h1 tabindex="-1" data-t="nT">Votre nouveau mot de passe</h1>
+      <form id="f-nouveau" novalidate>
+        <label for="n-mdp" data-t="mdp3">Mot de passe</label>
+        <input id="n-mdp" type="password" autocomplete="new-password" minlength="8" required>
+        <p class="q-aide" data-t="mdpH2">8 caractères au moins.</p>
+        <p class="alerte" role="alert" hidden></p>
+        <div class="actions">
+          <button type="submit" class="btn btn-sun" data-t="nGo">Enregistrer</button>
+        </div>
+      </form>
+    </section>
+  </main>
+
+  <!-- Mon espace -->
+  <main id="espace" class="espace" hidden>
+    <div class="e-code" id="e-code" hidden>
+      <h1 tabindex="-1" data-t="eCodeT">Cet espace demande le code parent</h1>
+      <p data-t="eCodeP">Cette tablette est préparée pour un enfant. Ouvrez le carnet avec votre code, puis revenez ici.</p>
+      <a class="btn btn-sun" href="../#carnet" data-t="eCodeGo">Ouvrir le carnet</a>
+    </div>
+
+    <div id="e-corps" hidden>
+      <header class="e-tete">
+        <img src="../img/marmotte-carnet.webp" width="180" alt="">
+        <div>
+          <h1 tabindex="-1" data-t="eT">Mon compte</h1>
+          <p class="e-email" id="e-email"></p>
+          <p class="bien" id="e-bienvenue" role="status" hidden data-t="eBienvenue">C'est fait, votre compte est prêt.</p>
+        </div>
+      </header>
+      <p class="alerte" id="e-alerte" role="alert" hidden></p>
+
+      <div class="e-grille">
+        <section class="e-bloc e-large">
+          <h2 data-t="eCeT">Cet appareil</h2>
+          <p id="e-appareil"></p>
+          <a class="btn btn-sun" id="e-ouvrir" href="../"></a>
+        </section>
+
+        <section class="e-bloc e-large">
+          <h2 data-t="eSyT">Retrouver Ludiworld sur mes appareils</h2>
+          <label class="case"><input id="e-synchro" type="checkbox"> <span data-t="eSyL">Garder une copie en ligne pour la retrouver sur mes autres appareils</span></label>
+          <p data-t="eSyP">Partent en ligne&nbsp;: le pseudo et l'âge des enfants, les jeux choisis, le temps de jeu, les records et les notions, et votre code parent sous une forme brouillée. Le bureau de Ludiworld n'y a pas accès. Elles ne sont pas chiffrées dans la base&nbsp;: techniquement, son administrateur pourrait les lire, et il s'engage à ne pas le faire.</p>
+          <p class="q-aide" data-t="eSyH">Décocher efface la copie en ligne. Ce qui est sur cet appareil y reste.</p>
+          <p class="bien" id="e-synchro-etat" role="status" hidden></p>
+        </section>
+
+        <section class="e-bloc">
+          <h2 data-t="eFoT">Formule</h2>
+          <p class="e-formule" id="e-formule"></p>
+        </section>
+
+        <section class="e-bloc">
+          <h2 data-t="eCoT">Le compte</h2>
+          <label class="case"><input id="e-nouvelles" type="checkbox"> <span data-t="eNoL">Recevoir les nouveautés et les invitations à tester</span></label>
+          <p><a href="#nouveau" data-t="eMdp">Changer mon mot de passe</a></p>
+          <p><a href="#essayer" data-t="eRe">Revoir mes réponses aux questions</a></p>
+          <p id="e-bureau-p" hidden><a href="../bureau/" data-t="eBu">Ouvrir le bureau</a></p>
+          <button type="button" class="btn-ligne" id="e-sortir" data-t="eSo">Se déconnecter</button>
+        </section>
+
+        <section class="e-bloc e-large e-donnees">
+          <h2 data-t="eDoT">Mes données</h2>
+          <p><span data-t="eDoP">Ce que nous gardons, et pourquoi&nbsp;:</span> <a href="../confidentialite/" data-t="eDoL">la page dédiée</a>.</p>
+          <button type="button" class="btn-ligne" id="e-exporter" data-t="eEx">Télécharger mes données</button>
+          <details class="e-effacer">
+            <summary data-t="eEfS">Effacer mon compte</summary>
+            <p data-t="eEfP">Le compte, la copie en ligne et vos réponses disparaissent aussitôt, sans retour possible. Ce qui est sur les appareils y reste&nbsp;: effacez-le depuis le carnet de chacun.</p>
+            <form id="f-effacer" novalidate>
+              <label for="e-mot" data-t="eEfL">Pour confirmer, écrivez EFFACER</label>
+              <input id="e-mot" type="text" autocomplete="off">
+              <button type="submit" class="btn-danger" data-t="eEfGo">Effacer définitivement</button>
+            </form>
+          </details>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <footer class="foot" id="lw-pied"></footer>
+
+  <!-- Textes appelés par le script -->
+  <div hidden>
+    <span data-t="erreurAdresse">Cette adresse e-mail ne semble pas valide.</span>
+    <span data-t="erreurMdp">Le mot de passe doit faire 8 caractères au moins.</span>
+    <span data-t="erreurAdulte">Cochez la case pour confirmer que vous êtes un adulte.</span>
+    <span data-t="erreurIdentifiants">Adresse ou mot de passe incorrect.</span>
+    <span data-t="erreurNonConfirme">Votre adresse n'est pas encore confirmée. Ouvrez le lien reçu par e-mail.</span>
+    <span data-t="erreurFaible">Ce mot de passe est trop facile à deviner. Choisissez-en un autre.</span>
+    <span data-t="erreurMeme">C'est déjà votre mot de passe. Choisissez-en un autre.</span>
+    <span data-t="erreurTrop">Trop d'essais d'un coup. Réessayez dans quelques minutes.</span>
+    <span data-t="erreurReseau">Pas de réseau pour l'instant. Réessayez quand la connexion revient.</span>
+    <span data-t="erreurFerme">Les inscriptions sont fermées pour l'instant.</span>
+    <span data-t="erreurSession">Votre session a expiré. Reconnectez-vous.</span>
+    <span data-t="erreurLien">Ce lien a expiré ou a déjà servi. Demandez-en un nouveau.</span>
+    <span data-t="erreurAutre">Ça n'a pas marché. Réessayez dans un instant.</span>
+    <span data-t="erreurMot">Écrivez le mot EFFACER pour confirmer.</span>
+    <span data-t="motEffacer">EFFACER</span>
+    <span data-t="rang">Question {i} sur {n}</span>
+    <span data-t="passer">Passer</span>
+    <span data-t="suivant">Suivant</span>
+    <span data-t="finir">Créer mon compte</span>
+    <span data-t="reRenvoye">Message renvoyé.</span>
+    <span data-t="mdpChange">Mot de passe changé.</span>
+    <span data-t="erreurAutreCompte">Un autre compte est déjà ouvert sur cet appareil. Déconnectez-vous d'abord, puis rouvrez le lien.</span>
+    <span data-t="syAutre">Ce compte a déjà une copie en ligne. Cochez la case pour la réunir avec ce qui est sur cet appareil.</span>
+    <span data-t="syOn">Copie en ligne à jour.</span>
+    <span data-t="syOff">Copie en ligne effacée.</span>
+    <span data-t="synchroPrete">Votre Ludiworld est retrouvé sur cet appareil.</span>
+    <span data-t="appPret">Ludiworld est préparé ici.</span>
+    <span data-t="appVide">Ludiworld n'est pas encore préparé sur cet appareil.</span>
+    <span data-t="appOuvrir">Ouvrir Ludiworld</span>
+    <span data-t="appPreparer">Préparer la tablette</span>
+    <span data-t="efface">Votre compte est effacé.</span>
+    <span data-t="formuleLibre">Tout Ludiworld est gratuit.</span>
+  </div>
+
+  <script src="../site/barre.js" defer></script>
+  <script src="../synchro.js" defer></script>
+  <script src="../site/nuage.js" defer></script>
+  <script src="../site/site.js" defer></script>
+  <script src="en.js" defer></script>
+  <script src="compte.js" defer></script>
+</body>
+</html>

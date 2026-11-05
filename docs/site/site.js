@@ -11,6 +11,7 @@
   var T = {
     fr: {
       foot: 'Fait par Julien (pikifou), d\'abord pour son fils.',
+      footPrivacy: 'Ce que Ludiworld fait des données',
       footCode: 'Le code sur GitHub',
       years: function (a, b) { return a + ' à ' + b + ' ans'; },
       mins: function (a, b) { return a === b ? a + ' min' : a + ' à ' + b + ' min'; },
@@ -54,6 +55,7 @@
     },
     en: {
       foot: 'Made by Julien (pikifou), first for his son.',
+      footPrivacy: 'What Ludiworld does with data',
       footCode: 'The code on GitHub',
       years: function (a, b) { return 'ages ' + a + ' to ' + b; },
       mins: function (a, b) { return a === b ? a + ' min' : a + ' to ' + b + ' min'; },
@@ -98,6 +100,7 @@
   };
   var FR = {}; // textes de la page, relevés au chargement
   var EN = {}; // textes de la page en anglais (en.js)
+  var surLangue = []; // ce qu'une page veut refaire quand la langue change
 
   var lang = (function () {
     try { var l = localStorage.getItem(LANG_KEY); if (l === 'fr' || l === 'en') return l; } catch (e) { /* rien */ }
@@ -166,6 +169,7 @@
     barre();
     pied();
     renderAll();
+    surLangue.forEach(function (f) { f(); });
   }
   function setLang(l) {
     lang = l;
@@ -176,7 +180,10 @@
   function barre() {
     var hote = document.getElementById('lw-barre');
     if (hote && window.LudiBarre) LudiBarre.rendre(hote, { base: BASE, actif: document.body.getAttribute('data-page'), lang: lang, onLang: setLang });
-    document.querySelectorAll('[data-app]').forEach(function (a) { a.setAttribute('href', LudiBarre.lienApp(BASE)); });
+    document.querySelectorAll('[data-app]').forEach(function (a) {
+      a.setAttribute('href', LudiBarre.lienApp(BASE));
+      if (LudiBarre.nouveauVenu()) a.textContent = LudiBarre.libelleEssai(lang);
+    });
   }
   function pied() {
     var f = document.getElementById('lw-pied');
@@ -184,7 +191,8 @@
     f.textContent = '';
     f.appendChild(el('p', null, [
       el('span', { text: C().foot }), ' ',
-      el('a', { href: GH, text: C().footCode })
+      el('a', { href: GH, text: C().footCode }), ' ',
+      el('a', { href: BASE + 'confidentialite/', text: C().footPrivacy })
     ]));
   }
 
@@ -400,7 +408,10 @@
     document.addEventListener(ev, function () { if (window.LudiBarre && LudiBarre.parentOuvert()) LudiBarre.ouvrirParent(); }, { passive: true, capture: true });
   });
 
-  window.LudiSite = { en: function (dict) { Object.keys(dict).forEach(function (k) { EN[k] = dict[k]; }); } };
+  window.LudiSite = {
+    en: function (dict) { Object.keys(dict).forEach(function (k) { EN[k] = dict[k]; }); },
+    texte: D, rafraichir: barre, surLangue: function (f) { surLangue.push(f); }
+  };
 
   document.addEventListener('DOMContentLoaded', function () {
     var meta = document.querySelector('meta[name="description"]');

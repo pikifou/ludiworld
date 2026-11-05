@@ -52,6 +52,8 @@
   border-radius: 14px 18px 12px 16px; box-shadow: 0 3px 0 var(--lw-soleil-fonce);
 }
 .lw-action:hover { transform: translateY(-1px); }
+.lw-compte { white-space: nowrap; color: var(--lw-papier); font-weight: 500; font-size: .98rem; text-decoration: none; padding: 8px 2px; border-bottom: 2px solid transparent; }
+.lw-compte:hover, .lw-compte[aria-current="page"] { border-bottom-color: var(--lw-soleil); }
 .lw-barre a:focus-visible, .lw-barre button:focus-visible { outline: 3px solid var(--lw-soleil); outline-offset: 2px; }
 
 /* Téléphone et tablette en portrait : la marque et les boutons en haut, les onglets dessous, qu'on fait défiler. */
@@ -70,4 +72,8 @@
   .lw-action { padding: 8px 11px 7px; font-size: .9rem; }
   .lw-action .lw-ico { display: none; }
   .lw-marque { font-size: 1.35rem; }
+  .lw-compte { font-size: .84rem; }
+  .lw-langs { padding: 2px; }
+  .lw-langs button { min-width: 28px; min-height: 30px; font-size: .78rem; }
+  .lw-barre:has(.lw-compte) .lw-action { padding-inline: 9px; }
 }

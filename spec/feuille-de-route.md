@@ -30,7 +30,7 @@ Avancer petit, publier, en parler, laisser venir.
 - [x] Kit 0.2.0 (`checkpoint`, `onWrapUp`) dans les cinq jeux de Julien (clones à côté, non publiés).
 - [x] Plein écran décidé par Ludiworld (réglage du carnet) ; les jeux n'y ont pas droit dans l'appli et cachent leur bouton.
 - [ ] Le suivi des jeux eux-mêmes (`ludi.v1.<jeu>`) est partagé entre les enfants d'une même tablette : à traiter si les profils servent.
-- Comptes et synchro entre appareils (Supabase, UE) : le parent règle depuis son téléphone.
+- [ ] Comptes et synchro entre appareils (Supabase, UE) : le parent règle depuis son téléphone. Écrits et testés (`spec/comptes.md`), à mettre en service (`supabase/LISEZ-MOI.md`).
 
 ## Ouverture aux autres créateurs (avancé dès la v0)
 - [x] `LUDIWORLD.md` : guide à donner à son IA (charte, cadre, fiche, kit, GitHub Pages, soumission).

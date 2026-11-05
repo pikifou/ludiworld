@@ -1,0 +1,80 @@
+/* Ludiworld, le bureau : un outil, dense et à plat. La nuit du site à gauche, le papier pour lire, l'encre pour les chiffres. */
+[hidden] { display: none !important; }
+body { font-size: .95rem; line-height: 1.45; }
+.b-garde { max-width: 32rem; padding-block: 12vh; padding-inline: var(--gutter); }
+.b-garde h1 { font-family: var(--f-display); font-weight: 800; font-size: 2.6rem; margin-bottom: .3em; }
+
+.bureau { display: grid; grid-template-columns: 200px minmax(0, 1fr); min-height: 100vh; }
+.b-rail { background: var(--nuit); color: var(--papier); padding: 20px 14px; display: flex; flex-direction: column; gap: 20px; position: sticky; top: 0; height: 100vh; }
+.b-rail .lw-marque { font-family: var(--f-display); font-weight: 800; font-size: 1.5rem; color: var(--papier); text-decoration: none; padding-inline: 8px; }
+.b-rail .lw-marque span { color: var(--soleil); }
+#b-nav { display: flex; flex-direction: column; gap: 2px; }
+#b-nav a { padding: 8px 10px; color: #c9d2ee; text-decoration: none; border-left: 4px solid transparent; border-radius: 0 8px 8px 0; }
+#b-nav a:hover { color: var(--papier); background: rgba(255, 255, 255, .07); }
+#b-nav a[aria-current="page"] { color: var(--papier); font-weight: 600; border-left-color: var(--soleil); }
+.b-qui { margin: auto 8px 0; font-size: .8rem; color: #c9d2ee; overflow-wrap: anywhere; }
+
+.b-page { padding-block: 24px 60px; padding-inline: clamp(16px, 3vw, 40px); min-width: 0; }
+.b-page h1 { font-family: var(--f-display); font-weight: 800; font-size: 1.9rem; line-height: 1.1; margin-bottom: .6em; }
+.b-page h2 { font-family: var(--f-display); font-weight: 700; font-size: 1.1rem; line-height: 1.2; margin: 1.6em 0 .6em; }
+.b-page a { color: var(--corail-encre); text-underline-offset: 3px; }
+.b-note { max-width: 70ch; color: var(--encre-douce); }
+.b-vide { color: var(--encre-douce); margin: 0; padding: .5em 0; text-align: left; caption-side: bottom; }
+
+/* Ce qui attend : quatre chiffres qui mènent quelque part. */
+.b-attente { display: flex; flex-wrap: wrap; gap: 0; border-block: 3px solid var(--encre); }
+.b-attente a { flex: 1 1 150px; display: flex; flex-direction: column; padding: 12px 14px 12px 0; color: var(--encre); text-decoration: none; }
+.b-attente a + a { padding-left: 14px; border-left: 1px solid rgba(29, 43, 79, .2); }
+.b-attente a:hover span { text-decoration: underline; }
+.b-attente b { font-family: var(--f-display); font-size: 2.1rem; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
+.b-attente span { font-size: .88rem; color: var(--encre-douce); margin-top: 3px; }
+
+.b-deux { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 0 clamp(20px, 4vw, 48px); }
+.b-trois { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 0 clamp(20px, 4vw, 40px); }
+
+.b-barres { display: grid; gap: 2px; max-width: 760px; }
+.b-barre { display: grid; grid-template-columns: minmax(120px, 13rem) minmax(40px, 1fr) 2.6em 3.2em; align-items: center; gap: 8px; min-height: 26px; font-size: .9rem; }
+.b-nom { min-width: 0; }
+.b-piste { display: block; height: 10px; }
+.b-piste i { display: block; height: 100%; min-width: 1px; background: var(--encre); border-radius: 0 4px 4px 0; }
+.b-barre b { text-align: right; font-variant-numeric: tabular-nums; }
+.b-pct { color: var(--encre-douce); font-size: .84rem; font-variant-numeric: tabular-nums; }
+
+.b-chiffres { margin: 0; display: grid; gap: 0; }
+.b-chiffres div { display: flex; justify-content: space-between; gap: 12px; padding: 5px 0; border-bottom: 1px solid rgba(29, 43, 79, .15); }
+.b-chiffres dd { margin: 0; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+.b-colonnes { margin: 0 0 16px; }
+.b-colonnes figcaption { margin-bottom: 6px; }
+.b-cols { display: flex; align-items: flex-end; gap: 2px; height: 80px; border-bottom: 1px solid var(--encre); }
+.b-col { flex: 1; height: 100%; display: flex; align-items: flex-end; }
+.b-col i { display: block; width: 100%; background: var(--encre); border-radius: 4px 4px 0 0; }
+.b-col:hover i { background: var(--corail-encre); }
+
+.b-outils { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; margin: 0 0 10px; }
+.b-outils input, .b-outils select { min-height: 38px; padding: 4px 8px; margin-left: 6px; font: inherit; color: var(--encre); background: #fff; border: 2px solid rgba(29, 43, 79, .4); border-radius: 7px 10px 6px 9px; }
+.btn-ligne { min-height: 38px; padding: .3em .9em; cursor: pointer; background: none; color: var(--encre); font: 500 .9rem/1.2 var(--f-body); border: 2px solid var(--encre); border-radius: 8px 12px 7px 11px; }
+.btn-ligne:hover { background: var(--encre); color: var(--papier); }
+
+.b-tableau { overflow-x: auto; }
+.b-tableau table { width: 100%; border-collapse: collapse; font-size: .87rem; }
+.b-tableau th { text-align: left; font-weight: 600; padding: 6px 12px 6px 0; border-bottom: 2px solid var(--encre); white-space: nowrap; }
+.b-tableau td { padding: 6px 12px 6px 0; border-bottom: 1px solid rgba(29, 43, 79, .13); vertical-align: top; }
+.b-tableau .nowrap { white-space: nowrap; }
+.b-message { min-width: 16rem; max-width: 32rem; overflow-wrap: anywhere; }
+.b-adresse { overflow-wrap: anywhere; min-width: 12rem; }
+.b-liste { margin: 0; padding: 0; list-style: none; }
+.b-liste li { padding: 5px 0; border-bottom: 1px solid rgba(29, 43, 79, .13); }
+.b-liste span { color: var(--encre-douce); font-size: .85rem; }
+.alerte { margin: 0 0 12px; padding: .55em .8em; background: #fbe4dd; color: #7c2a18; border-left: 5px solid var(--corail-encre); }
+.alerte::before { content: "! "; font-weight: 700; }
+
+@media (max-width: 760px) {
+  .bureau { grid-template-columns: minmax(0, 1fr); }
+  .b-rail { position: static; height: auto; flex-direction: row; flex-wrap: wrap; align-items: center; padding: 10px 16px; gap: 8px 14px; }
+  #b-nav { flex-direction: row; overflow-x: auto; width: 100%; order: 3; }
+  #b-nav a { white-space: nowrap; border-left: 0; border-bottom: 3px solid transparent; border-radius: 0; }
+  #b-nav a[aria-current="page"] { border-bottom-color: var(--soleil); }
+  .b-qui { margin: 0 0 0 auto; }
+  .b-barre { grid-template-columns: minmax(96px, 9rem) minmax(30px, 1fr) 2.2em 2.8em; }
+}

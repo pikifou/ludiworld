@@ -1,0 +1,27 @@
+/* Ludiworld, la page sur les données : les textes en anglais (le français est dans index.html). */
+LudiSite.en({
+  docTitle: 'What Ludiworld does with data',
+  metaDesc: 'What Ludiworld keeps, where, why, and how to erase it all.',
+  t: 'What Ludiworld does with data',
+  i: 'Ludiworld is made for children, so we keep as little as we can, as close to the family as we can. No ads, no resale, no trackers.',
+  a: 'Without an account',
+  a1: 'Everything stays on the device: the child\'s nickname and age, the chosen games, play time, records, and the parent code in scrambled form. Nothing goes over the internet. Games only receive the nickname.',
+  b: 'The questions before creating an account',
+  b1: 'If you answer them, your answers are saved as you go, with no name or address. They serve one purpose: knowing what people expect from Ludiworld and what to build next. If you then create an account, they are attached to it.',
+  c: 'With an account',
+  c1: 'Your email address and an encrypted password, so you can sign in.',
+  c2: 'Your answers to the questions, your language, and whether you accept our messages (you do not, unless you ticked the box).',
+  c3: 'We see the list of accounts, your answers to the questions (including the age ranges you ticked and your message) and the last sign-in date. No nicknames, no play time.',
+  d: 'If you turn on the online copy',
+  d1: 'You are the one who turns it on, and it is off by default. What then goes online: the children\'s nicknames and ages, the chosen games, play time, records and skills, and the parent code in scrambled form. Only you reach them from Ludiworld, and the Ludiworld back office has no access to them. They are not encrypted in the database: technically its administrator could read them, and undertakes not to. Unticking the box erases this copy.',
+  d2: 'Do not use your child\'s real name: a nickname is enough. We never ask for a surname, a photo or a date of birth.',
+  e: 'Where it is hosted',
+  e1: 'With Supabase, in a data center in the European Union. Like any online service, it keeps technical logs for a limited time, which may include an IP address. The site itself is served by GitHub Pages. Each game is hosted by its maker: its card says whether it contacts other sites.',
+  e2: 'Worth knowing: today, Julien\'s games are served from the same address as the site. They only receive the nickname, but it is their code that guarantees this, not the browser. Games by other makers, hosted elsewhere, cannot reach what Ludiworld keeps.',
+  f: 'Your rights',
+  f1: 'See it all: “Download my data” in your account.',
+  f2: 'Erase it all in one go: “Delete my account”. The account, the online copy and your answers disappear at once.',
+  f3: 'What is on a device is erased from the notebook on that device.',
+  f4: 'A question or a request: <a href="https://github.com/pikifou/ludiworld/issues">open a discussion</a>. You can also contact your data protection authority.',
+  g: 'Accounts are for adults only: a parent creates one, and the child has no access to it.'
+});

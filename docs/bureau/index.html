@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Le bureau · Ludiworld</title>
+  <link rel="icon" href="../icons/marmotte-192.png">
+  <link rel="stylesheet" href="../site/barre.css">
+  <link rel="stylesheet" href="../site/site.css">
+  <link rel="stylesheet" href="bureau.css">
+</head>
+<body>
+  <!-- Le code de cette page est public ; les données ne le sont pas : la base ne les rend qu'à un compte du bureau. -->
+  <div class="b-garde" id="b-garde">
+    <h1 id="b-garde-t">Le bureau</h1>
+    <p id="b-garde-p" role="status">Chargement…</p>
+    <a class="btn btn-sun" id="b-garde-a" href="../compte/#connexion" hidden>Se connecter</a>
+  </div>
+
+  <div class="bureau" id="bureau" hidden>
+    <aside class="b-rail">
+      <a class="lw-marque" href="../decouvrir/" aria-label="Ludiworld">Ludi<span>world</span></a>
+      <nav id="b-nav" aria-label="Rubriques">
+        <a href="#apercu">Aperçu</a>
+        <a href="#envies">Les envies</a>
+        <a href="#comptes">Les comptes</a>
+        <a href="#catalogue">Le catalogue</a>
+        <a href="#formules">Les formules</a>
+      </nav>
+      <p class="b-qui" id="b-qui"></p>
+    </aside>
+    <main class="b-page">
+      <section data-rub="apercu" hidden>
+        <h1>Aperçu</h1>
+        <div class="b-attente" id="ap-attente"></div>
+        <div class="b-deux">
+          <div>
+            <h2>Du questionnaire au compte</h2>
+            <div id="ap-parcours"></div>
+          </div>
+          <div>
+            <h2>Depuis l'arrivée des comptes</h2>
+            <dl class="b-chiffres" id="ap-chiffres"></dl>
+          </div>
+        </div>
+        <h2>Ce que les gens veulent</h2>
+        <div id="ap-envie"></div>
+        <h2>Chaque semaine, sur 12 semaines</h2>
+        <div class="b-deux" id="ap-semaines"></div>
+      </section>
+
+      <section data-rub="envies" hidden>
+        <h1>Les envies</h1>
+        <div class="b-trois" id="en-totaux"></div>
+        <h2>Toutes les réponses</h2>
+        <div class="b-outils">
+          <label>Montrer
+            <select id="en-filtre">
+              <option value="">tout le monde</option>
+              <option value="jouer">veut trouver des jeux</option>
+              <option value="aider">veut aider</option>
+              <option value="creer">veut faire un jeu</option>
+              <option value="curieux">regarde</option>
+              <option value="message">a laissé un message</option>
+            </select>
+          </label>
+          <button type="button" class="btn-ligne" id="en-csv">Exporter en CSV</button>
+        </div>
+        <div class="b-tableau"><table id="en-table"></table></div>
+      </section>
+
+      <section data-rub="comptes" hidden>
+        <h1>Les comptes</h1>
+        <p class="b-note">Ni pseudo, ni temps de jeu, ni rien d'autre sur les enfants : la base ne les donne pas à cet écran.</p>
+        <div class="b-outils">
+          <label>Chercher une adresse <input id="co-cherche" type="search" autocomplete="off"></label>
+          <button type="button" class="btn-ligne" id="co-csv">Exporter ceux qui acceptent nos messages</button>
+        </div>
+        <div class="b-tableau"><table id="co-table"></table></div>
+      </section>
+
+      <section data-rub="catalogue" hidden>
+        <h1>Le catalogue</h1>
+        <h2>À traiter sur GitHub</h2>
+        <div id="ca-github"></div>
+        <h2>Les jeux</h2>
+        <div class="b-tableau"><table id="ca-jeux"></table></div>
+        <h2>Ludiworld aime bien</h2>
+        <div class="b-tableau"><table id="ca-recos"></table></div>
+      </section>
+
+      <section data-rub="formules" hidden>
+        <h1>Les formules</h1>
+        <p class="b-note">Un droit (comme « synchro ») appartient à une formule : la base refuse l'écriture à qui n'y a pas droit. Lire et effacer ses données restent toujours possibles. Les formules se modifient dans Supabase, jamais depuis un navigateur.</p>
+        <div class="b-tableau"><table id="fo-table"></table></div>
+      </section>
+    </main>
+  </div>
+
+  <script src="../site/barre.js"></script>
+  <script src="../synchro.js"></script>
+  <script src="../site/nuage.js"></script>
+  <script src="bureau.js"></script>
+</body>
+</html>

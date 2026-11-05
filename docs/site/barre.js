@@ -6,15 +6,21 @@
   var STORE = 'ludiworld.v1';
   var CLE_PARENT = 'ludiworld.parent'; // dernière activité du parent (sessionStorage), après son code
   var DUREE_PARENT = 5 * 60 * 1000;   // au-delà, le carnet redemande le code
+  var CLE_SESSION = 'ludiworld.session'; // la session du compte (site/nuage.js)
+  // Le projet Supabase de Ludiworld. La clé est publique par nature : ce sont les règles de la base qui protègent les données.
+  // Vide : pas de compte, le site et l'appli marchent comme avant. window.LUDI_NUAGE sert aux tests.
+  var NUAGE = window.LUDI_NUAGE || { url: 'https://mtjayvylkapxblzybjrv.supabase.co', cle: 'sb_publishable_4t-dJM6WstpVtr31qgESmQ_bK0FEc9v' };
 
   var T = {
     fr: {
       nav: 'Ludiworld', accueil: 'Accueil', moi: 'Mon Ludiworld', jeux: 'Les jeux', creer: 'Créer un jeu', aime: 'Ludiworld aime bien',
-      code: 'demande le code parent', preparer: 'Préparer la tablette', ouvrir: 'Ouvrir Ludiworld', enfant: 'Côté enfant'
+      code: 'demande le code parent', preparer: 'Préparer la tablette', ouvrir: 'Ouvrir Ludiworld', enfant: 'Côté enfant',
+      connexion: 'Se connecter', compte: 'Mon compte', essayer: 'Essayer'
     },
     en: {
       nav: 'Ludiworld', accueil: 'Home', moi: 'My Ludiworld', jeux: 'The games', creer: 'Make a game', aime: 'Ludiworld likes',
-      code: 'asks for the parent code', preparer: 'Set up the tablet', ouvrir: 'Open Ludiworld', enfant: 'Child side'
+      code: 'asks for the parent code', preparer: 'Set up the tablet', ouvrir: 'Open Ludiworld', enfant: 'Child side',
+      connexion: 'Sign in', compte: 'My account', essayer: 'Try it'
     }
   };
   var ICO = {
@@ -31,8 +37,14 @@
   }
   function ouvrirParent() { try { sessionStorage.setItem(CLE_PARENT, String(Date.now())); } catch (e) { /* rien */ } }
   function fermerParent() { try { sessionStorage.removeItem(CLE_PARENT); } catch (e) { /* rien */ } }
-  // Adresse de l'appli depuis une page : préparer la tablette, ou l'ouvrir.
-  function lienApp(base) { return configure() ? base : base + '#demarrer'; }
+  function nuageActif() { return !!(NUAGE.url && NUAGE.cle); }
+  function connecte() { try { return nuageActif() && !!localStorage.getItem(CLE_SESSION); } catch (e) { return false; } }
+  // Quelqu'un de nouveau passe par les questions et le compte, sinon on prépare la tablette ou on l'ouvre.
+  function nouveauVenu() { return nuageActif() && !configure() && !connecte(); }
+  function lienApp(base) {
+    if (nouveauVenu()) return base + 'compte/#essayer';
+    return configure() ? base : base + '#demarrer';
+  }
 
   function svg(nom) {
     var s = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -76,13 +88,19 @@
     var action = null;
     if (o.action !== false) {
       if (ouvert) action = el('a', { class: 'lw-action', href: b, onclick: fermerParent }, [svg('soleil'), D.enfant]);
+      else if (nouveauVenu()) action = el('a', { class: 'lw-action', href: lienApp(b) }, [svg('soleil'), D.essayer]);
       else action = el('a', { class: 'lw-action', href: lienApp(b) }, [svg('soleil'), conf ? D.ouvrir : D.preparer]);
+    }
+    var lienCompte = null;
+    if (nuageActif()) {
+      var co = connecte();
+      lienCompte = el('a', { class: 'lw-compte', href: b + 'compte/' + (co ? '#espace' : '#connexion'), 'aria-current': o.actif === 'compte' ? 'page' : null, text: co ? D.compte : D.connexion });
     }
     hote.textContent = '';
     hote.appendChild(el('header', { class: 'lw-barre' }, [
       el('a', { class: 'lw-marque', href: b + 'decouvrir/', 'aria-label': 'Ludiworld' }, ['Ludi', el('span', { text: 'world' })]),
       nav,
-      el('div', { class: 'lw-cote' }, [langs, action])
+      el('div', { class: 'lw-cote' }, [langs, lienCompte, action])
     ]));
   }
 
@@ -97,7 +115,8 @@
   }
 
   window.LudiBarre = {
-    rendre: rendre, configure: configure, lienApp: lienApp,
+    rendre: rendre, configure: configure, lienApp: lienApp, nouveauVenu: nouveauVenu, connecte: connecte,
+    nuage: function () { return NUAGE; }, libelleEssai: function (lang) { var D = T[lang] || T.fr; return D.essayer; },
     parentOuvert: parentOuvert, ouvrirParent: ouvrirParent, fermerParent: fermerParent
   };
 })();

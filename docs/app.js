@@ -1,4 +1,4 @@
-/* Ludiworld : l'appli (côté enfant, carnet parent, jeux en plein cadre). Tout reste sur l'appareil. */
+/* Ludiworld : l'appli (côté enfant, carnet parent, jeux en plein cadre). Tout reste sur l'appareil, sauf si le parent active la synchro. */
 (function () {
   'use strict';
 
@@ -366,12 +366,14 @@
           if (code !== acc.pin1) { acc.pin1 = null; msg.textContent = t('hello.pinMismatch'); reset(true); return; }
           var jeux = {};
           Object.keys(acc.jeux || {}).forEach(function (id) { if (acc.jeux[id]) jeux[id] = { max: null }; });
-          store.famille = { v: 2, cree: Date.now(), pin: hash(code), protege: true, enfants: [], actif: null };
+          store.famille = { v: 2, cree: Date.now(), maj: Date.now(), pin: hash(code), protege: true, enfants: [], actif: null };
           var e = nouvelEnfant(acc.nom.trim().slice(0, 24), acc.age, jeux,
             Temps.regles({ ecole: acc.ecole, libre: acc.libre, fin: acc.fin, joursLibres: lang === 'fr' ? [0, 3, 6] : [0, 6] }));
           e.games = store.games; store.games = {};
           store.famille.actif = e.id;
+          e.maj = Date.now();
           saveStore();
+          planifierSynchro();
           acc.step = 5; renderAccueil();
         }),
         el('div', { class: 'a-nav' }, [el('button', { type: 'button', class: 'btn-ghost', text: t('hello.prev'), onclick: function () { acc.pin1 = null; acc.step--; renderAccueil(); } })])
@@ -626,7 +628,7 @@
       inner.appendChild(el('h2', { text: t('gate.forgotTitle') }));
       inner.appendChild(el('p', { text: t('gate.forgotText') }));
       inner.appendChild(el('button', { type: 'button', class: 'btn-sun', text: t('gate.forgotGo'), onclick: function () {
-        foyer().reset = Date.now(); saveStore(); closeGate(); render();
+        foyer().reset = Date.now(); foyer().maj = Date.now(); saveStore(); planifierSynchro(); closeGate(); render();
       } }));
       inner.appendChild(el('button', { type: 'button', class: 'lien', text: t('gate.cancel'), onclick: closeGate }));
     } else if (mode === 'wait') {
@@ -636,7 +638,7 @@
       inner.appendChild(el('p', { text: t('gate.waitText', { t: minutesLeft(left) }) }));
       inner.appendChild(msg);
       inner.appendChild(pinPad(function (code, reset) {
-        if (hash(code) === foyer().pin) { foyer().reset = null; saveStore(); closeGate(); onOk(); return; }
+        if (hash(code) === foyer().pin) { foyer().reset = null; foyer().maj = Date.now(); saveStore(); planifierSynchro(); closeGate(); onOk(); return; }
         msg.textContent = t('gate.wrong'); reset(true);
       }));
     } else if (mode === 'set') {
@@ -649,7 +651,7 @@
         if (code !== first) { first = null; msg.textContent = t('hello.pinMismatch'); reset(true); return; }
         var f = foyer();
         if (f.reset) { f.reset = null; f.codeChange = Date.now(); }
-        f.pin = hash(code); saveStore(); closeGate(); onOk();
+        f.pin = hash(code); f.maj = Date.now(); saveStore(); planifierSynchro(); closeGate(); onOk();
       }));
     } else {
       if (codePret()) { openGate(onOk, 'set'); return; }
@@ -695,7 +697,30 @@
     clearTimeout(toastTimer);
     toastTimer = setTimeout(function () { n.hidden = true; }, 1800);
   }
-  function saveFam(msg) { saveStore(); if (msg !== false) toast(msg || t('parent.saved')); }
+  function saveFam(msg) { marquer(); saveStore(); planifierSynchro(); if (msg !== false) toast(msg || t('parent.saved')); }
+  // Le dernier réglage fait foi d'un appareil à l'autre : on note quand il a changé.
+  function marquer() { var h = foyer(), f = fam(); if (h) h.maj = Date.now(); if (f) f.maj = Date.now(); }
+
+  // ---------- Synchro (seulement si le parent l'a activée dans son compte) ----------
+  // Jamais pendant une partie. Dans le carnet, on envoie sans remplacer ce que le parent a sous les yeux :
+  // l'autre appareil et le prochain retour ici refusionneront de toute façon.
+  var Nuage = window.LudiNuage;
+  var minuteurSynchro = null;
+  function synchroVoulue() { return !!(Nuage && Nuage.actif() && Nuage.connecte() && Nuage.synchroLocale()); }
+  function synchroniser() {
+    if (!synchroVoulue() || playing || !foyer()) return;
+    return Nuage.synchroniser(foyer()).then(function (m) {
+      if (!m || playing || vue === 'parent') return;
+      store.famille = LudiSynchro.fusionner(store.famille, m);
+      saveStore();
+      if (vue === 'enfant') render();
+    }).catch(function () { /* hors ligne : on réessaiera, l'appareil garde tout */ });
+  }
+  function planifierSynchro() {
+    if (!synchroVoulue()) return;
+    clearTimeout(minuteurSynchro);
+    minuteurSynchro = setTimeout(synchroniser, 1500);
+  }
 
   function renderParent() {
     var f = fam();
@@ -1017,6 +1042,7 @@
         } }, [icon('plus'), t('parent.addKid')]),
         h.enfants.length > 1 ? el('button', { type: 'button', class: 'btn-ghost', onclick: function () {
           if (!window.confirm(t('parent.removeKidConfirm', { n: f.enfant.nom }))) return;
+          (h.retires || (h.retires = {}))[f.id] = Date.now();
           h.enfants = h.enfants.filter(function (e) { return e.id !== f.id; });
           h.actif = h.enfants[0].id; saveFam(); renderParent();
         } }, [icon('cross'), t('parent.removeKid', { n: f.enfant.nom })]) : null
@@ -1047,11 +1073,16 @@
       openGate(function () { toast(t('parent.pinChanged')); }, 'set');
     } })]));
     out.appendChild(section(t('parent.lang'), [langSwitch()]));
+    if (Nuage && Nuage.actif()) out.appendChild(section(t('parent.account'), [
+      el('p', { text: Nuage.connecte() ? t('parent.accountOn', { e: Nuage.email() || '' }) : t('parent.accountOff') }),
+      el('a', { class: 'lien', href: 'compte/' + (Nuage.connecte() ? '#espace' : '#creer'), text: Nuage.connecte() ? t('parent.accountOpen') : t('parent.accountCreate') })
+    ]));
     out.appendChild(section(t('parent.data'), [
-      el('p', { text: t('parent.dataText') }),
+      el('p', { text: synchroVoulue() ? t('parent.dataTextSync') : t('parent.dataText') }),
       el('button', { type: 'button', class: 'btn-danger', onclick: function () {
         if (!window.confirm(t('parent.eraseConfirm'))) return;
-        try { localStorage.removeItem(STORE); } catch (e) { /* rien */ }
+        try { localStorage.removeItem(STORE); localStorage.removeItem('ludiworld.envie'); } catch (e) { /* rien */ }
+        if (Nuage) Nuage.oublier(); // une tablette vidée ne reste liée à personne : elle peut changer de famille
         store = { games: {} }; acc = { step: 0, nom: '', age: 7, jeux: null, ecole: 30, libre: 60, fin: 'douce', pin1: null };
         show('accueil');
       } }, [icon('warn'), t('parent.erase')])
@@ -1161,6 +1192,7 @@
     if (!playing) return;
     compter();
     flushStore();
+    setTimeout(planifierSynchro, 0); // la partie est finie : le temps de jeu peut partir
     var wasEssai = playing.essai, backToSheet = playing.sheet;
     playing = null;
     if (frame) { frame.remove(); frame = null; }
@@ -1375,11 +1407,14 @@
   loadCatalogue().then(function () {
     // Un jeu choisi qui a disparu du catalogue n'est plus proposé (on garde son choix au cas où il revient).
     if (!prepare) { show('accueil'); return; }
+    synchroniser();
     if (arrivee === '#carnet' && LudiBarre.parentOuvert()) { show('parent'); return; }
     LudiBarre.fermerParent();
     show('enfant');
     if (arrivee === '#carnet') openGate(ouvrirCarnet);
   });
+  // Retour sur l'appli (« +10 min » donné depuis le téléphone, par exemple) : on regarde s'il y a du neuf.
+  document.addEventListener('visibilitychange', function () { if (!document.hidden && vue === 'enfant') synchroniser(); });
   // « Mon Ludiworld » cliqué sans quitter la page (onglet du carnet, adresse tapée) : même règle.
   window.addEventListener('hashchange', function () {
     if (location.hash !== '#carnet' || !prepare) return;
