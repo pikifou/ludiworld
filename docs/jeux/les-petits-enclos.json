@@ -1,0 +1,79 @@
+{
+  "ludi": 1,
+  "id": "les-petits-enclos",
+  "status": "published",
+  "title": {
+    "fr": "Les Petits Enclos",
+    "en": "Little Enclosures"
+  },
+  "pitch": {
+    "fr": "Accompagne un petit gardien dans cinq mondes pour installer lucioles, pandas, hiboux, moutons et chats. Un animal par ligne, colonne et enclos, sans se toucher : 200 énigmes à difficulté progressive.",
+    "en": "Join a little keeper across five worlds to settle fireflies, pandas, owls, sheep and cats. One animal per row, column and enclosure, without touching: 200 progressively challenging puzzles."
+  },
+  "url": "https://pikifou.github.io/les-petits-enclos/",
+  "icon": "https://pikifou.github.io/les-petits-enclos/icon-512.png",
+  "color": "#d8dfc8",
+  "author": {
+    "name": "Julien",
+    "url": "https://github.com/pikifou/les-petits-enclos"
+  },
+  "languages": [
+    "fr",
+    "en"
+  ],
+  "age": {
+    "min": 6,
+    "max": 10
+  },
+  "reading": "some",
+  "learning": {
+    "level": "core",
+    "domains": [
+      "logique.puzzle"
+    ],
+    "what": {
+      "fr": "Croiser plusieurs contraintes, écarter des possibilités et vérifier une hypothèse.",
+      "en": "Combine several constraints, rule out possibilities and test an assumption."
+    },
+    "how": {
+      "fr": "200 grilles à solution unique, de 4 × 4 à 8 × 8, classées selon les déductions nécessaires. Les indices rappellent une règle générale sans montrer la case. Les règles et indices demandent de lire ou d’être accompagné.",
+      "en": "200 uniquely solvable grids, from 4 × 4 to 8 × 8, ordered by the deductions needed. Hints explain a general rule without revealing a square. Rules and hints require reading or help from an adult."
+    }
+  },
+  "session": {
+    "minutes": [
+      5,
+      15
+    ],
+    "natural_end": true,
+    "total_hours": 15
+  },
+  "content": {
+    "fr": "Des animaux à installer dans des paysages doux. Pas de chronomètre, de vies à perdre ni de combat.",
+    "en": "Animals to settle in gentle landscapes. No timer, lives to lose or fighting."
+  },
+  "devices": [
+    "phone",
+    "tablet",
+    "computer"
+  ],
+  "offline": true,
+  "healthy": {
+    "no_ads": true,
+    "no_purchases": true,
+    "no_subscription": true,
+    "no_loot_boxes": true,
+    "no_daily_pressure": true,
+    "no_notifications": true,
+    "no_strangers": true,
+    "no_tracking": true,
+    "natural_stops": true
+  },
+  "third_parties": [],
+  "kit": true,
+  "embed": true,
+  "source": {
+    "card": "https://pikifou.github.io/les-petits-enclos/ludi.json",
+    "imported": "2026-11-11"
+  }
+}
