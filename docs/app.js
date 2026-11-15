@@ -1105,15 +1105,17 @@
       el('p', { text: Nuage.connecte() ? t('parent.accountOn', { e: Nuage.email() || '' }) : t('parent.accountOff') }),
       el('a', { class: 'lien', href: 'compte/' + (Nuage.connecte() ? '#espace' : '#creer'), text: Nuage.connecte() ? t('parent.accountOpen') : t('parent.accountCreate') })
     ]));
+    var enLigne = synchroVoulue();
+    if (enLigne) out.appendChild(section(t('parent.onlineCopy'), [el('p', { text: t('parent.onlineCopyText') })]));
     out.appendChild(section(t('parent.data'), [
-      el('p', { text: synchroVoulue() ? t('parent.dataTextSync') : t('parent.dataText') }),
+      el('p', { text: enLigne ? t('parent.dataTextSync') : t('parent.dataText') }),
       el('button', { type: 'button', class: 'btn-danger', onclick: function () {
-        if (!window.confirm(t('parent.eraseConfirm'))) return;
+        if (!window.confirm(t(enLigne ? 'parent.eraseConfirmSync' : 'parent.eraseConfirm'))) return;
         try { localStorage.removeItem(STORE); localStorage.removeItem('ludiworld.envie'); } catch (e) { /* rien */ }
         if (Nuage) Nuage.oublier(); // une tablette vidée ne reste liée à personne : elle peut changer de famille
         store = { games: {} }; acc = { step: 0, nom: '', age: 7, jeux: null, ecole: 30, libre: 60, fin: 'douce', pin1: null };
         show('accueil');
-      } }, [icon('warn'), t('parent.erase')])
+      } }, [icon('warn'), t(enLigne ? 'parent.eraseSync' : 'parent.erase')])
     ]));
     return out;
   }
