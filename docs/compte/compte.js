@@ -184,19 +184,14 @@
   }
 
   // ---------- Après la connexion ----------
-  // Avec son mot de passe, sur un appareil vide : on retrouve sa copie en ligne.
-  // Un appareil qui a déjà un foyer n'envoie rien tant que le parent n'a pas coché la case, sous l'adresse affichée :
-  // il peut s'agir d'une autre famille sur la même tablette.
+  // Le mot de passe autorise la liaison ; sur une tablette préparée, le code parent la précède.
   function apresMotDePasse() {
     var msg = '';
     return Promise.resolve().then(function () {
       if (rep.id) return N.rpc('rattacher_envie', { p_id: rep.id }).catch(function () { /* rien */ });
     }).then(function () {
-      return N.lireTable('comptes?select=synchro');
-    }).then(function (l) {
-      if (!(l && l[0] && l[0].synchro) || foyerLocal() || ancienFormat()) return;
-      return N.synchroniser(null).then(function (m) {
-        N.poserSynchroLocale(true);
+      if (verrouille() || ancienFormat()) return;
+      return N.lierAppareil(foyerLocal()).then(function (m) {
         if (m) { ecrireFoyer(m); msg = 'synchroPrete'; }
       });
     }).catch(function () { /* hors ligne : on voit l'espace quand même, il dira ce qui manque */ }).then(function () { entrer(msg); });
@@ -294,15 +289,17 @@
     dire($('e-appareil'), pret ? 'appPret' : 'appVide');
     $('e-ouvrir').textContent = tx(pret ? 'appOuvrir' : 'appPreparer');
     $('e-ouvrir').setAttribute('href', pret ? '../' : '../#demarrer');
-    $('e-synchro').checked = N.synchroLocale();
+    $('e-synchro').disabled = true;
     $('e-formule').innerHTML = tx('formuleLibre');
     Promise.all([N.lireTable('comptes?select=synchro,nouvelles'), N.rpc('mes_droits'), N.rpc('est_admin')]).then(function (r) {
       var c = r[0] && r[0][0];
       if (!c) { N.oublier(); LudiSite.rafraichir(); aller('connexion'); return; }
-      // La case dit l'état de cet appareil. Une copie coupée depuis un autre appareil le délie ici aussi.
+      // La case représente le choix du compte, partagé entre tous les appareils.
       if (!c.synchro) N.poserSynchroLocale(false);
-      $('e-synchro').checked = N.synchroLocale();
-      if (c.synchro && !N.synchroLocale()) dire($('e-synchro-etat'), 'syAutre'); else $('e-synchro-etat').hidden = true;
+      $('e-synchro').checked = !!c.synchro;
+      if (!c.synchro) dire($('e-synchro-etat'), 'syOff');
+      else if (!N.appareilAutorise() && !N.liaisonDemandee()) dire($('e-synchro-etat'), 'syAutre');
+      else $('e-synchro-etat').hidden = true;
       $('e-nouvelles').checked = !!c.nouvelles;
       var nom = r[1] && r[1].nom && (r[1].nom[document.documentElement.lang] || r[1].nom.fr);
       if (nom) {
@@ -310,7 +307,8 @@
         $('e-formule').appendChild(document.createElement('span')).innerHTML = tx('formuleLibre');
       }
       $('e-bureau-p').hidden = r[2] !== true;
-    }).catch(erreurEspace);
+      if (c.synchro && !ancienFormat()) return N.lierAppareil(foyerLocal()).then(ecrireFoyer);
+    }).catch(erreurEspace).then(function () { $('e-synchro').disabled = false; });
   }
   function brancherEspace() {
     $('e-synchro').addEventListener('change', function () {

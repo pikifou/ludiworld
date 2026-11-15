@@ -69,7 +69,7 @@ test('inscription : préférences et réponse au questionnaire passent par les m
   const r = await c.n.inscrire({ email: 'a@exemple.test', motDePasse: 'motdepasse', langue: 'fr', nouvelles: true, envieId: 'e-1', retour: 'https://site/compte/' });
   const appel = c.fetch.appels[0];
   assert.strictEqual(appel.url, URL_ + '/auth/v1/signup?redirect_to=' + encodeURIComponent('https://site/compte/'));
-  assert.deepStrictEqual(appel.corps.data, { langue: 'fr', nouvelles: 'true', envie_id: 'e-1' });
+  assert.deepStrictEqual(appel.corps.data, { langue: 'fr', synchro: true, nouvelles: 'true', envie_id: 'e-1' });
   assert.strictEqual(r.aConfirmer, true, 'aucune session : il faut confirmer l\'adresse');
   assert.strictEqual(c.n.connecte(), false);
 });
@@ -177,6 +177,62 @@ test('déconnexion : la session part, même sans réseau', async () => {
 });
 
 const f = (o) => Object.assign({ pin: 'p', maj: 1, actif: 'e1', enfants: [] }, o);
+
+test('mot de passe : la liaison automatique attend le contrôle parent, puis retrouve le foyer', async () => {
+  const etat = f({ pin: 'parent' });
+  const c = client([{ status: 200, body: SESSION }, { status: 200, body: [{ synchro: true }] }, { status: 200, body: [{ etat, version: 1 }] }]);
+  await c.n.connecter('a@exemple.test', 'x');
+  assert.strictEqual(c.n.liaisonDemandee(), true);
+  assert.strictEqual(c.n.synchroLocale(), false);
+  assert.strictEqual(c.fetch.appels.length, 1, 'la connexion seule ne fait partir aucun foyer');
+  assert.deepStrictEqual(await c.n.lierAppareil(null), etat);
+  assert.strictEqual(c.n.synchroLocale(), true);
+  assert.strictEqual(c.n.liaisonDemandee(), false);
+});
+
+test('une désactivation du compte est respectée sur un nouvel appareil et sur un appareil déjà relié', async () => {
+  const c = client([{ status: 200, body: SESSION }, { status: 200, body: [{ synchro: false }] }, { status: 200, body: [{ synchro: false }] }]);
+  await c.n.connecter('a@exemple.test', 'x');
+  assert.strictEqual(await c.n.lierAppareil(f()), null);
+  assert.strictEqual(c.n.synchroLocale(), false);
+  c.n.poserSynchroLocale(true);
+  assert.strictEqual(await c.n.lierAppareil(f()), null);
+  assert.strictEqual(c.n.synchroLocale(), false);
+  assert.strictEqual(c.fetch.appels.length, 3, 'aucune lecture ni écriture du foyer');
+});
+
+test('confirmation : seule une inscription faite ici peut autoriser la liaison du même compte', async () => {
+  const c = client([{ status: 200, body: { id: 'u1' } }]);
+  await c.n.inscrire({ email: 'a@exemple.test', motDePasse: 'x' });
+  const jwt = id => 'x.' + Buffer.from(JSON.stringify({ sub: id })).toString('base64url') + '.y';
+  c.n.lireRetour('#access_token=' + jwt('autre') + '&expires_in=3600&type=signup');
+  assert.strictEqual(c.n.liaisonDemandee(), false);
+  assert.strictEqual(await c.n.lierAppareil(f()), null);
+  assert.strictEqual(c.fetch.appels.length, 1, 'un lien d\'un autre compte ne fait rien partir');
+  c.stockage.removeItem('ludiworld.session');
+  c.n.lireRetour('#access_token=' + jwt('u1') + '&expires_in=3600&type=signup');
+  assert.strictEqual(c.n.liaisonDemandee(), true);
+});
+
+test('une liaison hors ligne reste en attente pour la prochaine tentative', async () => {
+  const c = client([{ status: 200, body: SESSION }, new TypeError('Failed to fetch'), { status: 200, body: [{ synchro: true }] }, { status: 200, body: [] }, { status: 200, body: 1 }]);
+  await c.n.connecter('a@exemple.test', 'x');
+  await assert.rejects(c.n.lierAppareil(f()));
+  assert.strictEqual(c.n.liaisonDemandee(), true);
+  assert.strictEqual(c.n.synchroLocale(), false);
+  await c.n.lierAppareil(f());
+  assert.strictEqual(c.n.synchroLocale(), true);
+});
+
+test('réactiver depuis un autre appareil reprend la synchro sans refaire la liaison', async () => {
+  const c = client([{ status: 200, body: SESSION }, { status: 200, body: [{ synchro: false }] }, { status: 200, body: [{ synchro: true }] }, { status: 200, body: [] }, { status: 200, body: 1 }]);
+  await c.n.connecter('a@exemple.test', 'x');
+  await c.n.lierAppareil(f());
+  assert.strictEqual(c.n.synchroLocale(), false);
+  assert.strictEqual(c.n.appareilAutorise(), true, 'le choix du compte ne fait pas oublier cet appareil');
+  await c.n.lierAppareil(f());
+  assert.strictEqual(c.n.synchroLocale(), true);
+});
 
 test('synchro : rien en ligne, on envoie le foyer (version 0) et on retient la version', async () => {
   const c = client([{ status: 200, body: SESSION }, { status: 200, body: [] }, { status: 200, body: 1 }]);

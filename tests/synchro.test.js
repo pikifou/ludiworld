@@ -113,3 +113,31 @@ test('ne modifie pas ce qu\'on lui donne', () => {
   assert.strictEqual(JSON.stringify(a), ca);
   assert.strictEqual(JSON.stringify(b), cb);
 });
+
+test('ce que dit l\'enfant et les envies se fusionnent case par case, le plus récent gagne', () => {
+  const a = Object.assign(enfant('e1'), { maj: 5, avis: { x: { v: 'bof', t: 1 }, y: { v: 'appris', t: 9 } }, envies: { z: { v: true, t: 2 } } });
+  const b = Object.assign(enfant('e1'), { maj: 9, avis: { x: { v: 'adore', t: 3 }, y: { v: null, t: 4 } } });
+  const m = fusionner(foyer({ enfants: [a] }), foyer({ enfants: [b] })).enfants[0];
+  assert.strictEqual(m.avis.x.v, 'adore');
+  assert.strictEqual(m.avis.y.v, 'appris');
+  assert.strictEqual(m.envies.z.v, true);
+});
+
+test('la sauvegarde d\'un jeu : la plus récente gagne, d\'un bloc, dans les deux sens', () => {
+  const jeu = (save) => ({ ms: 1000, sessions: 1, days: {}, scores: {}, progress: {}, skills: {}, skillDays: {}, save });
+  const tablette = foyer({ enfants: [enfant('e1', { games: { tour: jeu({ data: { etage: 9, done: [1, 2] }, at: 2000 }) } })] });
+  const tel = foyer({ enfants: [enfant('e1', { games: { tour: jeu({ data: { etage: 12 }, at: 5000 }), cochons: jeu({ data: { sues: 3 }, at: 10 }) } })] });
+  [fusionner(tablette, tel), fusionner(tel, tablette)].forEach((m) => {
+    const g = m.enfants[0].games;
+    assert.deepStrictEqual(g.tour.save, { data: { etage: 12 }, at: 5000 });
+    assert.deepStrictEqual(g.cochons.save, { data: { sues: 3 }, at: 10 });
+  });
+});
+
+test('une sauvegarde absente d\'un côté n\'efface pas celle de l\'autre', () => {
+  const avec = foyer({ enfants: [enfant('e1', { games: { tour: { ms: 1, save: { data: { etage: 4 }, at: 9 } } } })] });
+  const sans = foyer({ enfants: [enfant('e1', { games: { tour: { ms: 5 } } })] });
+  assert.deepStrictEqual(fusionner(sans, avec).enfants[0].games.tour.save, { data: { etage: 4 }, at: 9 });
+  assert.strictEqual(fusionner(sans, avec).enfants[0].games.tour.ms, 5);
+  assert.strictEqual('save' in fusionner(sans, sans).enfants[0].games.tour, false);
+});

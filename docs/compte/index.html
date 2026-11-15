@@ -109,7 +109,7 @@
     <!-- Créer son compte -->
     <section class="feuille" data-vue="creer" hidden>
       <h1 tabindex="-1" data-t="cT">Créez votre compte de parent</h1>
-      <p data-t="cP">Gratuit. Il garde vos réglages et vous laisse retrouver Ludiworld sur vos autres appareils, si vous le souhaitez.</p>
+      <p data-t="cP">Gratuit. Vos réglages et les résultats des jeux sont synchronisés pour les retrouver sur votre téléphone, votre tablette et votre ordinateur. Vous pouvez désactiver la synchronisation dans votre compte.</p>
       <form id="f-creer" novalidate>
         <label for="c-email" data-t="email">Adresse e-mail</label>
         <input id="c-email" type="email" autocomplete="email" inputmode="email" required>
@@ -120,7 +120,7 @@
         <label class="case"><input id="c-nouvelles" type="checkbox"> <span data-t="nouvelles">Écrivez-moi quand il y a du nouveau, ou pour tester un jeu. Pas plus d'un message par mois.</span></label>
         <p class="alerte" role="alert" hidden></p>
         <div class="actions">
-          <button type="submit" class="btn btn-sun" data-t="cGo">Créer mon compte</button>
+          <button type="submit" class="btn btn-sun" data-t="cGo">Créer mon compte et synchroniser</button>
         </div>
       </form>
       <p class="autre"><span data-t="dejaCompte">Vous avez déjà un compte&nbsp;?</span> <a href="#connexion" data-t="seConnecter">Se connecter</a></p>
@@ -147,6 +147,7 @@
         <input id="s-email" type="email" autocomplete="email" inputmode="email" required>
         <label for="s-mdp" data-t="mdp2">Mot de passe</label>
         <input id="s-mdp" type="password" autocomplete="current-password" required>
+        <p class="q-aide" data-t="sSy">Si la synchronisation est activée dans votre compte, cet appareil retrouve automatiquement vos réglages et vos résultats.</p>
         <p class="alerte" role="alert" hidden></p>
         <button type="button" class="lien-doux" id="s-renvoyer" hidden data-t="vRe2">Renvoyer le message de confirmation</button>
         <div class="actions">
@@ -216,9 +217,9 @@
 
         <section class="e-bloc e-large">
           <h2 data-t="eSyT">Retrouver Ludiworld sur mes appareils</h2>
-          <label class="case"><input id="e-synchro" type="checkbox"> <span data-t="eSyL">Garder une copie en ligne pour la retrouver sur mes autres appareils</span></label>
+          <label class="case"><input id="e-synchro" type="checkbox" disabled aria-describedby="e-synchro-aide"> <span data-t="eSyL">Synchroniser mes réglages et les résultats sur mes appareils</span></label>
           <p data-t="eSyP">Partent en ligne&nbsp;: le pseudo et l'âge des enfants, les jeux choisis, le temps de jeu, les records et les notions, et votre code parent sous une forme brouillée. Le bureau de Ludiworld n'y a pas accès. Elles ne sont pas chiffrées dans la base&nbsp;: techniquement, son administrateur pourrait les lire, et il s'engage à ne pas le faire.</p>
-          <p class="q-aide" data-t="eSyH">Décocher efface la copie en ligne. Ce qui est sur cet appareil y reste.</p>
+          <p class="q-aide" id="e-synchro-aide" data-t="eSyH">Si vous désactivez la synchronisation, les nouvelles parties restent sur l'appareil où l'enfant joue. Les résultats de la tablette ne seront plus consultables depuis votre téléphone ou un autre ordinateur. La copie en ligne est effacée ; les données déjà présentes sur les appareils restent en place.</p>
           <p class="bien" id="e-synchro-etat" role="status" hidden></p>
         </section>
 
@@ -280,9 +281,9 @@
     <span data-t="reRenvoye">Message renvoyé.</span>
     <span data-t="mdpChange">Mot de passe changé.</span>
     <span data-t="erreurAutreCompte">Un autre compte est déjà ouvert sur cet appareil. Déconnectez-vous d'abord, puis rouvrez le lien.</span>
-    <span data-t="syAutre">Ce compte a déjà une copie en ligne. Cochez la case pour la réunir avec ce qui est sur cet appareil.</span>
-    <span data-t="syOn">Copie en ligne à jour.</span>
-    <span data-t="syOff">Copie en ligne effacée.</span>
+    <span data-t="syAutre">Connectez-vous avec votre mot de passe pour retrouver vos réglages et vos résultats sur cet appareil.</span>
+    <span data-t="syOn">Réglages et résultats synchronisés.</span>
+    <span data-t="syOff">Synchronisation désactivée. Les nouvelles parties restent sur l'appareil utilisé.</span>
     <span data-t="synchroPrete">Votre Ludiworld est retrouvé sur cet appareil.</span>
     <span data-t="appPret">Ludiworld est préparé ici.</span>
     <span data-t="appVide">Ludiworld n'est pas encore préparé sur cet appareil.</span>

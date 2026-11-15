@@ -65,9 +65,11 @@ console.log('Création de comptes');
 await db.exec(`insert into auth.users (id, email, email_confirmed_at, raw_user_meta_data) values
   ('${ID.a}', 'a@exemple.test', now(), '{"langue": "en", "nouvelles": "true", "envie_id": "${ENV.a}", "formule": "royale", "est_admin": true}'),
   ('${ID.b}', 'b@exemple.test', now(), '{"envie_id": "pas-un-uuid", "nouvelles": "oui"}'),
-  ('${ID.adm}', 'patron@exemple.test', now(), '{}')`);
+  ('${ID.adm}', 'patron@exemple.test', now(), '{"synchro": true}')`);
 const compteA = (await db.query('select * from public.comptes where id = $1', [ID.a])).rows[0];
 check('compte créé avec langue et nouvelles', compteA.langue === 'en' && compteA.nouvelles === true, compteA);
+check('une inscription qui annonce la synchro l\'active', (await db.query('select synchro from public.comptes where id = $1', [ID.adm])).rows[0].synchro === true);
+check('sans ce choix à l\'inscription, la synchro reste coupée', compteA.synchro === false);
 const compteB = (await db.query('select * from public.comptes where id = $1', [ID.b])).rows[0];
 check('des métadonnées invalides ne cassent pas l\'inscription', compteB && compteB.nouvelles === false && compteB.langue === 'fr', compteB);
 check('toujours gratuit à la création, quoi qu\'on envoie', (await db.query('select formule_id f from public.abonnements where compte_id = $1', [ID.a])).rows[0].f === 'gratuit');

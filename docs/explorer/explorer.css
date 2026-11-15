@@ -1,0 +1,138 @@
+/* Ludiworld, la page Explorer : une scène de nuit, où seules les branches et les icônes des jeux sont vives. */
+.page-explorer {
+  --ex-nuit: #10183a; --ex-nuit-2: #1a2455; --ex-nuit-3: #2f3c86; --ex-craie: #fbf7ee; --ex-brume: #c3cced;
+  background: var(--ex-nuit); color: var(--ex-craie);
+}
+.page-explorer :focus-visible { outline: 3px solid var(--soleil); outline-offset: 2px; }
+.ex { --ex-marge: max(16px, env(safe-area-inset-left, 0px)); display: flex; flex-direction: column; }
+.ex button, .ex a { font: inherit; color: inherit; }
+.ex button { cursor: pointer; }
+.ex-cache { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+.ex-outils { display: flex; align-items: center; gap: 10px 18px; flex-wrap: wrap; padding: 12px var(--ex-marge) 8px; }
+.ex-titre { font-family: var(--f-display); font-weight: 800; font-size: 2rem; line-height: 1; color: var(--soleil); }
+.ex-cherche { position: relative; flex: 1 1 280px; min-width: 0; max-width: 640px; }
+.ex-cherche input {
+  width: 100%; min-height: 48px; padding: 2px 16px 0; font-family: var(--f-display); font-weight: 500; font-size: 1.15rem; color: var(--ex-craie);
+  background: var(--ex-nuit-2); border: 2px solid var(--ex-nuit-3); border-radius: 16px 22px 14px 20px;
+}
+.ex-cherche input::placeholder { color: var(--ex-brume); }
+.ex-resultats {
+  position: absolute; z-index: 30; top: calc(100% + 6px); left: 0; right: 0; max-height: 60vh; overflow-y: auto;
+  display: flex; flex-direction: column; gap: 2px; padding: 6px; background: var(--ex-nuit-2);
+  border: 2px solid var(--ex-nuit-3); border-radius: 14px 18px 12px 16px; box-shadow: 0 12px 30px rgba(0, 0, 0, .45);
+}
+.ex-resultats[hidden] { display: none; }
+.ex-resultats button { display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 6px 8px; background: none; border: 0; border-radius: 10px; text-align: left; line-height: 1.2; }
+.ex-resultats button:hover, .ex-resultats button:focus-visible { background: var(--ex-nuit-3); }
+.ex-resultats small { display: block; color: var(--ex-brume); font-size: .78rem; }
+.ex-resultats p { margin: 6px 8px; font-size: .95rem; line-height: 1.35; }
+.ex-mini-vide { flex: none; display: grid; place-items: center; width: 36px; height: 36px; border: 2px dashed var(--ex-nuit-3); border-radius: 10px; }
+.ex-enfants { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.ex-enfant, .ex-envies { min-height: 44px; padding: 2px 13px 0; font-family: var(--f-display) !important; font-weight: 700 !important; background: var(--ex-nuit-2); border: 2px solid transparent; border-radius: 12px 16px 10px 14px; }
+.ex-enfant[aria-pressed="true"] { border-color: var(--soleil); }
+.ex-enfant:disabled { cursor: default; opacity: 1; }
+.ex-envies { background: none; border-color: var(--ex-nuit-3); }
+
+.ex-branches { display: flex; gap: 6px; padding: 2px var(--ex-marge) 8px; overflow-x: auto; scrollbar-width: thin; }
+.ex-branches button {
+  flex: none; display: inline-flex; align-items: center; gap: 7px; min-height: 46px; padding: 3px 13px 0;
+  font-family: var(--f-display); font-weight: 700; font-size: 1.05rem; background: var(--ex-nuit-2); border: 2px solid transparent; border-radius: 13px 17px 11px 15px;
+}
+.ex-branches button[aria-pressed="true"] { border-color: var(--c); color: var(--c); background: var(--ex-nuit); }
+.ex-tous { margin-right: 10px; }
+.ex-glyphe { flex: none; }
+
+/* Le pli : l'arbre à gauche, ce qu'on a touché à droite. L'arbre garde sa hauteur pour qu'on monte dedans. */
+.ex-scene { display: grid; grid-template-columns: minmax(0, 1fr) 360px; height: max(560px, calc(100dvh - 210px)); }
+.ex-arbre { position: relative; display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+.ex-attente { padding: 40px var(--ex-marge); font-family: var(--f-display); font-size: 1.3rem; }
+.ex-progression { flex: 1; min-height: 0; overflow: auto; display: flex; flex-direction: column; justify-content: safe center; }
+.ex-colonnes { display: flex; justify-content: safe center; align-items: flex-end; gap: 6px; padding: 8px 16px 0; min-width: max-content; }
+.ex-colonne { position: relative; flex: none; }
+.ex-traits { position: absolute; inset: 0; }
+.ex-case { position: absolute; display: flex; flex-direction: column; align-items: center; width: 118px; padding: 0; background: none; border: 0; }
+.ex-hex { display: block; width: 72px; height: 81px; transition: transform .18s; }
+.ex-case:hover .ex-hex { transform: scale(1.14); }
+.ex-case.sel .ex-hex polygon:last-of-type { stroke: var(--soleil); stroke-width: 7; stroke-opacity: 1; stroke-dasharray: none; }
+.ex-case.sel .ex-nom { color: var(--soleil); }
+.ex-nom { margin-top: 1px; font-family: var(--f-display); font-weight: 700; font-size: .96rem; line-height: 1.05; text-align: center; text-shadow: 0 0 6px var(--ex-nuit), 0 0 3px var(--ex-nuit); }
+.ex-initiale { font-family: var(--f-display); font-weight: 800; font-size: 46px; fill: #fff; }
+.ex-encore { font-family: var(--f-display); font-weight: 800; font-size: 18px; fill: #10183a; }
+.ex-terne { filter: saturate(.55) brightness(.82); }
+.ex-pied {
+  position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); padding: 5px 14px 2px; white-space: nowrap;
+  font-family: var(--f-display); font-weight: 800; font-size: 1.2rem; color: var(--ex-nuit); background: var(--c); border-radius: 12px 16px 10px 14px;
+}
+.ex-tronc { flex: none; height: 8px; width: min(90%, 900px); margin: 0 auto 8px; background: var(--c); border-radius: 4px; }
+.ex-legende { flex: none; display: flex; flex-wrap: wrap; gap: 4px 14px; padding: 6px 16px 10px; font-size: .8rem; color: var(--ex-brume); }
+.ex-legende span { display: inline-flex; align-items: center; gap: 6px; }
+.ex-monte { animation: ex-monte .55s cubic-bezier(.2, 1.2, .4, 1) both; }
+@keyframes ex-monte { from { transform: translateY(14px); opacity: 0; } }
+
+/* Tous les jeux */
+.ex-mur { position: absolute; inset: 0; overflow-y: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); align-content: start; gap: 14px; padding: 6px 16px 26px; }
+.ex-tuile { display: flex; flex-direction: column; gap: 8px; padding: 10px; background: var(--ex-nuit-2); border: 2px solid transparent; border-radius: 18px 24px 14px 20px; }
+.ex-tuile.sel { border-color: var(--soleil); }
+.ex-tuile-jeu { display: block; width: 100%; padding: 0; background: none; border: 0; text-align: left; }
+.ex-tuile-jeu .ex-image { width: 100%; height: auto; aspect-ratio: 1; }
+.ex-tuile-jeu strong { display: block; margin-top: 7px; font-family: var(--f-display); font-weight: 800; font-size: 1.15rem; line-height: 1.05; }
+.ex-tuile-jeu em { display: block; margin-top: 3px; font-style: normal; font-size: .82rem; color: var(--ex-brume); }
+.ex-pastilles { display: flex; flex-wrap: wrap; gap: 5px; }
+.ex-pastilles button { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 3px 9px; font-size: .82rem; line-height: 1.1; text-align: left; background: var(--ex-nuit); border: 0; border-radius: 9px 12px 8px 11px; }
+.ex-pastilles button:hover { outline: 2px solid var(--c); }
+
+.ex-image { position: relative; display: block; flex: none; overflow: hidden; width: 76px; height: 76px; background: var(--jeu); border-radius: 15px 18px 12px 17px; }
+.ex-image > span { position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--f-display); font-weight: 800; font-size: 1.8rem; color: #fff; }
+.ex-image img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.ex-image.mini { width: 36px; height: 36px; border-radius: 9px; }
+.ex-image.mini > span { font-size: 1rem; }
+.ex-image.grande { width: min(100%, 120px); height: auto; aspect-ratio: 1; border-radius: 26px 32px 22px 30px; }
+
+/* Le panneau */
+.ex-panneau { min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 11px; padding: 18px 18px 22px; background: var(--ex-nuit-2); border-radius: 26px 0 0 0; }
+.ex-panneau h2 { font-family: var(--f-display); font-weight: 800; font-size: 2rem; line-height: 1; }
+.ex-panneau h3 { margin-top: 5px; font-family: var(--f-display); font-weight: 700; font-size: 1.15rem; line-height: 1.1; }
+.ex-panneau p { margin: 0; font-size: .95rem; line-height: 1.42; }
+.ex-fil, .ex-note { font-size: .82rem !important; color: var(--ex-brume); }
+.ex-fait { font-size: .9rem !important; line-height: 1.32 !important; }
+.ex-alerte { padding: 7px 10px; font-size: .88rem !important; color: var(--ex-nuit); background: var(--soleil); border-radius: 10px 13px 9px 12px; }
+.ex-fermer { display: none; }
+.ex-carte { display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px; text-align: left; background: var(--ex-nuit); border: 0; border-radius: 16px 22px 14px 20px; }
+.ex-carte strong { display: block; font-family: var(--f-display); font-weight: 800; font-size: 1.15rem; line-height: 1.05; }
+.ex-carte span span { display: block; margin-top: 3px; font-size: .82rem; line-height: 1.3; }
+.ex-choix { display: flex; flex-wrap: wrap; gap: 7px; }
+.ex-choix button { min-height: 46px; padding: 3px 12px 0; font-family: var(--f-display); font-weight: 700; background: var(--ex-nuit); border: 2px solid var(--ex-nuit-3); border-radius: 12px 16px 10px 14px; }
+.ex-choix button[aria-pressed="true"] { color: var(--ex-nuit); background: var(--soleil); border-color: var(--soleil); }
+.ex-choix button[aria-pressed="true"]::before { content: "✓ "; }
+.ex-actions { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+.ex-action { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 48px; padding: 3px 15px 0; font-family: var(--f-display) !important; font-weight: 800 !important; font-size: 1.1rem !important; line-height: 1.1; text-align: center; text-decoration: none; color: var(--ex-nuit) !important; background: var(--soleil); border: 0; border-radius: 14px 18px 12px 16px; }
+.ex-action small { font-family: var(--f-body); font-weight: 400; font-size: .75rem; }
+.ex-action.creux { color: var(--ex-craie) !important; background: none; border: 2px solid var(--ex-brume); font-weight: 700 !important; }
+.ex-lien { font-weight: 500; color: var(--soleil) !important; text-underline-offset: 3px; }
+
+@media (prefers-reduced-motion: reduce) { .ex-monte { animation: none; } .ex-hex { transition: none; } }
+
+@media (max-width: 1100px) {
+  .ex-scene { grid-template-columns: minmax(0, 1fr) 320px; height: max(540px, calc(100dvh - 250px)); }
+  .ex-branches { gap: 4px; }
+  .ex-branches button { padding-inline: 7px; font-size: .98rem; }
+  .ex-tous { margin-right: 4px; }
+}
+
+/* Téléphone et tablette en portrait : l'arbre prend tout, on fait glisser les colonnes, le panneau monte du bas quand on touche. */
+@media (max-width: 860px) {
+  .ex-scene { grid-template-columns: minmax(0, 1fr); height: max(520px, calc(100dvh - 240px)); }
+  .ex-colonnes { justify-content: flex-start; scroll-snap-type: x proximity; }
+  .ex-panneau {
+    display: none; position: fixed; z-index: 40; left: 0; right: 0; bottom: 0; max-height: 66dvh; border-radius: 22px 26px 0 0;
+    box-shadow: 0 -10px 30px rgba(0, 0, 0, .5); padding-bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+  }
+  .ex-panneau.ouvert { display: flex; }
+  .ex-fermer { display: block; align-self: flex-end; min-height: 44px; padding: 0 14px; font-size: .85rem; background: none; border: 2px solid var(--ex-brume); border-radius: 11px 14px 10px 13px; }
+  .ex-legende { flex-wrap: nowrap; overflow-x: auto; white-space: nowrap; scrollbar-width: none; }
+  .ex-panneau h2 { font-size: 1.7rem; }
+  .ex-image.grande { width: 110px; }
+  .ex-titre { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .ex-mur { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+}

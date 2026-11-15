@@ -6,6 +6,7 @@
 
   var CLE_SESSION = 'ludiworld.session';
   var CLE_SYNCHRO = 'ludiworld.synchro';
+  var CLE_LIAISON = 'ludiworld.liaison';
   var MARGE = 60 * 1000; // on renouvelle le jeton une minute avant qu'il expire
   var ESSAIS = 3;        // écritures concurrentes : on relit et on refusionne au plus trois fois
 
@@ -50,7 +51,14 @@
         id: u.id || jwt.sub || null, email: u.email || jwt.email || null
       });
     }
-    function oublier() { ecrire(CLE_SESSION, null); ecrire(CLE_SYNCHRO, null); }
+    function oublier() { ecrire(CLE_SESSION, null); ecrire(CLE_SYNCHRO, null); ecrire(CLE_LIAISON, null); }
+    function appareilAutorise() { var s = session(), l = lire(CLE_SYNCHRO); return !!(s && s.id && l && l.compte === s.id); }
+    function synchroLocale() { var l = lire(CLE_SYNCHRO); return appareilAutorise() && l.active !== false; }
+    function poserSynchroLocale(v) {
+      var s = session();
+      ecrire(CLE_SYNCHRO, s && (v || appareilAutorise()) ? { compte: s.id, active: !!v } : null);
+    }
+    function liaisonDemandee() { var s = session(), l = lire(CLE_LIAISON); return !!(s && s.id && l && l.compte === s.id); }
 
     function requete(chemin, options, jeton) {
       if (!url || !cle) return Promise.reject(erreur('inactif'));
@@ -97,7 +105,9 @@
     // Relit la copie en ligne, fusionne, écrit si quelque chose a changé. Renvoie le foyer fusionné.
     function synchroniser(foyer, essai) {
       essai = essai || 1;
+      var compte = session() && session().id;
       return lireFoyer().then(function (d) {
+        if (!session() || session().id !== compte) throw erreur('session');
         var fusion = fusionner(foyer, d.etat);
         if (!fusion) return null;
         if (d.etat && memeContenu(fusion, d.etat)) return fusion; // déjà à jour : on n'écrit pas
@@ -110,6 +120,26 @@
     }
     // Deux foyers sont les mêmes si les comparer clé par clé ne montre aucune différence (l'ordre des clés ne compte pas).
     function memeContenu(a, b) { return trie(sansActif(a)) === trie(sansActif(b)); }
+    // Le mot de passe, ou l'inscription faite ici, autorise à relier cet appareil.
+    // Le code parent est vérifié par la page avant cet appel. Un lien reçu seul n'autorise aucun envoi.
+    function lierAppareil(foyer) {
+      if (!appareilAutorise() && !liaisonDemandee()) return Promise.resolve(null);
+      var compte = session().id;
+      return lireTable('comptes?select=synchro').then(function (l) {
+        if (!session() || session().id !== compte) return null;
+        if (!(l && l[0] && l[0].synchro)) {
+          ecrire(CLE_SYNCHRO, { compte: compte, active: false });
+          ecrire(CLE_LIAISON, null);
+          return null;
+        }
+        return synchroniser(foyer).then(function (m) {
+          if (!session() || session().id !== compte) return null;
+          poserSynchroLocale(true);
+          ecrire(CLE_LIAISON, null);
+          return m;
+        });
+      });
+    }
     function trie(v) {
       return JSON.stringify(v, function (k, x) {
         if (x && typeof x === 'object' && !Array.isArray(x)) {
@@ -126,16 +156,21 @@
       connecte: function () { return !!session(); },
       email: function () { var s = session(); return s ? s.email : null; },
       inscrire: function (d) {
-        var data = { langue: d.langue || 'fr' };
+        var data = { langue: d.langue || 'fr', synchro: true };
         if (d.nouvelles) data.nouvelles = 'true';
         if (d.envieId) data.envie_id = d.envieId;
         return requete('/auth/v1/signup' + retourParam(d.retour), { method: 'POST', corps: { email: d.email, password: d.motDePasse, data: data } }).then(function (r) {
+          var compte = r && (r.user || r);
+          if (compte && compte.id) ecrire(CLE_LIAISON, { compte: compte.id });
           if (r && r.access_token) { garder(r); return { aConfirmer: false }; }
           return { aConfirmer: true };
         });
       },
       connecter: function (email, motDePasse) {
-        return requete('/auth/v1/token?grant_type=password', { method: 'POST', corps: { email: email, password: motDePasse } }).then(function (r) { garder(r); });
+        return requete('/auth/v1/token?grant_type=password', { method: 'POST', corps: { email: email, password: motDePasse } }).then(function (r) {
+          garder(r);
+          ecrire(CLE_LIAISON, { compte: session().id });
+        });
       },
       renvoyer: function (email, retour) {
         return requete('/auth/v1/resend' + retourParam(retour), { method: 'POST', corps: { type: 'signup', email: email } });
@@ -166,10 +201,11 @@
       ecrireTable: function (chemin, valeurs) { return moi('/rest/v1/' + chemin, { method: 'PATCH', corps: valeurs }); },
       lireFoyer: lireFoyer,
       synchroniser: synchroniser,
-      // Cet appareil est-il relié à ce compte ? Le lien porte le nom du compte, et seul un geste du parent le pose :
-      // ni un lien reçu, ni le fait que le compte ait une copie en ligne ne font partir un foyer vers un compte.
-      synchroLocale: function () { var s = session(), l = lire(CLE_SYNCHRO); return !!(s && s.id && l && l.compte === s.id); },
-      poserSynchroLocale: function (v) { var s = session(); ecrire(CLE_SYNCHRO, v && s ? { compte: s.id } : null); }
+      liaisonDemandee: liaisonDemandee,
+      appareilAutorise: appareilAutorise,
+      lierAppareil: lierAppareil,
+      synchroLocale: synchroLocale,
+      poserSynchroLocale: poserSynchroLocale
     };
   }
 

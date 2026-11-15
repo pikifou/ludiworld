@@ -1,5 +1,7 @@
 /* Ludiworld : la barre du site. La même sur les pages du site et dans le carnet parent de l'appli.
-   Le premier onglet est « Accueil » tant que rien n'est préparé sur l'appareil, puis « Mon Ludiworld » (le carnet). */
+   Tant que rien n'est préparé et que personne n'est connecté : Accueil, Les jeux, Créer un jeu, Ludiworld aime bien.
+   Sinon on est chez soi : Expériences installées (le carnet, si l'appareil est préparé), Les jeux, et le reste dans Plus.
+   Explorer (l'arbre des compétences) existe mais n'est lié nulle part : il attend d'avoir bien plus de jeux. */
 (function () {
   'use strict';
 
@@ -13,12 +15,12 @@
 
   var T = {
     fr: {
-      nav: 'Ludiworld', accueil: 'Accueil', moi: 'Mon Ludiworld', jeux: 'Les jeux', creer: 'Créer un jeu', aime: 'Ludiworld aime bien',
+      nav: 'Ludiworld', accueil: 'Accueil', moi: 'Expériences installées', plus: 'Plus', jeux: 'Les jeux', creer: 'Créer un jeu', aime: 'Ludiworld aime bien',
       code: 'demande le code parent', preparer: 'Préparer la tablette', ouvrir: 'Ouvrir Ludiworld', enfant: 'Côté enfant',
       connexion: 'Se connecter', compte: 'Mon compte', essayer: 'Essayer'
     },
     en: {
-      nav: 'Ludiworld', accueil: 'Home', moi: 'My Ludiworld', jeux: 'The games', creer: 'Make a game', aime: 'Ludiworld likes',
+      nav: 'Ludiworld', accueil: 'Home', moi: 'Installed experiences', plus: 'More', jeux: 'The games', creer: 'Make a game', aime: 'Ludiworld likes',
       code: 'asks for the parent code', preparer: 'Set up the tablet', ouvrir: 'Open Ludiworld', enfant: 'Child side',
       connexion: 'Sign in', compte: 'My account', essayer: 'Try it'
     }
@@ -69,19 +71,27 @@
     var D = T[o.lang] || T.fr;
     var b = o.base || '';
     var conf = configure(), ouvert = parentOuvert();
-    var onglets = [
-      conf ? ['moi', b + '#carnet'] : ['accueil', b + 'decouvrir/'],
-      ['jeux', b + 'les-jeux/'],
-      ['creer', b + 'creer/'],
-      ['aime', b + 'aime-bien/']
-    ];
-    var nav = el('nav', { class: 'lw-onglets', 'aria-label': D.nav }, onglets.map(function (x) {
+    var chezSoi = conf || connecte();
+    var onglets = chezSoi
+      ? (conf ? [['moi', b + '#carnet']] : []).concat([['jeux', b + 'les-jeux/']])
+      : [['accueil', b + 'decouvrir/'], ['jeux', b + 'les-jeux/'], ['creer', b + 'creer/'], ['aime', b + 'aime-bien/']];
+    function onglet(x) {
       var actif = x[0] === o.actif;
       var verrou = x[0] === 'moi' && !ouvert && !actif;
       return el('a', { href: x[1], 'aria-current': actif ? 'page' : null, class: 'lw-onglet lw-' + x[0], title: verrou ? D.code : null }, [
         verrou ? svg('cadenas') : null, D[x[0]]
       ]);
-    }));
+    }
+    var liens = onglets.map(onglet);
+    if (chezSoi) {
+      var dans = [['creer', b + 'creer/'], ['aime', b + 'aime-bien/']];
+      var plus = el('details', { class: 'lw-plus' }, [
+        el('summary', { class: 'lw-onglet', 'aria-current': dans.some(function (x) { return x[0] === o.actif; }) ? 'page' : null, text: D.plus }),
+        el('div', { class: 'lw-plus-liste' }, dans.map(onglet))
+      ]);
+      liens.push(plus);
+    }
+    var nav = el('nav', { class: 'lw-onglets' + (chezSoi ? ' lw-chez-soi' : ''), 'aria-label': D.nav }, liens);
     var langs = el('div', { class: 'lw-langs', role: 'group', 'aria-label': 'Langue / Language' }, ['fr', 'en'].map(function (l) {
       return el('button', { type: 'button', lang: l, 'aria-pressed': String(o.lang === l), text: l.toUpperCase(), onclick: function () { o.onLang(l); } });
     }));
@@ -98,11 +108,16 @@
     }
     hote.textContent = '';
     hote.appendChild(el('header', { class: 'lw-barre' }, [
-      el('a', { class: 'lw-marque', href: b + 'decouvrir/', 'aria-label': 'Ludiworld' }, ['Ludi', el('span', { text: 'world' })]),
+      el('a', { class: 'lw-marque', href: conf ? b + '#carnet' : chezSoi ? b + 'les-jeux/' : b + 'decouvrir/', 'aria-label': 'Ludiworld' }, ['Ludi', el('span', { text: 'world' })]),
       nav,
       el('div', { class: 'lw-cote' }, [langs, lienCompte, action])
     ]));
   }
+
+  // Le menu Plus se ferme quand on touche ailleurs ou qu'on appuie sur Échap.
+  function fermerPlus(sauf) { document.querySelectorAll('.lw-plus[open]').forEach(function (d) { if (d !== sauf) d.open = false; }); }
+  document.addEventListener('click', function (ev) { fermerPlus(ev.target.closest ? ev.target.closest('.lw-plus') : null); });
+  document.addEventListener('keydown', function (ev) { if (ev.key === 'Escape') fermerPlus(null); });
 
   // Pages du site : quand une nouvelle version publiée prend la main, on recharge pour l'afficher.
   // (L'appli, elle, s'en occupe dans app.js, pour ne pas couper une partie.)

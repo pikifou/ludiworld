@@ -182,3 +182,86 @@ test('fin de temps annoncée par le launcher (wrapup)', () => {
   w.message({ type: 'ludi:wrapup', minutes: 5 });
   assert.strictEqual(got, 5);
 });
+
+// ---------- Sauvegarde du jeu (Ludi.save / Ludi.onRestore) ----------
+const sauvegardes = (w) => w.sent.filter((s) => s.msg.type === 'ludi:event' && s.msg.event.kind === 'save').map((s) => s.msg.event);
+
+test('save : gardée en local, envoyée au launcher, jamais dans les événements', () => {
+  const w = fakeWindow({ embedded: true });
+  const L = createLudi(w.win, { now: clock() }).init({ game: 'jeu' });
+  assert.strictEqual(L.save({ etage: 5 }), true);
+  assert.deepStrictEqual(JSON.parse(w.storage.get('ludi.v1.jeu')).save.data, { etage: 5 });
+  assert.deepStrictEqual(sauvegardes(w).map((e) => e.data), [{ etage: 5 }]);
+  assert.strictEqual(L.data().events.filter((e) => e.kind === 'save').length, 0);
+});
+
+test('save : refuse le vide et le trop gros', () => {
+  const w = fakeWindow({ embedded: true });
+  const L = createLudi(w.win, { now: clock() }).init({ game: 'jeu' });
+  assert.strictEqual(L.save(null), false);
+  assert.strictEqual(L.save({ gros: 'x'.repeat(260000) }), false);
+  assert.strictEqual(sauvegardes(w).length, 0);
+});
+
+test('onRestore : la sauvegarde plus récente du launcher revient au jeu, une fois', () => {
+  const w = fakeWindow({ embedded: true });
+  const L = createLudi(w.win, { now: clock(5000) }).init({ game: 'jeu' });
+  const recu = [];
+  L.onRestore((d) => recu.push(d));
+  w.message({ type: 'ludi:welcome', player: { name: 'Léo' }, save: { data: { etage: 9 }, at: 9000 } });
+  assert.deepStrictEqual(recu, [{ etage: 9 }]);
+  assert.deepStrictEqual(JSON.parse(w.storage.get('ludi.v1.jeu')).save, { data: { etage: 9 }, at: 9000 });
+  assert.strictEqual(sauvegardes(w).length, 0, 'rien à renvoyer : le launcher a déjà celle-ci');
+});
+
+test('onRestore : appelée aussi quand le jeu s\'abonne après l\'arrivée de la sauvegarde', () => {
+  const w = fakeWindow({ embedded: true });
+  const L = createLudi(w.win, { now: clock() }).init({ game: 'jeu' });
+  w.message({ type: 'ludi:welcome', player: null, save: { data: { a: 1 }, at: 7 } });
+  const recu = [];
+  L.onRestore((d) => recu.push(d));
+  L.onRestore((d) => recu.push('deuxieme'));
+  assert.deepStrictEqual(recu, [{ a: 1 }]);
+});
+
+test('sauvegarde de cet appareil plus récente : on ne la remplace pas, on la rend au launcher', () => {
+  const w = fakeWindow({ embedded: true });
+  const L = createLudi(w.win, { now: clock(50000) }).init({ game: 'jeu' });
+  L.save({ etage: 12 });
+  const recu = [];
+  L.onRestore((d) => recu.push(d));
+  w.sent.length = 0;
+  w.message({ type: 'ludi:welcome', player: null, save: { data: { etage: 3 }, at: 1000 } });
+  assert.deepStrictEqual(recu, []);
+  assert.deepStrictEqual(sauvegardes(w).map((e) => e.data), [{ etage: 12 }]);
+});
+
+test('launcher sans sauvegarde : celle de l\'appareil lui est confiée', () => {
+  const w = fakeWindow({ embedded: true });
+  const L = createLudi(w.win, { now: clock() }).init({ game: 'jeu' });
+  L.save({ etage: 4 });
+  w.sent.length = 0;
+  w.message({ type: 'ludi:welcome', player: null, save: null });
+  assert.deepStrictEqual(sauvegardes(w).map((e) => e.data), [{ etage: 4 }]);
+});
+
+test('save { existante } : une partie d\'avant le kit ne bat jamais une sauvegarde venue d\'ailleurs', () => {
+  const w = fakeWindow({ embedded: true });
+  const L = createLudi(w.win, { now: clock(80000) }).init({ game: 'jeu' });
+  const recu = [];
+  L.onRestore((d) => recu.push(d));
+  L.save({ etage: 2 }, { existante: true });
+  w.message({ type: 'ludi:welcome', player: null, save: { data: { etage: 8 }, at: 60000 } });
+  assert.deepStrictEqual(recu, [{ etage: 8 }]);
+  // et il ne remplace pas une sauvegarde déjà faite
+  assert.strictEqual(L.save({ etage: 1 }, { existante: true }), false);
+});
+
+test('une sauvegarde venue d\'un faux launcher est ignorée', () => {
+  const w = fakeWindow({ embedded: true });
+  const L = createLudi(w.win, { now: clock() }).init({ game: 'jeu' });
+  const recu = [];
+  L.onRestore((d) => recu.push(d));
+  w.message({ type: 'ludi:welcome', player: null, save: { data: { etage: 99 }, at: 5 } }, 'https://pirate.example');
+  assert.deepStrictEqual(recu, []);
+});

@@ -40,6 +40,19 @@ Une réponse juste ou fausse sur une notion. C'est ce qui permet de suivre l'app
 Ludi.skill("maths.multiplication", "7x8", true);
 ```
 
+### `Ludi.save(data)` et `Ludi.onRestore(fn)` (recommandés pour tout jeu qui garde une partie)
+Pour que l'enfant reprenne sur un autre appareil (ou après une réinstallation), le jeu confie sa sauvegarde à Ludiworld. Ludiworld la garde **avec l'enfant** : elle part donc dans la copie en ligne du parent, si elle est active, et nulle part ailleurs.
+
+- `Ludi.save(data)` : à appeler à chaque fois que le jeu enregistre sa propre sauvegarde. `data` est ce que le jeu veut (tout ce qui passe par JSON : étage, village, leçons faites), **250 000 caractères au plus**. Ludiworld garde la dernière. Renvoie `true` si elle est gardée.
+- `Ludi.onRestore(fn)` : `fn(data)` est appelée **au plus une fois par ouverture**, quand Ludiworld a une sauvegarde plus récente que celle de l'appareil (venue d'un autre appareil). Le jeu la range comme la sienne, puis se redessine ou recharge sa page. Elle arrive peu après le démarrage : le jeu se lance d'abord avec sa propre sauvegarde. Ce qui est propre à l'appareil (volume du son, plein écran) ne doit pas être écrasé.
+- Une partie commencée avant l'ajout du kit : `Ludi.save(data, { existante: true })` à l'ouverture. Elle est réputée très ancienne : si Ludiworld en a déjà une, c'est la sienne qui revient ; sinon il garde celle-ci.
+
+```js
+function sauver() { localStorage.setItem(CLE, JSON.stringify(sv)); Ludi.save(sv); }
+Ludi.onRestore(function (d) { sv = d; localStorage.setItem(CLE, JSON.stringify(sv)); redessiner(); });
+```
+Limite connue : sur une tablette partagée entre plusieurs enfants, la mémoire du jeu reste commune (voir la feuille de route). Hors Ludiworld, rien ne change : `save` garde la sauvegarde dans le navigateur, `onRestore` ne sera jamais appelée.
+
 ### `Ludi.player()`
 Renvoie `{ name }` si le launcher a donné un pseudo, sinon `null`. Le jeu peut s'en servir pour pré-remplir un prénom.
 
@@ -68,8 +81,8 @@ Messages `postMessage`, toujours avec une origine cible précise (jamais `*`).
 | Sens | `type` | Contenu |
 |---|---|---|
 | jeu → launcher | `ludi:hello` | `{ game, kit }` (version du kit) |
-| launcher → jeu | `ludi:welcome` | `{ player: { name } }` |
-| jeu → launcher | `ludi:event` | `{ game, event }`, où `event` est `{ kind, at, … }` avec `kind` parmi `session`, `score`, `progress`, `skill`, `checkpoint` |
+| launcher → jeu | `ludi:welcome` | `{ player: { name }, save }` (`save` : `{ data, at }` ou `null`, la sauvegarde que Ludiworld garde pour cet enfant) |
+| jeu → launcher | `ludi:event` | `{ game, event }`, où `event` est `{ kind, at, … }` avec `kind` parmi `session`, `score`, `progress`, `skill`, `checkpoint`, `save` (`{ kind: "save", data, at }`) |
 | launcher → jeu | `ludi:wrapup` | `{ minutes }` (temps qui reste, 0 : finir la partie en cours) |
 | launcher → jeu | `ludi:pause` | `{ reason }` |
 

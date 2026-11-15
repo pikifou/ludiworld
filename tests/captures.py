@@ -128,12 +128,12 @@ class FauxSupabase:
         self.appels.append(chemin)
         email = self.qui(route)
         if chemin.startswith("/auth/v1/signup"):
-            self.comptes[corps["email"]] = {"id": "u-" + str(len(self.comptes)), "mdp": corps["password"], "confirme": False, "synchro": False,
+            self.comptes[corps["email"]] = {"id": "u-" + str(len(self.comptes)), "mdp": corps["password"], "confirme": False, "synchro": corps["data"].get("synchro") is True,
                                             "nouvelles": corps["data"].get("nouvelles") == "true", "data": corps["data"]}
             ei = corps["data"].get("envie_id")
             if ei in self.envies:
                 self.envies[ei]["compte"] = corps["email"]
-            return self.repond(route, {"id": "u", "email": corps["email"]})
+            return self.repond(route, {"id": self.comptes[corps["email"]]["id"], "email": corps["email"]})
         if chemin.startswith("/auth/v1/token?grant_type=password"):
             c = self.comptes.get(corps["email"])
             if not c or c["mdp"] != corps["password"]:
@@ -146,7 +146,9 @@ class FauxSupabase:
         if chemin.startswith("/auth/v1/"):
             return self.repond(route, {})
         if chemin.startswith("/rest/v1/comptes"):
-            c = self.comptes[email]
+            c = self.comptes.get(email)
+            if not c:
+                return self.repond(route, [])
             if req.method == "PATCH":
                 c.update(corps)
                 return self.repond(route, None, 204)
@@ -248,7 +250,7 @@ def run():
             assert page.get_attribute(".lw-action", "href").endswith("#demarrer")
             page.wait_for_timeout(2500)
             page.screenshot(path=str(OUT / f"{name}-0-site-accueil.png"))
-            for onglet, cle, attendu in [("Les jeux", "jeux", "#fiches-jeux .fiche"), ("Créer un jeu", "creer", ".etape"), ("Ludiworld aime bien", "aime", "#ab-valides .reco")]:
+            for onglet, cle, attendu in [("Les jeux", "jeux", ".vt-tuile"), ("Créer un jeu", "creer", ".etape"), ("Ludiworld aime bien", "aime", "#ab-valides .reco")]:
                 page.locator(".lw-onglet", has_text=onglet).click()
                 page.wait_for_selector(attendu)
                 assert page.get_attribute(".lw-onglet[aria-current=page]", "class").endswith("lw-" + cle)
@@ -331,19 +333,46 @@ def run():
         page.screenshot(path=str(OUT / "tablette-8-carnet-temps.png"))
         # Le carnet est un onglet du site : on va lire une autre page et on revient sans redonner le code
         assert page.get_attribute(".lw-onglet[aria-current=page]", "class").endswith("lw-moi")
+        page.locator(".lw-plus summary").click()
         page.locator(".lw-onglet", has_text="Ludiworld aime bien").click()
         page.wait_for_selector("#ab-valides .reco")
         assert page.locator(".lw-action", has_text="Côté enfant").count() == 1
-        page.locator(".lw-onglet", has_text="Mon Ludiworld").click()
+        page.locator(".lw-onglet", has_text="Expériences installées").click()
         page.wait_for_selector(".carnet:not([hidden])")
         assert page.locator("#gate[open]").count() == 0, "le code n'est pas redemandé tout de suite"
         # « Côté enfant » depuis le site : retour aux jeux, et le carnet redemande le code
-        page.locator(".lw-onglet", has_text="Les jeux").click()
-        page.wait_for_selector("#fiches-jeux .fiche")
+        page.locator(".lw-onglets > .lw-onglet", has_text="Les jeux").click()
+        page.wait_for_selector(".vt-tuile")
         page.locator(".lw-action").click()
         page.wait_for_selector(".tuile")
         page.goto(BASE + "/ludiworld/#carnet")
         page.wait_for_selector("#gate[open]")
+        # Les jeux : la vitrine et ses filtres ; la fiche d'un jeu ; installer demande le code puis on y revient
+        page.goto(BASE + "/ludiworld/les-jeux/")
+        page.wait_for_selector(".vt-tuile")
+        assert page.get_attribute(".lw-onglet[aria-current=page]", "class").endswith("lw-jeux")
+        assert [t.strip() for t in page.locator(".lw-onglets > .lw-onglet").all_inner_texts()] == ["Expériences installées", "Les jeux"], "Explorer n'est plus dans la barre"
+        assert page.get_attribute(".lw-marque", "href").endswith("#carnet"), "le logo mène chez soi"
+        tous = page.locator(".vt-tuile").count()
+        page.locator("[data-theme=sciences]").click()
+        assert page.locator(".vt-tuile").count() == 1, "Sciences : la Tour aux Aimants, d'après les fiches"
+        page.locator("[data-theme=sciences]").click()
+        assert page.locator(".vt-tuile").count() == tous, "un 2e toucher enlève le filtre"
+        page.locator("#vt-q").fill("electromagnetisme")
+        assert page.locator(".vt-tuile").count() == 1, "la recherche passe aussi par les sujets"
+        page.locator("#vt-q").fill("")
+        page.locator("[data-jeu=tour-aimants]").click()
+        page.wait_for_selector("#vt-fiche[open]")
+        assert page.url.endswith("#tour-aimants")
+        page.locator("[data-installer=tour-aimants]").first.click()
+        page.wait_for_selector("#gate[open]")
+        code(page, PIN)
+        page.wait_for_url("**/les-jeux/#tour-aimants")
+        page.wait_for_selector("#vt-fiche[open] [data-retirer=tour-aimants]")
+        assert page.locator("#vt-jouer").count() == 1, "le code donné, le jeu est installé sans refaire le geste"
+        page.screenshot(path=str(OUT / "tablette-9-jeux.png"))
+        page.keyboard.press("Escape")
+        page.wait_for_function("!document.querySelector('#vt-fiche').open && !location.hash", timeout=3000)  # fermer la fiche la retire de l'adresse
         ctx.close()
 
         # 2 bis. Sur un téléphone préparé : le carnet et la barre du site tiennent dans l'écran
@@ -418,7 +447,9 @@ def run():
         page.wait_for_selector(".tuile")
         page.evaluate("ludiDemo.ajouter('jeu-kit', 10)")
         page.wait_for_timeout(500)
-        assert page.locator(".tuile", has_text="Jeu kit").is_disabled(), "limite du jeu atteinte"
+        assert page.locator(".tuile", has_text="Jeu kit").count() == 0, "limite du jeu atteinte : plus une tuile à toucher"
+        assert page.locator(".e-repos .e-repos-jeu", has_text="Jeu kit").count() == 1, "il reste visible, petit, après les autres"
+        assert page.evaluate("[...document.querySelectorAll('#e-jeux > *')].pop().classList.contains('e-repos')"), "les jeux fermés viennent en dernier"
         assert page.locator(".tuile", has_text="Pluie de Cochons").is_enabled(), "les autres jeux restent ouverts"
         page.wait_for_timeout(2000)
         page.screenshot(path=str(OUT / "telephone-6-limite-jeu.png"))
@@ -673,7 +704,8 @@ def run():
             assert page.inner_text(".lw-compte") == "Mon compte"
             page.wait_for_function("document.getElementById('e-formule').textContent.includes('Gratuit')")
             assert page.is_hidden("#e-bureau-p"), "un parent ne voit pas le lien du bureau"
-            assert not page.is_checked("#e-synchro"), "la copie en ligne est coupée par défaut"
+            page.wait_for_function("document.getElementById('e-synchro').checked")
+            assert page.is_checked("#e-synchro"), "la création du compte annonce et active la synchronisation"
             page.wait_for_timeout(300)
             page.screenshot(path=str(OUT / f"{name}-27-espace.png"), full_page=True)
             page.locator(".lw-langs button", has_text="EN").click()
@@ -760,7 +792,7 @@ def run():
         assert pg.is_hidden("#f-nouveau")
         piege.close()
 
-        # Une autre famille sur sa propre tablette, avec ce compte : son foyer ne part pas sans qu'on coche
+        # Une tablette préparée : le mot de passe autorise la liaison, mais il faut encore le code parent
         autre = contexte(browser, store=famille(), nuage=nuage, **formats["tablette"])
         pg = autre.new_page()
         pg.on("pageerror", lambda e: errors.append(str(e)))
@@ -773,6 +805,10 @@ def run():
         pg.click("#f-connexion button[type=submit]")
         pg.wait_for_selector("#e-code:not([hidden])")
         assert nuage.version == version and pg.evaluate("localStorage.getItem('ludiworld.synchro')") is None
+        pg.click("#e-code .btn-sun")
+        pg.wait_for_selector("#gate[open]")
+        code(pg, PIN)
+        pg.wait_for_function("localStorage.getItem('ludiworld.synchro') !== null")
         autre.close()
 
         # Le téléphone, vide : se connecter suffit à tout retrouver, sans repasser par la préparation ni redonner le code au réseau
@@ -810,6 +846,49 @@ def run():
         page.evaluate("ludiDemo.ajouter('pluie-de-cochons', 2)")
         page.wait_for_timeout(200)
         assert len(nuage.appels) == avant, "le temps de jeu ne déclenche pas d'appel réseau à chaque seconde"
+
+        # Limite atteinte : la tablette envoie sans cliquer sur le bouton de l'écran d'arrêt.
+        tel.locator("#c-nav button", has_text="Aujourd’hui").click()
+        page.locator(".tuile", has_text="Jeu kit").click()
+        page.frame_locator("#player iframe").locator("#b").click()
+        page.evaluate("ludiDemo.ajouter('jeu-kit', 31)")
+        page.frame_locator("#player iframe").locator("#fin").click()
+        page.wait_for_selector("#p-rideau:not([hidden])")
+        for _ in range(50):
+            jeu = nuage.foyer["enfants"][0].get("games", {}).get("jeu-kit", {})
+            if jeu.get("ms", 0) >= 31 * 60000:
+                break
+            page.wait_for_timeout(100)
+        assert jeu.get("ms", 0) >= 31 * 60000, "l'écran d'arrêt synchronise sans geste supplémentaire"
+
+        # Le carnet du téléphone est déjà ouvert : une réception met à jour le graphique.
+        tel.evaluate("window.dispatchEvent(new Event('online'))")
+        tel.wait_for_function("JSON.parse(localStorage.getItem('ludiworld.v1')).famille.enfants[0].games['jeu-kit']?.ms >= 31 * 60000")
+        assert int(tel.inner_text(".semaine .jour.auj .jour-val")) >= 31, "les minutes reçues apparaissent dans le graphique ouvert"
+        tel.screenshot(path=str(OUT / "telephone-synchro-resultats.png"), full_page=True)
+
+        # Désactiver sur le téléphone : la tablette conserve ses données sans recréer la copie en ligne.
+        tel.goto(BASE + "/ludiworld/compte/#espace")
+        tel.wait_for_selector("#e-corps:not([hidden])")
+        tel.wait_for_function("!document.getElementById('e-synchro').disabled")
+        tel.uncheck("#e-synchro")
+        tel.wait_for_function("document.getElementById('e-synchro-etat').textContent.includes('désactivée')")
+        assert "téléphone" in tel.inner_text("#e-synchro-aide") and "ordinateur" in tel.inner_text("#e-synchro-aide")
+        tel.screenshot(path=str(OUT / "telephone-synchro-desactivee-fr.png"), full_page=True)
+        tel.locator(".lw-langs button", has_text="EN").click()
+        assert "phone" in tel.inner_text("#e-synchro-aide") and "computer" in tel.inner_text("#e-synchro-aide")
+        tel.screenshot(path=str(OUT / "telephone-synchro-desactivee-en.png"), full_page=True)
+        tel.locator(".lw-langs button", has_text="FR").click()
+        page.evaluate("window.dispatchEvent(new Event('online'))")
+        page.wait_for_function("JSON.parse(localStorage.getItem('ludiworld.synchro')).active === false")
+        assert nuage.foyer is None, "la tablette ne recrée pas une copie désactivée depuis le téléphone"
+        assert page.evaluate("JSON.parse(localStorage.getItem('ludiworld.v1')).famille.enfants[0].games['jeu-kit'].ms") >= 31 * 60000
+        tel.wait_for_function("!document.getElementById('e-synchro').disabled")
+        tel.check("#e-synchro")
+        tel.wait_for_function("document.getElementById('e-synchro-etat').textContent.includes('synchronisés')")
+        page.evaluate("window.dispatchEvent(new Event('online'))")
+        page.wait_for_function("JSON.parse(localStorage.getItem('ludiworld.synchro')).active === true")
+        assert nuage.foyer["enfants"][0]["games"]["jeu-kit"]["ms"] >= 31 * 60000, "réactiver reprend la synchro sans reperdre les résultats"
 
         # 14. Le bureau : fermé à un parent, ouvert à son adresse
         tel.goto(BASE + "/ludiworld/bureau/")
