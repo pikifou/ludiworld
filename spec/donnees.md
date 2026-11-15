@@ -9,7 +9,8 @@ Ludiworld manipule des données d'enfants. On applique le principe le plus simpl
 ## v1 et après (comptes)
 Le fonctionnement est décrit dans `spec/comptes.md`, et ce qui est dit au public dans `docs/confidentialite/`.
 - Le compte appartient au parent et reste facultatif. L'enfant n'a qu'un pseudo, sans nom de famille, sans photo, sans date de naissance (l'âge suffit).
-- En France, le traitement des données d'un enfant de moins de 15 ans demande le consentement du parent. Le parent crée le compte, active lui-même la copie en ligne (coupée par défaut) et peut tout effacer d'un geste.
+- Le parent choisit « Créer mon compte et synchroniser » : le parcours annonce l'envoi des réglages et des résultats pour les retrouver sur ses autres appareils. Sans compte, tout reste local. Le parent peut désactiver la synchronisation dans son compte, et effacer ses données. Les comptes existants conservent leur choix.
+- La sauvegarde de chaque jeu (étage atteint, village, leçons faites : ce que le jeu choisit de confier à `Ludi.save`, 250 000 caractères au plus par jeu) suit l'enfant dans cette copie. Elle ne contient jamais l'identité de l'enfant : le jeu ne la connaît pas.
 - Ce qui est su d'un enfant ne sort de l'appareil que par cette copie, lisible par le parent seul : le bureau de Ludiworld n'y a pas accès.
 - Les réponses aux questions d'essai parlent du visiteur (ce qu'il cherche), sans nom ni adresse tant qu'il n'a pas créé de compte. Elles servent à décider quoi construire. Le champ libre demande de ne pas nommer d'enfant.
 - Les jeux ne reçoivent jamais l'identité de l'enfant, seulement le pseudo (voir `spec/kit.md`).

@@ -509,22 +509,35 @@
     if (catalogueOk === false) { list.appendChild(el('p', { class: 'e-vide', text: t('loadError') })); return; }
     var mine = choisis();
     if (!mine.length) { list.appendChild(el('p', { class: 'e-vide', text: t('kid.noGames') })); return; }
-    mine.forEach(function (g, i) {
-      var rj = resteJeu(g.id);
-      var fini = rj.jeu <= 0;
+    // Les jeux ouverts aujourd'hui d'abord, en grand. Les autres viennent après, petits et pâles, sans pouvoir les toucher :
+    // on comprend qu'ils sont là, mais ils ne sont pas mis en avant.
+    var repos = { libres: [], fini: [] };
+    jouables.forEach(function (g, i) {
       var c = choix(g.id);
-      var tag = null;
-      if (fini && c && c.libres && !Temps.jourLibre(regles())) tag = el('span', { class: 'tuile-tag fini' }, [icon('moon'), t('kid.freeDaysOnly')]);
-      else if (fini) tag = el('span', { class: 'tuile-tag fini' }, [icon('moon'), t('kid.gameDone')]);
-      else if (c && c.max) tag = el('span', { class: 'tuile-tag' }, [icon('hourglass'), t('kid.gameLeft', { t: minutesLeft(rj.jeu) })]);
       list.appendChild(el('button', {
-        type: 'button', class: 'tuile' + (fini ? ' fini' : ''), style: '--game:' + (g.color || '#1d2b4f') + ';--i:' + i,
-        disabled: fini, 'aria-label': pick(g.title) + (fini ? ', ' + t('kid.gameDone') : ''),
-        onclick: function () { play(g); }
+        type: 'button', class: 'tuile', style: '--game:' + (g.color || '#1d2b4f') + ';--i:' + i,
+        'aria-label': pick(g.title), onclick: function () { play(g); }
       }, [
         el('span', { class: 'tuile-img' }, [gameIcon(g)]),
         el('b', { class: 'tuile-nom', text: pick(g.title) }),
-        tag
+        c && c.max ? el('span', { class: 'tuile-tag' }, [icon('hourglass'), t('kid.gameLeft', { t: minutesLeft(resteJeu(g.id).jeu) })]) : null
+      ]));
+    });
+    mine.forEach(function (g) {
+      if (jouables.indexOf(g) !== -1) return;
+      var c = choix(g.id);
+      repos[c && c.libres && !Temps.jourLibre(regles()) ? 'libres' : 'fini'].push(g);
+    });
+    [['libres', 'kid.freeDaysOnly'], ['fini', 'kid.gameDone']].forEach(function (x) {
+      if (!repos[x[0]].length) return;
+      list.appendChild(el('div', { class: 'e-repos', role: 'group', 'aria-label': t(x[1]) }, [
+        el('p', { class: 'e-repos-titre' }, [icon('moon'), t(x[1])]),
+        el('div', { class: 'e-repos-jeux' }, repos[x[0]].map(function (g) {
+          return el('span', { class: 'e-repos-jeu', style: '--game:' + (g.color || '#1d2b4f') }, [
+            el('span', { class: 'tuile-img' }, [gameIcon(g)]),
+            el('span', { class: 'e-repos-nom', text: pick(g.title) })
+          ]);
+        }))
       ]));
     });
   }
@@ -589,7 +602,15 @@
     btn.addEventListener('click', function (e) { if (e.detail === 0) openGate(ouvrirCarnet); });
   })();
   // Le carnet est un onglet du site : le code donné, le parent peut lire les autres pages sans le redonner.
-  function ouvrirCarnet() { LudiBarre.ouvrirParent(); show('parent'); }
+  function ouvrirCarnet() {
+    LudiBarre.ouvrirParent();
+    // Le code demandé depuis la page des jeux (pour installer un jeu) : on y retourne.
+    var retour = null;
+    try { retour = sessionStorage.getItem('ludiworld.retour'); sessionStorage.removeItem('ludiworld.retour'); } catch (e) { /* rien */ }
+    if (retour && /^(les-jeux|explorer)\//.test(retour)) { location.href = retour; return; }
+    show('parent');
+    synchroniser();
+  }
   function fermerCarnet() { LudiBarre.fermerParent(); show('enfant'); }
 
   // « Qui joue ? » : les enfants du foyer, chacun avec son initiale sur sa couleur.
@@ -702,19 +723,26 @@
   function marquer() { var h = foyer(), f = fam(); if (h) h.maj = Date.now(); if (f) f.maj = Date.now(); }
 
   // ---------- Synchro (seulement si le parent l'a activée dans son compte) ----------
-  // Jamais pendant une partie. Dans le carnet, on envoie sans remplacer ce que le parent a sous les yeux :
-  // l'autre appareil et le prochain retour ici refusionneront de toute façon.
+  // Pas d'envoi pendant une partie active. L'écran de fin peut synchroniser sans attendre un bouton.
   var Nuage = window.LudiNuage;
   var minuteurSynchro = null;
-  function synchroVoulue() { return !!(Nuage && Nuage.actif() && Nuage.connecte() && Nuage.synchroLocale()); }
+  function synchroVoulue() { return !!(Nuage && Nuage.actif() && Nuage.connecte() && (Nuage.appareilAutorise() || (Nuage.liaisonDemandee() && LudiBarre.parentOuvert()))); }
+  var synchroEnCours = null;
+  var synchroARelancer = false;
   function synchroniser() {
-    if (!synchroVoulue() || playing || !foyer()) return;
-    return Nuage.synchroniser(foyer()).then(function (m) {
-      if (!m || playing || vue === 'parent') return;
+    if (!synchroVoulue() || (playing && playing.phase !== 'arrete') || !foyer()) return;
+    if (synchroEnCours) { synchroARelancer = true; return synchroEnCours; }
+    synchroEnCours = Nuage.lierAppareil(foyer()).then(function (m) {
+      if (!m || (playing && playing.phase !== 'arrete') || (vue === 'parent' && tab !== 'today')) return;
       store.famille = LudiSynchro.fusionner(store.famille, m);
       saveStore();
       if (vue === 'enfant') render();
-    }).catch(function () { /* hors ligne : on réessaiera, l'appareil garde tout */ });
+      else if (vue === 'parent' && tab === 'today') renderParent();
+    }).catch(function () { /* hors ligne : on réessaiera, l'appareil garde tout */ }).then(function () {
+      synchroEnCours = null;
+      if (synchroARelancer) { synchroARelancer = false; planifierSynchro(); }
+    });
+    return synchroEnCours;
   }
   function planifierSynchro() {
     if (!synchroVoulue()) return;
@@ -732,7 +760,7 @@
     var nav = document.getElementById('c-nav');
     nav.textContent = '';
     ['today', 'games', 'time', 'settings'].forEach(function (k) {
-      nav.appendChild(el('button', { type: 'button', role: 'tab', 'aria-selected': String(tab === k), class: tab === k ? 'on' : '', text: t('parent.tabs.' + k), onclick: function () { tab = k; renderParent(); document.getElementById('c-page').scrollTop = 0; } }));
+      nav.appendChild(el('button', { type: 'button', role: 'tab', 'aria-selected': String(tab === k), class: tab === k ? 'on' : '', text: t('parent.tabs.' + k), onclick: function () { tab = k; renderParent(); document.getElementById('c-page').scrollTop = 0; if (tab === 'today') synchroniser(); } }));
     });
     var page = document.getElementById('c-page');
     page.textContent = '';
@@ -856,7 +884,7 @@
         ]));
       });
     });
-    out.appendChild(section(t('parent.skills'), skillBits.length ? skillBits : [el('p', { class: 'c-note', text: t('parent.skillsNone') })]));
+    out.appendChild(section(t('parent.skills'), (skillBits.length ? skillBits : [el('p', { class: 'c-note', text: t('parent.skillsNone') })]).concat([el('a', { class: 'lien vers-jeux', href: 'les-jeux/', text: t('parent.toGames') })])));
 
     // Records
     var recs = [];
@@ -1284,6 +1312,8 @@
 
   function arreter(cause) {
     playing.phase = 'arrete';
+    flushStore();
+    synchroniser();
     pastille.hidden = true; bandeau.hidden = true;
     postToGame({ type: 'ludi:pause', reason: 'temps' });
     var f = fam();
@@ -1341,7 +1371,7 @@
     if (m.type === 'ludi:hello') {
       playing.kit = true; g.kit = true; saveStore();
       var f = fam();
-      frame.contentWindow.postMessage({ type: 'ludi:welcome', player: f && !playing.essai ? { name: f.enfant.nom } : null }, playing.origin);
+      frame.contentWindow.postMessage({ type: 'ludi:welcome', player: f && !playing.essai ? { name: f.enfant.nom } : null, save: !playing.essai && g.save ? g.save : null }, playing.origin);
       // Un jeu qui arrive alors que l'enfant a déjà été prévenu l'apprend aussi.
       if (playing.avertie) { var r = resteJeu(playing.game.id); postToGame({ type: 'ludi:wrapup', minutes: Math.max(0, Math.ceil(r.reste / MIN)) }); }
     } else if (m.type === 'ludi:event' && m.event) {
@@ -1349,6 +1379,11 @@
       if (playing.essai) return; // l'essai du parent ne compte pas dans les stats de l'enfant
       if (ev.kind === 'score' && ev.record) { g.scores[ev.key] = { value: ev.value, better: ev.better }; saveStore(); }
       else if (ev.kind === 'progress') { g.progress[ev.key] = ev.value; saveStore(); }
+      else if (ev.kind === 'save') {
+        // La sauvegarde du jeu, gardée avec l'enfant (donc dans la copie en ligne). La plus récente fait foi ; la taille est bornée.
+        var sv = ev.data, at = Number(ev.at);
+        if (sv !== undefined && sv !== null && isFinite(at) && JSON.stringify(sv).length <= 250000 && (!g.save || at >= g.save.at)) { g.save = { data: sv, at: at }; saveStore(); }
+      }
       else if (ev.kind === 'skill' && ev.domain) {
         var id = String(ev.domain) + (ev.item !== null && ev.item !== undefined ? '/' + ev.item : '');
         var s = g.skills[id] || { ok: 0, ko: 0, streak: 0 };
@@ -1398,10 +1433,12 @@
 
   // ---------- Démarrage ----------
   // Rien de préparé sur cet appareil : on arrive sur le site, sauf si l'on vient y préparer la tablette (#demarrer).
-  // Préparé : côté enfant ; #carnet (onglet « Mon Ludiworld » du site) ouvre le carnet, avec le code s'il le faut.
+  // Préparé : côté enfant ; #carnet (onglet « Expériences installées » du site) ouvre le carnet, avec le code s'il le faut.
   document.documentElement.lang = lang;
   var arrivee = location.hash;
   var prepare = !!(fam() && foyer().pin);
+  var aJouer = /^#jouer=/.test(arrivee) ? arrivee.slice(7) : null; // « Y jouer » depuis la fiche d'un jeu
+  if (aJouer) history.replaceState(history.state, '', location.pathname + location.search);
   if (!prepare && arrivee !== '#demarrer') { location.replace('decouvrir/'); return; }
   if (arrivee === '#carnet' || arrivee === '#enfant' || (prepare && arrivee === '#demarrer')) history.replaceState(history.state, '', location.pathname + location.search);
   loadCatalogue().then(function () {
@@ -1412,10 +1449,17 @@
     LudiBarre.fermerParent();
     show('enfant');
     if (arrivee === '#carnet') openGate(ouvrirCarnet);
+    if (aJouer) {
+      // Les mêmes règles que sur une tuile : un jeu choisi, et du temps qu'il reste.
+      var g = games.filter(function (x) { return x.id === aJouer; })[0];
+      if (g && choix(g.id) && resteJeu(g.id).jeu > 0 && document.querySelector('.tuile')) play(g);
+    }
   });
   // Retour sur l'appli (« +10 min » donné depuis le téléphone, par exemple) : on regarde s'il y a du neuf.
-  document.addEventListener('visibilitychange', function () { if (!document.hidden && vue === 'enfant') synchroniser(); });
-  // « Mon Ludiworld » cliqué sans quitter la page (onglet du carnet, adresse tapée) : même règle.
+  document.addEventListener('visibilitychange', function () { if (!document.hidden) synchroniser(); });
+  window.addEventListener('online', synchroniser);
+  setInterval(function () { if (!document.hidden && vue === 'parent' && tab === 'today') synchroniser(); }, 30000);
+  // « Expériences installées » cliqué sans quitter la page (onglet du carnet, adresse tapée) : même règle.
   window.addEventListener('hashchange', function () {
     if (location.hash !== '#carnet' || !prepare) return;
     history.replaceState(history.state, '', location.pathname + location.search);

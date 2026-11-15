@@ -26,8 +26,14 @@
   }
   function notionDuJour(a, b) { return { ok: maxNombres(a.ok, b.ok), ko: maxNombres(a.ko, b.ko) }; }
 
+  // La sauvegarde du jeu : la plus récente gagne, d'un bloc (jamais mélangée).
+  function sauvegarde(a, b) {
+    if (!a || a.at === undefined) return b; if (!b || b.at === undefined) return a;
+    return Number(b.at) > Number(a.at) ? b : a;
+  }
   function fusionnerJeu(a, b) {
-    return Object.assign({}, a, b, {
+    var sv = sauvegarde(a.save, b.save);
+    var out = Object.assign({}, a, b, {
       ms: maxNombres(a.ms, b.ms),
       sessions: maxNombres(a.sessions, b.sessions),
       kit: !!(a.kit || b.kit),
@@ -37,10 +43,16 @@
       skills: parCle(a.skills, b.skills, notion),
       skillDays: parCle(a.skillDays, b.skillDays, notionDuJour)
     });
+    if (sv) out.save = sv; else delete out.save;
+    return out;
   }
+  function plusRecent(a, b) { return (b.t || 0) > (a.t || 0) ? b : a; }
   function fusionnerEnfant(a, b) {
     var recent = (b.maj || 0) > (a.maj || 0) ? b : a;
-    return Object.assign({}, recent, { maj: maxNombres(a.maj, b.maj), games: parCle(a.games, b.games, fusionnerJeu) });
+    var out = Object.assign({}, recent, { maj: maxNombres(a.maj, b.maj), games: parCle(a.games, b.games, fusionnerJeu) });
+    // Ce que dit l'enfant et les envies (Explorer) se fusionnent case par case : ce ne sont pas des réglages.
+    ['avis', 'envies'].forEach(function (k) { if (a[k] || b[k]) out[k] = parCle(a[k], b[k], plusRecent); });
+    return out;
   }
 
   function fusionner(local, distant) {

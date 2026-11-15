@@ -295,9 +295,15 @@ select { width: auto; min-height: 40px; padding: 4px 10px; font-size: 1rem; }
   display: inline-flex; align-items: center; gap: 5px; padding: 2px 10px; border-radius: 999px;
   background: var(--soleil-pale); font-family: var(--f-jeu); font-weight: 700; font-size: .92rem;
 }
-.tuile.fini { background: #dfe3ee; box-shadow: none; }
-.tuile.fini .tuile-img { filter: grayscale(.85) brightness(.75); }
-.tuile-tag.fini { background: var(--nuit); color: var(--papier); }
+/* Les jeux fermés aujourd'hui : après les autres, petits, pâles, et rien ne se passe si on les touche. */
+.e-repos { grid-column: 1 / -1; margin-top: 6px; opacity: .62; pointer-events: none; user-select: none; -webkit-user-select: none; animation: tombe .7s 1.2s cubic-bezier(.25, 1.4, .5, 1) both; }
+.e-jeux.calme .e-repos { animation: none; }
+.e-repos-titre { display: flex; align-items: center; gap: 6px; margin: 0 0 8px 4px; font-family: var(--f-jeu); font-weight: 700; font-size: .95rem; color: var(--encre); }
+.e-repos-titre svg { width: 16px; height: 16px; }
+.e-repos-jeux { display: flex; flex-wrap: wrap; gap: 10px 14px; }
+.e-repos-jeu { display: flex; flex-direction: column; align-items: center; gap: 4px; width: 76px; }
+.e-repos-jeu .tuile-img { width: 58px; border-radius: 14px 17px 12px 16px; filter: grayscale(.9); }
+.e-repos-nom { font-family: var(--f-jeu); font-weight: 600; font-size: .78rem; line-height: 1.1; text-align: center; }
 .e-vide { grid-column: 1 / -1; font-family: var(--f-jeu); font-size: 1.3rem; background: var(--papier); padding: 20px; border-radius: var(--coupe-1); box-shadow: var(--ombre-papier); }
 
 .e-dodo {
@@ -336,7 +342,7 @@ select { width: auto; min-height: 40px; padding: 4px 10px; font-size: 1rem; }
   background: var(--papier);
   background-image: repeating-linear-gradient(transparent 0 31px, rgba(29, 43, 79, .06) 31px 32px);
 }
-/* La barre du site au-dessus du carnet : le carnet est l'onglet « Mon Ludiworld ». */
+/* La barre du site au-dessus du carnet : le carnet est l'onglet « Expériences installées ». */
 .c-barre { grid-column: 1 / -1; position: sticky; top: 0; z-index: 9; min-width: 0; }
 .c-rail {
   position: sticky; top: 64px; height: calc(100dvh - 64px); display: flex; flex-direction: column; gap: 22px;
@@ -651,3 +657,4 @@ select { width: auto; min-height: 40px; padding: 4px 10px; font-size: 1rem; }
   .pin-keys { grid-template-columns: repeat(3, 66px); }
   .e-jeux { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+.lien.vers-jeux { display: inline-block; padding: 12px 0; }

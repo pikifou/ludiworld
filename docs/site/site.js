@@ -1,4 +1,5 @@
-/* Ludiworld, le site : langue FR / EN, barre et pied communs, fiches des jeux et de « Ludiworld aime bien ».
+/* Ludiworld, le site : langue FR / EN, barre et pied communs, cartes des jeux (accueil) et fiches de « Ludiworld aime bien ».
+   La page des jeux a son propre script (les-jeux/vitrine.js), qui reprend les textes communs d'ici.
    Le français est écrit dans chaque page (data-t) ; l'anglais vient de en.js à côté de la page (LudiSite.en). Aucune dépendance. */
 (function () {
   'use strict';
@@ -15,8 +16,7 @@
       footCode: 'Le code sur GitHub',
       years: function (a, b) { return a + ' à ' + b + ' ans'; },
       mins: function (a, b) { return a === b ? a + ' min' : a + ' à ' + b + ' min'; },
-      fAge: 'Âge', fSession: 'Partie', fReading: 'Lecture', fLang: 'Langues', fDevices: 'Sur', fOffline: 'Sans réseau',
-      yes: 'oui', no: 'non',
+      fAge: 'Âge', fSession: 'Partie', fReading: 'Lecture', fLang: 'Langues', fDevices: 'Appareils', fOffline: 'Réseau',
       reading: { none: 'Sans lecture', some: 'Quelques mots', fluent: 'Bien lire' },
       goal: { core: 'Apprendre est le but', side: 'On apprend en passant', none: 'Pour le plaisir' },
       langs: { fr: 'français', en: 'anglais' },
@@ -59,8 +59,7 @@
       footCode: 'The code on GitHub',
       years: function (a, b) { return 'ages ' + a + ' to ' + b; },
       mins: function (a, b) { return a === b ? a + ' min' : a + ' to ' + b + ' min'; },
-      fAge: 'Age', fSession: 'Session', fReading: 'Reading', fLang: 'Languages', fDevices: 'On', fOffline: 'Offline',
-      yes: 'yes', no: 'no',
+      fAge: 'Age', fSession: 'Session', fReading: 'Reading', fLang: 'Languages', fDevices: 'Devices', fOffline: 'Connection',
       reading: { none: 'No reading', some: 'A few words', fluent: 'Fluent reading' },
       goal: { core: 'Learning is the point', side: 'Some learning on the way', none: 'Just for fun' },
       langs: { fr: 'French', en: 'English' },
@@ -139,7 +138,6 @@
     core: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1" class="fill"/>',
     side: '<circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" class="fill"/>',
     none: '<path d="M12 3l2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.4 6.7 19.4l1.2-6L3.4 9.3l6-.7z"/>',
-    check: '<path d="M4.5 12.5l5 5 10-11"/>',
     serie: '<rect x="3" y="6.5" width="18" height="12.5" rx="2.5"/><path d="M8.5 2.5l3.5 4 3.5-4M9 22h6"/>',
     film: '<rect x="3" y="9.5" width="18" height="11" rx="1.5"/><path d="M3.4 9.5l1.4-5 15.8-1.2.4 3.6zM8.5 4.2l1.6 4.6M14.2 3.8l1.6 4.6"/>',
     appli: '<rect x="5.5" y="2.5" width="13" height="19" rx="2.5"/><path d="M10.5 18h3"/>',
@@ -214,18 +212,13 @@
     }
     return ico;
   }
-  function facts(g, full) {
+  function facts(g) {
     var c = C();
     var rows = [
       g.age ? [c.fAge, c.years(g.age.min, g.age.max)] : null,
       g.session && g.session.minutes ? [c.fSession, c.mins(g.session.minutes[0], g.session.minutes[1])] : null,
       g.reading ? [c.fReading, c.reading[g.reading] || g.reading] : null
     ];
-    if (full) rows = rows.concat([
-      g.languages ? [c.fLang, g.languages.map(function (l) { return c.langs[l] || l; }).join(', ')] : null,
-      g.devices ? [c.fDevices, g.devices.map(function (d) { return c.devices[d] || d; }).join(', ')] : null,
-      [c.fOffline, g.offline ? c.yes : c.no]
-    ]);
     return el('dl', { class: 'facts' }, rows.map(function (r) { return r ? el('div', null, [el('dt', { text: r[0] }), el('dd', { text: r[1] })]) : null; }));
   }
   function tags(g) {
@@ -243,65 +236,14 @@
     a.style.setProperty('--jc', safeColor(g.color));
     return a;
   }
-  // Fiche complète (page des jeux) : tout ce que dit ludi.json, y compris le moins flatteur.
-  function fiche(g) {
-    var c = C(), l = g.learning || {};
-    var promesses = Object.keys(c.healthy).filter(function (k) { return g.healthy && g.healthy[k] === true; });
-    var a = el('article', { class: 'fiche', id: g.id }, [
-      el('header', { class: 'fiche-tete' }, [
-        gameIco(g),
-        el('div', null, [
-          el('h2', { text: pick(g.title) }),
-          el('p', { class: 'fiche-auteur', text: c.by(g.author && g.author.name || '?') }),
-          goalBadge(l.level)
-        ])
-      ]),
-      el('p', { class: 'fiche-pitch', text: pick(g.pitch) }),
-      facts(g, true),
-      el('div', { class: 'fiche-corps' }, [
-        el('section', null, [
-          el('h3', { text: c.learnWhat }),
-          tags(g),
-          l.what ? el('p', { text: pick(l.what) }) : null,
-          l.how ? el('p', null, [el('strong', { text: c.learnHow + ' : ' }), pick(l.how)]) : null
-        ]),
-        el('section', null, [el('h3', { text: c.content }), el('p', { text: pick(g.content) })]),
-        el('section', { class: 'fiche-promesses' }, [
-          el('h3', { text: c.promises }),
-          el('ul', null, promesses.map(function (k) { return el('li', null, [svg(ICO.check), c.healthy[k]]); })),
-          el('p', { class: 'fiche-tiers', text: g.third_parties && g.third_parties.length ? c.third(g.third_parties.join(', ')) : c.thirdNone })
-        ])
-      ]),
-      el('footer', { class: 'fiche-pied' }, [
-        g.status === 'draft' ? el('p', { class: 'fiche-brouillon', text: c.draft }) : null,
-        el('p', { class: 'fiche-liens' }, [
-          el('a', { class: 'btn btn-paper', href: g.url, target: '_blank', rel: 'noopener', text: c.tryGame }),
-          g.author && g.author.url ? el('a', { class: 'lien-encre', href: g.author.url, target: '_blank', rel: 'noopener', text: c.code }) : null
-        ]),
-        el('p', { class: 'fiche-note', text: c.tryNote })
-      ])
-    ]);
-    a.style.setProperty('--jc', safeColor(g.color));
-    return a;
-  }
   function renderGames() {
     var list = document.getElementById('jeux-list');
-    var full = document.getElementById('fiches-jeux');
-    [list, full].forEach(function (box) {
-      if (!box) return;
-      if (gamesFailed) { box.replaceChildren(el('p', { class: 'jeux-wait', text: C().gError })); return; }
-      if (!games) return;
-      box.replaceChildren.apply(box, games.map(box === full ? fiche : card));
-    });
-    // Arrivée sur une fiche précise (les-jeux/#pluie-de-cochons) : les fiches sont dessinées après le chargement.
-    if (full && games && location.hash && !renderGames.vu) {
-      renderGames.vu = true;
-      var cible = document.getElementById(decodeURIComponent(location.hash.slice(1)));
-      if (cible) cible.scrollIntoView();
-    }
+    if (!list) return;
+    if (gamesFailed) { list.replaceChildren(el('p', { class: 'jeux-wait', text: C().gError })); return; }
+    if (games) list.replaceChildren.apply(list, games.map(card));
   }
   function loadGames() {
-    if (!document.getElementById('jeux-list') && !document.getElementById('fiches-jeux')) return;
+    if (!document.getElementById('jeux-list')) return;
     getJSON(BASE + 'jeux/index.json').then(function (idx) {
       return Promise.all(((idx && idx.games) || []).map(function (f) {
         if (!/^[a-z0-9-]+\.json$/i.test(f)) return null;
@@ -410,7 +352,8 @@
 
   window.LudiSite = {
     en: function (dict) { Object.keys(dict).forEach(function (k) { EN[k] = dict[k]; }); },
-    texte: D, rafraichir: barre, surLangue: function (f) { surLangue.push(f); }
+    texte: D, langue: function () { return lang; }, rafraichir: barre, surLangue: function (f) { surLangue.push(f); },
+    commun: C, pick: pick
   };
 
   document.addEventListener('DOMContentLoaded', function () {

@@ -19,3 +19,5 @@ Utilisé dans les fiches (`learning.domains`) et par `Ludi.skill`. Format `famil
 | `emotions.frustration` | Accepter de perdre, gérer la frustration, recommencer sans abandonner |
 
 Pistes à venir : `histoire.egypte`, `histoire.grece`, `mythologie.grecque`.
+
+Chaque notion a sa case dans l'arbre d'Explorer (`docs/explorer/arbre.js`) : voir `spec/arbre.md`. Un test échoue si une notion ajoutée ici n'y est pas.

@@ -9,6 +9,8 @@ node supabase/verifier.mjs <ce dossier>
 ```
 
 ## Mettre en service
+La migration `20261109120000_synchro_inscription.sql` active la synchronisation pour les nouvelles inscriptions qui l'annoncent. À appliquer avant de publier le nouveau parcours. Elle ne modifie aucun compte existant.
+
 1. Créer un projet Supabase en région UE et appliquer `migrations/`.
 2. Créer soi-même le compte du bureau et confirmer son adresse, **puis seulement** la déclarer (cette ligne ne va pas dans le dépôt) : `insert into public.admins values ('adresse@en-minuscules');`. Dans l'autre sens, quelqu'un qui s'inscrit le premier avec cette adresse pourrait garder son mot de passe après la confirmation.
 3. Reporter l'adresse du projet et sa clé publique (`sb_publishable_…`) dans `docs/site/barre.js`. Jamais la clé `service_role`.

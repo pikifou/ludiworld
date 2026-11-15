@@ -121,6 +121,8 @@ Ludi.progress("level", 5);                         // how far the child got
 Ludi.skill("maths.multiplication", "7x8", true);   // one right/wrong answer on a topic
 Ludi.checkpoint("end-of-level");                   // the child can stop here without losing anything
 Ludi.onPause(() => pauseGame());                   // the launcher may ask for a pause
+Ludi.save(mySave);                                 // every time the game saves: the child can resume on another device
+Ludi.onRestore((d) => { mySave = d; redraw(); });  // a newer save from another device arrives shortly after start
 ```
 
 When `Ludi.inLauncher()` is true, hide anything that would take the child out of the frame the parent chose: "install this app" buttons or hints, links to other sites. Also hide your fullscreen button and never call `requestFullscreen`: inside Ludiworld, full screen is decided by Ludiworld (games are not allowed to go full screen there). Also keep the top-left corner free (the launcher's back button, about 120 × 44 px).
