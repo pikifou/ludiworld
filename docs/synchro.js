@@ -31,6 +31,14 @@
     if (!a || a.at === undefined) return b; if (!b || b.at === undefined) return a;
     return Number(b.at) > Number(a.at) ? b : a;
   }
+  // « Fini » ne s'enlève jamais, « complet » ne redescend jamais.
+  function etat(a, b) {
+    if (!a && !b) return null;
+    a = a || {}; b = b || {};
+    var out = { fini: !!(a.fini || b.fini) };
+    if (a.complet != null || b.complet != null) out.complet = maxNombres(a.complet, b.complet);
+    return out;
+  }
   function fusionnerJeu(a, b) {
     var sv = sauvegarde(a.save, b.save);
     var out = Object.assign({}, a, b, {
@@ -44,6 +52,8 @@
       skillDays: parCle(a.skillDays, b.skillDays, notionDuJour)
     });
     if (sv) out.save = sv; else delete out.save;
+    var et = etat(a.etat, b.etat);
+    if (et) out.etat = et; else delete out.etat;
     return out;
   }
   function plusRecent(a, b) { return (b.t || 0) > (a.t || 0) ? b : a; }

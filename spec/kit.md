@@ -53,6 +53,12 @@ Ludi.onRestore(function (d) { sv = d; localStorage.setItem(CLE, JSON.stringify(s
 ```
 Limite connue : sur une tablette partagée entre plusieurs enfants, la mémoire du jeu reste commune (voir la feuille de route). Hors Ludiworld, rien ne change : `save` garde la sauvegarde dans le navigateur, `onRestore` ne sera jamais appelée.
 
+### `Ludi.fini()` et `Ludi.complet(x)` (pour tout jeu qui peut se terminer)
+- `Ludi.fini()` : le parcours principal est terminé (histoire finie, dernier boss battu). Ça ne s'enlève jamais. Ludiworld range alors le jeu dans la rangée « Finis » de l'enfant et affiche la marque « Fini ».
+- `Ludi.complet(x)`, `x` de 0 à 1 : ce qui reste en option une fois le jeu fini (mode difficile, médailles, étoiles). Ludiworld l'affiche en pourcentage à côté de « Fini ». La valeur ne redescend jamais ; sans option, ne pas l'appeler.
+- Le jeu les appelle au moment où ça arrive **et** au démarrage si son état le dit déjà (après une restauration), puis les montre lui-même sur son écran principal, avec une forme et pas seulement une couleur. Ludiworld ne décide de rien : il lit.
+- Exemple (Chasseur de Dragons) : fini dès qu'un mode est gagné, `complet(modes gagnés / 3)`.
+
 ### `Ludi.player()`
 Renvoie `{ name }` si le launcher a donné un pseudo, sinon `null`. Le jeu peut s'en servir pour pré-remplir un prénom.
 

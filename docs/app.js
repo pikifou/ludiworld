@@ -475,6 +475,23 @@
     return { nuit: nuit, part: part };
   }
 
+  // La marque du jeu : « Fini » (coche) et, pour les jeux qui ont des options, le pourcentage de ce qui est fait.
+  function tuileJeu(g, i) {
+    var c = choix(g.id), et = (S()[g.id] || {}).etat || {};
+    var marques = [];
+    if (et.fini) marques.push(el('span', { class: 'marque marque-fini' }, [icon('check'), t('kid.finiBadge')]));
+    if (et.fini && et.complet !== undefined) marques.push(el('span', { class: 'marque marque-complet' }, [t('kid.completBadge', { p: Math.round(et.complet * 100) })]));
+    return el('button', {
+      type: 'button', class: 'tuile', style: '--game:' + (g.color || '#1d2b4f') + ';--i:' + i,
+      'aria-label': pick(g.title) + (et.fini ? ', ' + t('kid.finiBadge') : ''), onclick: function () { play(g); }
+    }, [
+      el('span', { class: 'tuile-img' }, [gameIcon(g)]),
+      marques.length ? el('span', { class: 'marques' }, marques) : null,
+      el('b', { class: 'tuile-nom', text: pick(g.title) }),
+      c && c.max ? el('span', { class: 'tuile-tag' }, [icon('hourglass'), t('kid.gameLeft', { t: minutesLeft(resteJeu(g.id).jeu) })]) : null
+    ]);
+  }
+
   function renderEnfant() {
     var f = fam();
     if (!f) { show('accueil'); return; }
@@ -512,16 +529,19 @@
     // Les jeux ouverts aujourd'hui d'abord, en grand. Les autres viennent après, petits et pâles, sans pouvoir les toucher :
     // on comprend qu'ils sont là, mais ils ne sont pas mis en avant.
     var repos = { libres: [], fini: [] };
-    jouables.forEach(function (g, i) {
-      var c = choix(g.id);
-      list.appendChild(el('button', {
-        type: 'button', class: 'tuile', style: '--game:' + (g.color || '#1d2b4f') + ';--i:' + i,
-        'aria-label': pick(g.title), onclick: function () { play(g); }
-      }, [
-        el('span', { class: 'tuile-img' }, [gameIcon(g)]),
-        el('b', { class: 'tuile-nom', text: pick(g.title) }),
-        c && c.max ? el('span', { class: 'tuile-tag' }, [icon('hourglass'), t('kid.gameLeft', { t: minutesLeft(resteJeu(g.id).jeu) })]) : null
-      ]));
+    // Trois rangées : ce qu'on a commencé, ce qu'il reste à découvrir, ce qui est fini (le jeu le dit lui-même).
+    var rangees = { cours: [], neuf: [], finis: [] };
+    jouables.forEach(function (g) {
+      var st = S()[g.id] || {}, et = st.etat || {};
+      var commence = (st.ms || 0) > 0 || !!st.save || Object.keys(st.progress || {}).length > 0;
+      rangees[et.fini ? 'finis' : commence ? 'cours' : 'neuf'].push(g);
+    });
+    var nbRangees = ['cours', 'neuf', 'finis'].filter(function (k) { return rangees[k].length; }).length;
+    var n = 0;
+    [['cours', 'kid.rowOn'], ['neuf', 'kid.rowNew'], ['finis', 'kid.rowDone']].forEach(function (x) {
+      if (!rangees[x[0]].length) return;
+      if (nbRangees > 1) list.appendChild(el('h2', { class: 'e-rangee e-rangee-' + x[0] }, [icon(x[0] === 'finis' ? 'check' : x[0] === 'neuf' ? 'sun' : 'hourglass'), t(x[1])]));
+      rangees[x[0]].forEach(function (g) { list.appendChild(tuileJeu(g, n++)); });
     });
     mine.forEach(function (g) {
       if (jouables.indexOf(g) !== -1) return;
@@ -1394,6 +1414,13 @@
         var k = Temps.cleJour();
         var sd = g.skillDays[k] || (g.skillDays[k] = { ok: 0, ko: 0 });
         if (ev.success) sd.ok++; else sd.ko++;
+        saveStore();
+      } else if (ev.kind === 'etat') {
+        // Ce que le jeu dit de sa progression : fini ne s'enlève pas, complet ne redescend pas.
+        var et = g.etat || (g.etat = { fini: false });
+        if (ev.fini) et.fini = true;
+        var cp = Number(ev.complet);
+        if (ev.complet !== null && ev.complet !== undefined && isFinite(cp) && (et.complet === undefined || cp > et.complet)) et.complet = Math.max(0, Math.min(1, cp));
         saveStore();
       } else if (ev.kind === 'checkpoint') { compter(); evaluer(true); }
       // Les tranches de temps (« session ») envoyées par le kit sont ignorées : Ludiworld compte lui-même.

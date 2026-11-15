@@ -265,3 +265,13 @@ test('une sauvegarde venue d\'un faux launcher est ignorée', () => {
   w.message({ type: 'ludi:welcome', player: null, save: { data: { etage: 99 }, at: 5 } }, 'https://pirate.example');
   assert.deepStrictEqual(recu, []);
 });
+
+test('fini et complet : posté au launcher, gardé, ne redescend jamais', () => {
+  const w = fakeWindow({ embedded: true });
+  const L = createLudi(w.win, { now: clock() }).init({ game: 'jeu' });
+  L.complet(0.4); L.complet(0.2); L.complet(5); L.fini(); L.fini();
+  const etats = w.sent.filter(p => p.msg.event && p.msg.event.kind === 'etat').map(p => p.msg.event);
+  assert.deepStrictEqual(etats.map(e => [e.fini, e.complet]), [[false, 0.4], [false, 1], [true, 1]]);
+  assert.deepStrictEqual(L.data().etat.fini, true);
+  assert.strictEqual(L.data().etat.complet, 1);
+});

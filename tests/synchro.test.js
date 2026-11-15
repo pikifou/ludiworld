@@ -141,3 +141,11 @@ test('une sauvegarde absente d\'un côté n\'efface pas celle de l\'autre', () =
   assert.strictEqual(fusionner(sans, avec).enfants[0].games.tour.ms, 5);
   assert.strictEqual('save' in fusionner(sans, sans).enfants[0].games.tour, false);
 });
+
+test('fini ne s\'enlève pas, complet ne redescend pas, d\'un appareil à l\'autre', () => {
+  const a = foyer({ enfants: [enfant('e1', { games: { g: { etat: { fini: true, complet: 0.3 } } } })] });
+  const b = foyer({ maj: 200, enfants: [enfant('e1', { games: { g: { etat: { fini: false, complet: 0.6 } } } })] });
+  assert.deepStrictEqual(fusionner(a, b).enfants[0].games.g.etat, { fini: true, complet: 0.6 });
+  const c = foyer({ enfants: [enfant('e1', { games: { g: { etat: { fini: true } } } })] });
+  assert.deepStrictEqual(fusionner(c, b).enfants[0].games.g.etat, { fini: true, complet: 0.6 });
+});

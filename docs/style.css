@@ -658,3 +658,13 @@ select { width: auto; min-height: 40px; padding: 4px 10px; font-size: 1rem; }
   .e-jeux { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 .lien.vers-jeux { display: inline-block; padding: 12px 0; }
+
+/* Les trois rangées du côté enfant et les marques « Fini » / pourcentage sur les tuiles. */
+.e-rangee { grid-column: 1 / -1; display: flex; align-items: center; gap: 8px; margin: 10px 0 0 4px; font-family: var(--f-jeu); font-weight: 800; font-size: 1.15rem; color: var(--encre); }
+.e-rangee:first-child { margin-top: 0; }
+.e-rangee svg { width: 20px; height: 20px; }
+.marques { position: absolute; top: 8px; left: 8px; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+.marque { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px 3px 8px; border-radius: 4px 12px 5px 11px; font-family: var(--f-jeu); font-weight: 800; font-size: .88rem; box-shadow: 0 2px 0 rgba(0, 0, 0, .25); }
+.marque svg { width: 14px; height: 14px; }
+.marque-fini { background: var(--encre); color: var(--papier); }
+.marque-complet { background: var(--soleil-pale); color: var(--encre); border: 2px solid var(--encre); }
