@@ -1,7 +1,7 @@
 {
   "ludi": 1,
   "id": "defis-de-barnabe",
-  "status": "draft",
+  "status": "published",
   "added": "2026-11-23",
   "title": {
     "fr": "Les Défis de Barnabé",
@@ -12,6 +12,12 @@
     "en": "The sequel to The King's Path. It is summer: by the sea, Barnabé has hidden chess challenges in bottles all along the coast. Leo opens them one by one: take what is left undefended, move pieces to safety, give check, find the mate, the fork, stop a mate. At the lighthouse, Barnabé waits for a real match."
   },
   "url": "https://pikifou.github.io/ludigames/defis-de-barnabe/",
+  "screenshots": [
+    { "src": "img/defis-de-barnabe-1.webp", "alt": { "fr": "Le chemin le long de la mer et la prochaine leçon", "en": "The path along the sea and the next lesson" } },
+    { "src": "img/defis-de-barnabe-2.webp", "alt": { "fr": "Barnabé montre une fourchette à Léo", "en": "Barnabé shows Léo a fork" } },
+    { "src": "img/defis-de-barnabe-3.webp", "alt": { "fr": "Barnabé prévient Léo d'un coup risqué", "en": "Barnabé warns Léo about a risky move" } }
+  ],
+  "screens": "portrait",
   "icon": "https://pikifou.github.io/ludigames/defis-de-barnabe/icons/icon-512.png",
   "color": "#2f8f9a",
   "author": {

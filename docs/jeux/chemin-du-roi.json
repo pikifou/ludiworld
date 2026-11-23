@@ -1,7 +1,7 @@
 {
   "ludi": 1,
   "id": "chemin-du-roi",
-  "status": "draft",
+  "status": "published",
   "added": "2026-11-15",
   "title": {
     "fr": "Le Chemin du Roi",
@@ -15,7 +15,7 @@
   "icon": "https://pikifou.github.io/ludigames/chemin-du-roi/icons/icon-512.png",
   "screenshots": [
     { "src": "img/chemin-du-roi-1.webp", "alt": { "fr": "Malo explique la valeur des pièces", "en": "Malo explains what pieces are worth" } },
-    { "src": "img/chemin-du-roi-2.webp", "alt": { "fr": "Lina prévient d'un coup risqué", "en": "Lina warns about a risky move" } },
+    { "src": "img/chemin-du-roi-2.webp", "alt": { "fr": "Barnabé prévient d'un coup risqué", "en": "Barnabé warns about a risky move" } },
     { "src": "img/chemin-du-roi-3.webp", "alt": { "fr": "Le chemin des leçons", "en": "The path of lessons" } }
   ],
   "screens": "portrait",
