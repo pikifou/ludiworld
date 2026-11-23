@@ -906,7 +906,7 @@ def run():
             avant_ms = page.evaluate("JSON.stringify(ludiDemo.etat().famille.enfants[0].games)")
             page.click("#e-vitrine")
             page.wait_for_selector(".v-tuile")
-            assert page.locator(".v-tuile").count() == 7, "les jeux qu'il n'a pas (9 au catalogue d'essai, 2 installés)"
+            assert page.locator(".v-tuile").count() == 8, "les jeux qu'il n'a pas (10 au catalogue d'essai, 2 installés)"
             assert page.locator(".v-tuile[data-jeu=pluie-de-cochons]").count() == 0
             page.wait_for_timeout(1500)
             assert page.evaluate("document.documentElement.scrollWidth <= innerWidth + 1"), ("rien ne dépasse", name)
@@ -959,7 +959,7 @@ def run():
             page.screenshot(path=str(OUT / f"{name}-p1-mes-jeux-demandes.png"))
             # Tous les jeux : l'état pour l'enfant regardé
             onglet(page, "catalogue")
-            assert page.locator(".pa-tous-grille .cat-mini").count() == 9
+            assert page.locator(".pa-tous-grille .cat-mini").count() == 10
             assert "Petit Loup le voudrait" in page.inner_text(".cat-mini[data-jeu=tour-aimants] .cat-mini-actions")
             assert "Installé pour Petit Loup" in page.inner_text(".cat-mini[data-jeu=pluie-de-cochons] .cat-mini-actions")
             assert page.evaluate("document.documentElement.scrollWidth <= innerWidth + 1"), ("rien ne dépasse", name)
@@ -1056,7 +1056,7 @@ def run():
             # Tout installé : « Tous les jeux » montre encore tout ; la vitrine de l'enfant n'a plus rien à montrer
             page.goto(BASE + "/ludiworld/jeux/index.json")   # l'appli fermée (elle réécrit ses données en partant), même origine
             page.evaluate("""() => { var s = JSON.parse(localStorage.getItem('ludiworld.v1')); var e = s.famille.enfants[0]; delete e.regarderTout;
-              ['tour-aimants','du-feu-a-la-fusee','chasseur-dragons','simon-des-monstres','monde-a-la-craie','les-petits-enclos','chemin-du-roi'].forEach(function (id) { e.jeux[id] = e.jeux[id] || { max: null }; });
+              ['tour-aimants','du-feu-a-la-fusee','chasseur-dragons','simon-des-monstres','monde-a-la-craie','les-petits-enclos','chemin-du-roi','defis-de-barnabe'].forEach(function (id) { e.jeux[id] = e.jeux[id] || { max: null }; });
               localStorage.setItem('ludiworld.v1', JSON.stringify(s)); }""")
             page.goto(APP)
             page.wait_for_selector(".tuile")
@@ -1066,11 +1066,11 @@ def run():
             code(page, PIN)
             parent(page)
             onglet(page, "catalogue")
-            assert page.locator(".pa-tous-grille .cat-mini").count() == 9 and page.locator(".pa-tous-grille .pa-installer").count() == 0, "tout installé : tous les jeux restent là"
+            assert page.locator(".pa-tous-grille .cat-mini").count() == 10 and page.locator(".pa-tous-grille .pa-installer").count() == 0, "tout installé : tous les jeux restent là"
             ctx.close()
 
         # « Nouveau » : une petite marque écrite, 30 jours après l'entrée du jeu au catalogue ; les nouveaux d'abord. Horloge au 5 décembre 2026 :
-        # Le Chemin du Roi (15 novembre) puis Les Petits Enclos (11 novembre) ; les autres, entrés avant le 6 novembre, ne le sont plus.
+        # Les Défis de Barnabé (23 novembre), Le Chemin du Roi (15 novembre) puis Les Petits Enclos (11 novembre) ; les autres, entrés avant le 6 novembre, ne le sont plus.
         ctx = contexte(browser, famille(), **formats["tablette"])
         page = ctx.new_page()
         page.on("pageerror", lambda e: errors.append(str(e)))
@@ -1079,9 +1079,9 @@ def run():
         code(page, PIN)
         parent(page)
         onglet(page, "catalogue")
-        assert page.locator(".cat-nouveau").count() == 2, page.locator(".cat-nouveau").count()
-        ordre = [page.locator(".pa-tous-grille .cat-mini").nth(i).get_attribute("data-jeu") for i in range(3)]
-        assert ordre[:2] == ["chemin-du-roi", "les-petits-enclos"], ordre
+        assert page.locator(".cat-nouveau").count() == 3, page.locator(".cat-nouveau").count()
+        ordre = [page.locator(".pa-tous-grille .cat-mini").nth(i).get_attribute("data-jeu") for i in range(4)]
+        assert ordre[:3] == ["defis-de-barnabe", "chemin-du-roi", "les-petits-enclos"], ordre
         assert page.inner_text(".cat-mini[data-jeu=chemin-du-roi] .cat-nouveau") == "Nouveau"
         page.wait_for_timeout(500)
         page.screenshot(path=str(OUT / "tablette-p1-nouveau.png"))
@@ -1092,7 +1092,7 @@ def run():
         assert page.inner_text("[data-onglet=catalogue]").strip() == "All games" and page.inner_text("[data-onglet=jeux]").strip() == "My games"
         page.goto(BASE + "/ludiworld/les-jeux/")
         page.wait_for_selector(".cat-mini")
-        assert page.locator(".cat-nouveau").count() == 2 and page.locator(".jx-grille .cat-mini").first.get_attribute("data-jeu") == "chemin-du-roi", "la vitrine du site aussi"
+        assert page.locator(".cat-nouveau").count() == 3 and page.locator(".jx-grille .cat-mini").first.get_attribute("data-jeu") == "defis-de-barnabe", "la vitrine du site aussi"
         ctx.close()
         # Le 1er février 2027 : plus rien de nouveau, pas de marque
         ctx = contexte(browser, famille(), **formats["tablette"])
