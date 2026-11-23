@@ -1,0 +1,19 @@
+{{ if eq (printf "%v" .Data.langue) "en" }}
+<div lang="en" style="font-family: Arial, sans-serif; max-width: 520px; margin: 0 auto; padding: 24px; color: #1d2b4f; line-height: 1.5;">
+  <p style="font-size: 22px; font-weight: bold; margin: 0 0 20px;">Ludi<span style="color: #e0a400;">world</span></p>
+  <p>Hello,</p>
+  <p>Here is the code to choose a new parent code in Ludiworld:</p>
+  <p style="font-size: 32px; font-weight: bold; letter-spacing: 6px; margin: 16px 0;">{{ .Token }}</p>
+  <p>Type it on the device where you asked for it. It works once, for one hour.</p>
+  <p style="font-size: 14px; color: #4a5678;">You didn't ask for anything? Do nothing: your parent code stays the same.</p>
+</div>
+{{ else }}
+<div lang="fr" style="font-family: Arial, sans-serif; max-width: 520px; margin: 0 auto; padding: 24px; color: #1d2b4f; line-height: 1.5;">
+  <p style="font-size: 22px; font-weight: bold; margin: 0 0 20px;">Ludi<span style="color: #e0a400;">world</span></p>
+  <p>Bonjour,</p>
+  <p>Voici le code pour choisir un nouveau code parent dans Ludiworld :</p>
+  <p style="font-size: 32px; font-weight: bold; letter-spacing: 6px; margin: 16px 0;">{{ .Token }}</p>
+  <p>Tapez-le sur l'appareil où vous l'avez demandé. Il ne marche qu'une fois, et pendant une heure.</p>
+  <p style="font-size: 14px; color: #4a5678;">Vous n'avez rien demandé ? Ne faites rien : votre code parent ne change pas.</p>
+</div>
+{{ end }}

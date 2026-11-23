@@ -3,9 +3,9 @@
 // Il est à la racine du site (sa portée couvre le site et l'appli) ; l'appli vit sous app/ (Julien, 2026-11-18) et marche hors ligne.
 // La racine ('./', l'accueil du site) et l'aiguillage restent en cache : une appli installée avant app/ (départ à la racine)
 // retombe dans l'appli, même hors ligne.
-const VERSION = 'ludiworld-0.12.4';
+const VERSION = 'ludiworld-0.12.5';
 const SHELL = [
-  'app/', 'app/index.html', './', 'site/aiguillage.js', 'style.css', 'app.js', 'textes.js', 'temps.js', 'synchro.js', 'usage.js', 'site/nuage.js', 'manifest.webmanifest', 'kit/ludi.js',
+  'app/', 'app/index.html', './', 'site/demenager.js', 'site/aiguillage.js', 'style.css', 'app.js', 'textes.js', 'temps.js', 'synchro.js', 'usage.js', 'site/nuage.js', 'manifest.webmanifest', 'kit/ludi.js',
   'site/barre.js', 'site/barre.css', 'site/catalogue.js', 'site/catalogue.css',
   'fonts/baloo2-500.woff2', 'fonts/baloo2-700.woff2', 'fonts/baloo2-800.woff2',
   'fonts/lexend.woff2', 'fonts/fraunces.woff2', 'fonts/fraunces-italic.woff2',

@@ -101,6 +101,18 @@
     }
     function moi(chemin, options) { return jeton().then(function (j) { return requete(chemin, options, j); }); }
 
+    var CLE_LANGUE = 'ludiworld.langueCompte';
+    function retenirLangue(langue) {
+      var s = session();
+      if (!s || !s.id || (langue !== 'fr' && langue !== 'en')) return Promise.resolve(false);
+      var deja = lire(CLE_LANGUE);
+      if (deja && deja.compte === s.id && deja.langue === langue) return Promise.resolve(false);
+      return moi('/auth/v1/user', { method: 'PUT', corps: { data: { langue: langue } } }).then(function () {
+        ecrire(CLE_LANGUE, { compte: s.id, langue: langue });
+        return true;
+      });
+    }
+
     function retourParam(retour) { return retour ? '?redirect_to=' + encodeURIComponent(retour) : ''; }
 
     function rpc(nom, args) { return moi('/rest/v1/rpc/' + nom, { method: 'POST', corps: args || {} }); }
@@ -204,6 +216,7 @@
         return requete('/auth/v1/token?grant_type=password', { method: 'POST', corps: { email: email, password: motDePasse } }).then(function (r) {
           garder(r);
           ecrire(CLE_LIAISON, { compte: session().id });
+          ecrire(CLE_LANGUE, { compte: session().id, langue: r && r.user && r.user.user_metadata && r.user.user_metadata.langue });
         });
       },
       // « Code oublié ? » sur un appareil connecté : le mot de passe du compte ouvert ici, vérifié par Supabase par le même appel
@@ -218,12 +231,18 @@
           return requete('/auth/v1/logout?scope=local', { method: 'POST' }, r.access_token).catch(function () { /* rien : elle expirera seule */ });
         }).then(function () { return true; });
       },
+      // La langue du compte (user_metadata.langue) : les e-mails de Supabase partent dans cette langue (supabase/emails/).
+      // Gardée à jour avec celle que le parent utilise : à la connexion, quand il change de langue, avant un code par e-mail.
+      // Une fois par compte et par langue (CLE_LANGUE) ; sans compte ou hors ligne, rien (les e-mails restent dans l'ancienne).
+      retenirLangue: function (langue) { return retenirLangue(langue); },
       // « Code oublié ? » sans le mot de passe : un code à 6 chiffres envoyé par e-mail à l'adresse du compte ouvert ici
-      // (modèle « Magic Link » de Supabase, qui doit contenir {{ .Token }}). Jamais de compte créé (create_user: false).
-      envoyerCodeEmail: function () {
+      // (modèle « Magic Link » de Supabase, qui doit contenir {{ .Token }}), dans la langue de l'écran. Jamais de compte créé (create_user: false).
+      envoyerCodeEmail: function (langue) {
         var s = session();
         if (!s || !s.id || !s.email) return Promise.reject(erreur('session'));
-        return requete('/auth/v1/otp', { method: 'POST', corps: { email: s.email, create_user: false } }).then(function () { return true; });
+        return retenirLangue(langue).catch(function () { /* l'e-mail part quand même, dans la langue d'avant */ }).then(function () {
+          return requete('/auth/v1/otp', { method: 'POST', corps: { email: s.email, create_user: false } });
+        }).then(function () { return true; });
       },
       // Le code reçu, vérifié par Supabase. Même logique que verifierMotDePasse : la session ouverte par la vérification est
       // refermée aussitôt, celle de l'appareil ne change pas, rien n'est gardé. Code refusé ou périmé : rejette avec 'code'.

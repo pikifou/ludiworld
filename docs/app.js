@@ -29,6 +29,8 @@
   function setLang(l) {
     lang = l;
     try { localStorage.setItem(LANG_KEY, lang); } catch (e) { /* rien */ }
+    // Connecté : les e-mails du compte suivront cette langue.
+    if (window.LudiNuage && window.LudiNuage.retenirLangue) window.LudiNuage.retenirLangue(lang).catch(function () { /* rien */ });
     document.documentElement.lang = lang;
     render();
   }
@@ -1019,7 +1021,7 @@
         renvoyer.disabled = true;
         msg.textContent = '';
         envoi.textContent = t('gate.mailSending');
-        Nuage.envoyerCodeEmail().then(function () {
+        Nuage.envoyerCodeEmail(lang).then(function () {
           dejaEnvoye = true;
           envoi.textContent = t('gate.mailSent', { e: Nuage.emailMasque() });
           finAttente = Date.now() + 60000;

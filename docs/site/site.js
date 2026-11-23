@@ -127,6 +127,8 @@
   function setLang(l) {
     lang = l;
     try { localStorage.setItem(LANG_KEY, lang); } catch (e) { /* rien */ }
+    // Connecté : les e-mails du compte suivront cette langue.
+    if (window.LudiNuage && window.LudiNuage.retenirLangue) window.LudiNuage.retenirLangue(lang).catch(function () { /* rien */ });
     applyLang();
   }
 

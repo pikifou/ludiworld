@@ -243,6 +243,8 @@
       occupe(f, true);
       N.connecter(email, mdp).then(function () {
         $('s-mdp').value = '';
+        // Les e-mails du compte partent dans la langue que le parent utilise ici.
+        if (N.retenirLangue) N.retenirLangue(LudiSite.langue()).catch(function () { /* rien */ });
         return apresMotDePasse();
       }).catch(function (e) {
         alerte(f, cleErreur(e));

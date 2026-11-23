@@ -1,0 +1,17 @@
+{{ if eq (printf "%v" .Data.langue) "en" }}
+<div lang="en" style="font-family: Arial, sans-serif; max-width: 520px; margin: 0 auto; padding: 24px; color: #1d2b4f; line-height: 1.5;">
+  <p style="font-size: 22px; font-weight: bold; margin: 0 0 20px;">Ludi<span style="color: #e0a400;">world</span></p>
+  <p>Hello,</p>
+  <p>To use {{ .NewEmail }} as your Ludiworld account address from now on:</p>
+  <p><a href="{{ .ConfirmationURL }}" style="display: inline-block; padding: 12px 20px; background: #ffc83d; color: #1d2b4f; font-weight: bold; text-decoration: none; border-radius: 12px;">Confirm the new address</a></p>
+  <p style="font-size: 14px; color: #4a5678;">You didn't ask for anything? Do nothing: the address stays the same.</p>
+</div>
+{{ else }}
+<div lang="fr" style="font-family: Arial, sans-serif; max-width: 520px; margin: 0 auto; padding: 24px; color: #1d2b4f; line-height: 1.5;">
+  <p style="font-size: 22px; font-weight: bold; margin: 0 0 20px;">Ludi<span style="color: #e0a400;">world</span></p>
+  <p>Bonjour,</p>
+  <p>Pour que votre compte Ludiworld utilise désormais l'adresse {{ .NewEmail }} :</p>
+  <p><a href="{{ .ConfirmationURL }}" style="display: inline-block; padding: 12px 20px; background: #ffc83d; color: #1d2b4f; font-weight: bold; text-decoration: none; border-radius: 12px;">Confirmer la nouvelle adresse</a></p>
+  <p style="font-size: 14px; color: #4a5678;">Vous n'avez rien demandé ? Ne faites rien : l'adresse ne change pas.</p>
+</div>
+{{ end }}

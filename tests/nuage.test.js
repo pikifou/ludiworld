@@ -320,6 +320,31 @@ test('code oublié par e-mail : envoi à l\'adresse du compte ouvert, sans crée
   assert.strictEqual(c.n.emailMasque(), 'a•••@exemple.test');
 });
 
+test('la langue du compte suit celle du parent (les e-mails partent dans sa langue), une fois par langue', async () => {
+  const fr = Object.assign({}, SESSION, { user: { id: 'u1', email: 'a@exemple.test', user_metadata: { langue: 'fr' } } });
+  const c = client([{ status: 200, body: fr }, { status: 200, body: {} }, { status: 200, body: {} }, { status: 200, body: {} }, new Error('hors ligne'), { status: 200, body: {} }]);
+  await c.n.connecter('a@exemple.test', 'x');
+  assert.strictEqual(await c.n.retenirLangue('fr'), false, 'déjà en français : rien ne part');
+  assert.strictEqual(c.fetch.appels.length, 1);
+  // Le code oublié demandé depuis un écran en anglais : la langue du compte change d'abord, puis l'e-mail part
+  assert.strictEqual(await c.n.envoyerCodeEmail('en'), true);
+  assert.strictEqual(c.fetch.appels[1].url, URL_ + '/auth/v1/user');
+  assert.strictEqual(c.fetch.appels[1].methode, 'PUT');
+  assert.deepStrictEqual(c.fetch.appels[1].corps, { data: { langue: 'en' } });
+  assert.strictEqual(c.fetch.appels[1].entetes.Authorization, 'Bearer jeton');
+  assert.strictEqual(c.fetch.appels[2].url, URL_ + '/auth/v1/otp');
+  // Une deuxième fois en anglais : seulement l'e-mail
+  await c.n.envoyerCodeEmail('en');
+  assert.strictEqual(c.fetch.appels[3].url, URL_ + '/auth/v1/otp');
+  // Hors ligne au moment de changer la langue : l'e-mail part quand même (dans l'ancienne langue)
+  assert.strictEqual(await c.n.envoyerCodeEmail('fr'), true);
+  assert.strictEqual(c.fetch.appels[4].url, URL_ + '/auth/v1/user');
+  assert.strictEqual(c.fetch.appels[5].url, URL_ + '/auth/v1/otp');
+  // Une langue inconnue ou sans compte : rien
+  assert.strictEqual(await c.n.retenirLangue('de'), false);
+  assert.strictEqual(await client([]).n.retenirLangue('en'), false);
+});
+
 test('code oublié par e-mail : bon code, la session de la vérification est refermée, rien d\'autre ne change', async () => {
   const verif = Object.assign({}, SESSION, { access_token: 'jeton-otp', user: { id: 'u1', email: 'a@exemple.test' } });
   const c = client([{ status: 200, body: SESSION }, { status: 200, body: verif }, { status: 204 }]);
