@@ -26,6 +26,20 @@ test('« +10 min » donné depuis le téléphone arrive sur la tablette', () => 
   assert.strictEqual(fusionner(tablette, tel).enfants[0].regles.bonus.min, 10);
 });
 
+test('un jeu retiré garde ses réglages d\'un appareil à l\'autre, pour être réinstallé tel quel', () => {
+  // Retiré sur le téléphone (plus récent) : le jeu quitte « jeux », ses réglages passent dans « jeuxRetires ».
+  const tablette = foyer({ enfants: [enfant('e1', { maj: 100, jeux: { simon: { max: 10, libres: true } } })] });
+  const tel = foyer({ enfants: [enfant('e1', { maj: 300, jeux: {}, jeuxRetires: { simon: { max: 10, libres: true } } })] });
+  const m = fusionner(tablette, tel);
+  assert.deepStrictEqual(m.enfants[0].jeux, {});
+  assert.deepStrictEqual(m.enfants[0].jeuxRetires.simon, { max: 10, libres: true });
+  // Réinstallé ensuite sur la tablette (plus récent encore) : les réglages reviennent, le souvenir s'efface.
+  const tablette2 = foyer({ enfants: [enfant('e1', { maj: 400, jeux: { simon: { max: 10, libres: true } }, jeuxRetires: {} })] });
+  const m2 = fusionner(m, tablette2);
+  assert.deepStrictEqual(m2.enfants[0].jeux.simon, { max: 10, libres: true });
+  assert.deepStrictEqual(m2.enfants[0].jeuxRetires, {});
+});
+
 test('un enfant ajouté sur un autre appareil apparaît', () => {
   const m = fusionner(foyer({ enfants: [enfant('e1')] }), foyer({ enfants: [enfant('e1'), enfant('e9')] }));
   assert.deepStrictEqual(m.enfants.map(e => e.id), ['e1', 'e9']);
@@ -148,4 +162,43 @@ test('fini ne s\'enlève pas, complet ne redescend pas, d\'un appareil à l\'aut
   assert.deepStrictEqual(fusionner(a, b).enfants[0].games.g.etat, { fini: true, complet: 0.6 });
   const c = foyer({ enfants: [enfant('e1', { games: { g: { etat: { fini: true } } } })] });
   assert.deepStrictEqual(fusionner(c, b).enfants[0].games.g.etat, { fini: true, complet: 0.6 });
+});
+
+test('un jeu rangé suit l\'enfant d\'un appareil à l\'autre, sans rien effacer', () => {
+  const tablette = foyer({ enfants: [enfant('e1', { maj: 100, jeux: { simon: { max: 10 } } })] });
+  const tel = foyer({ enfants: [enfant('e1', { maj: 300, jeux: { simon: { max: 10, range: 250 } } })] });
+  [fusionner(tablette, tel), fusionner(tel, tablette)].forEach((m) => assert.deepStrictEqual(m.enfants[0].jeux.simon, { max: 10, range: 250 }));
+  // Ressorti ensuite sur la tablette (plus récent) : il revient dans ses jeux.
+  const tablette2 = foyer({ enfants: [enfant('e1', { maj: 400, jeux: { simon: { max: 10 } } })] });
+  assert.deepStrictEqual(fusionner(fusionner(tablette, tel), tablette2).enfants[0].jeux.simon, { max: 10 });
+});
+
+test('la demande de l\'enfant arrive sur le téléphone du parent, même si ses réglages y sont plus récents', () => {
+  // La tablette (côté enfant) : la demande ne change pas « maj ». Le téléphone : un réglage plus récent.
+  const tablette = foyer({ enfants: [enfant('e1', { maj: 100, demandes: { simon: 150 } })] });
+  const tel = foyer({ enfants: [enfant('e1', { maj: 300, regles: { ecole: 45 } })] });
+  [fusionner(tablette, tel), fusionner(tel, tablette)].forEach((m) => {
+    assert.deepStrictEqual(m.enfants[0].demandes, { simon: 150 });
+    assert.strictEqual(m.enfants[0].regles.ecole, 45, 'les réglages du parent restent');
+  });
+});
+
+test('une demande traitée (installée ou « Pas maintenant ») ne revient pas d\'un autre appareil ; une nouvelle demande, si', () => {
+  const tablette = foyer({ enfants: [enfant('e1', { maj: 100, demandes: { simon: 150, tour: 160 } })] });
+  // Le parent installe Simon et dit « Pas maintenant » pour la Tour, sur son téléphone.
+  const tel = foyer({ enfants: [enfant('e1', { maj: 300, jeux: { simon: { max: null } }, demandesVues: { simon: 150, tour: 160 } })] });
+  const m = fusionner(tablette, tel);
+  assert.strictEqual('demandes' in m.enfants[0], false, 'plus de demande en attente');
+  assert.deepStrictEqual(m.enfants[0].demandesVues, { simon: 150, tour: 160 });
+  assert.deepStrictEqual(fusionner(tel, tablette).enfants[0], m.enfants[0], 'dans les deux sens');
+  // L'enfant redemande la Tour plus tard : la demande revient.
+  const tablette2 = foyer({ enfants: [Object.assign({}, m.enfants[0], { demandes: { tour: 900 } })] });
+  assert.deepStrictEqual(fusionner(m, tablette2).enfants[0].demandes, { tour: 900 });
+  assert.deepStrictEqual(fusionner(tablette2, m).enfants[0].demandes, { tour: 900 });
+});
+
+test('sans demande nulle part, rien n\'est ajouté à l\'enfant', () => {
+  const m = fusionner(foyer({ enfants: [enfant('e1')] }), foyer({ enfants: [enfant('e1')] }));
+  assert.strictEqual('demandes' in m.enfants[0], false);
+  assert.strictEqual('demandesVues' in m.enfants[0], false);
 });

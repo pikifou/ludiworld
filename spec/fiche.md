@@ -23,6 +23,8 @@ Les textes destinés aux gens sont bilingues : `{ "fr": "…", "en": "…" }`. L
 | `url` | oui | Adresse où l'on joue. |
 | `icon` | oui | Image carrée (512 px de préférence). |
 | `color` | non | Couleur de fond du jeu, pour la carte du catalogue. |
+| `screenshots` | non | Des images du jeu, de 1 à 5, montrées dans le catalogue. Voir ci-dessous. |
+| `screens` | avec `screenshots` | Le sens des images : `portrait` (jeu en hauteur, téléphone) ou `landscape` (jeu en largeur). |
 | `author` | oui | `{ "name": "…", "url": "…" }`. |
 | `languages` | oui | Langues du jeu (`["fr", "en"]`). |
 | `age` | oui | `{ "min": 6, "max": 10 }`, âge conseillé. |
@@ -35,9 +37,12 @@ Les textes destinés aux gens sont bilingues : `{ "fr": "…", "en": "…" }`. L
 | `healthy` | oui | La checklist de la charte (`spec/charte.md`). |
 | `third_parties` | oui | Domaines extérieurs que le jeu contacte (`[]` si aucun). |
 | `kit` | oui | `true` si le jeu utilise `ludi.js`. |
+| `after` | non | Une idée à faire sans écran, en lien avec le jeu, dite à l'enfant (fr, en ; une phrase, 160 signes au plus). Le launcher la montre une fois, sur l'écran « C'est fini pour aujourd'hui », pour le dernier jeu joué. Pas d'ordre sec : une proposition. |
+| `together` | non | `true` si le jeu se joue aussi à deux sur le même appareil (chacun son tour, ou côte à côte). La fiche affiche alors « À deux possible ». Absent : rien n'est dit. |
+| `added` | non | Ajouté par Ludiworld quand le jeu entre au catalogue : la date `AAAA-MM-JJ`. Côté parent, la mini-fiche porte une petite marque « Nouveau » pendant 30 jours, et les jeux nouveaux passent en premier dans « Tous les jeux ». Pas de notification, pas de compte à rebours. Chaque jeu du catalogue en a une. |
 | `embed` | non | Ajouté à l'import : `false` si le site du jeu interdit l'affichage dans un cadre (le launcher ouvre alors un nouvel onglet). |
 | `source` | non | Ajouté à l'import : `{ "card": "<adresse de la fiche>", "imported": "AAAA-MM-JJ" }`. |
-| `status` | oui | `draft` (fiche pas encore relue par l'auteur) ou `published`. |
+| `status` | oui | `draft` (fiche pas encore relue par l'auteur) ou `published`. Le site ne l'affiche pas aux familles. |
 
 ### `learning`
 ```json
@@ -58,6 +63,18 @@ Les textes destinés aux gens sont bilingues : `{ "fr": "…", "en": "…" }`. L
 - `minutes` : durée typique d'une partie.
 - `natural_end` : la partie a une fin claire (course, salle, niveau) où l'enfant peut s'arrêter sans rien perdre.
 - `total_hours` : durée de vie estimée du contenu.
+
+### `screenshots`
+```json
+"screenshots": [
+  { "src": "img/pluie-de-cochons-1.webp", "alt": { "fr": "Les cochons remplissent la grange", "en": "Pigs fill up the barn" } }
+],
+"screens": "landscape"
+```
+- De vraies images du jeu en train d'être joué, toutes dans le même sens (`screens`), pas d'affiche ni de montage.
+- `src` : dans la copie du catalogue, `img/<id>-N.webp` (fichier dans `docs/jeux/img/`, N de 1 à 9) ; sinon une adresse https. Dans le `ludi.json` d'un créateur, mettre des adresses https : le catalogue en garde une copie à la validation.
+- `alt` : ce que montre l'image, en une courte phrase (fr, en). C'est aussi la légende.
+- WebP de préférence, environ 960 × 540 (paysage) ou 720 × 1280 (portrait).
 
 ## Exemple complet
 Voir `docs/jeux/pluie-de-cochons.json`.

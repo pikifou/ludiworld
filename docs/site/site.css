@@ -258,6 +258,8 @@ a { color: inherit; }
   box-shadow: 2px 2px 0 var(--ciel-fonce);
 }
 .chips li::before { content: "✓ "; color: var(--encre); }
+.chips.onglets li { background: var(--carte); box-shadow: inset 0 0 0 2px var(--encre), 2px 2px 0 var(--encre); border-radius: 9px 9px 3px 3px; }
+.chips.onglets li::before { content: none; }
 .ends { margin: 0 0 14px; display: grid; gap: 10px; }
 .ends > div { padding: 10px 12px; border-radius: 12px 18px 10px 16px; }
 .end-soft { background: #fff2cc; }
@@ -303,52 +305,13 @@ a { color: inherit; }
 .jeux { --bg: var(--papier-2); background-image: var(--grain); }
 .jeux-grid { display: grid; gap: 36px; max-width: 1240px; margin: 0 auto; }
 .jeux-head p { max-width: 26em; margin-top: 16px; }
-.legend { list-style: none; margin: 22px 0 0; padding: 0; display: grid; gap: 8px; }
-.goal { display: flex; align-items: center; gap: 8px; font-family: var(--f-display); font-weight: 700; font-size: 1rem; line-height: 1.2; }
-.goal svg { flex: none; width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linejoin: round; }
-.goal svg .fill { fill: currentColor; stroke: none; }
-.goal-core { color: var(--feuille); }
-.goal-core svg { stroke: var(--feuille); }
-.goal-side { color: #8a5a22; }
-.goal-none { color: var(--encre-douce); }
-.legend .goal { color: var(--encre); }
-
 .jeux-list { display: grid; gap: 28px; }
 .jeux-wait { font-style: italic; color: var(--encre-douce); }
-.jeu {
-  position: relative; background: var(--carte); padding: 20px 20px 18px;
-  box-shadow: var(--shadow-paper); border-top: 10px solid var(--jc, var(--encre));
-}
-.jeu:nth-child(4n+1) { border-radius: 6px 10px 18px 26px; transform: rotate(-.7deg); }
-.jeu:nth-child(4n+2) { border-radius: 10px 6px 26px 16px; transform: rotate(.5deg); }
-.jeu:nth-child(4n+3) { border-radius: 8px 12px 14px 28px; transform: rotate(.8deg); }
-.jeu:nth-child(4n+4) { border-radius: 12px 6px 24px 18px; transform: rotate(-.4deg); }
-.jeu-top { display: flex; gap: 14px; align-items: center; margin-bottom: 12px; }
-.jeu-ico {
-  flex: none; width: 64px; height: 64px; background: var(--jc, var(--encre));
-  border-radius: 16px 20px 13px 18px; overflow: hidden; display: grid; place-items: center;
-  font: 800 1.8rem/1 var(--f-display); color: var(--papier);
-  box-shadow: 2px 3px 0 rgba(29, 43, 79, .2);
-}
-.jeu-ico img { width: 100%; height: 100%; object-fit: cover; }
-.jeu h3 { font-family: var(--f-display); font-weight: 800; font-size: 1.4rem; line-height: 1.1; }
-.jeu .goal { margin-top: 4px; font-size: .95rem; }
-.jeu-pitch { font-size: .98rem; margin-bottom: 14px; }
-.facts { display: grid; grid-template-columns: repeat(3, auto); justify-content: start; gap: 4px 18px; margin: 0 0 14px; }
-.facts div { min-width: 0; }
-.facts dt { font-family: var(--f-display); font-weight: 700; font-size: .8rem; letter-spacing: .08em; text-transform: uppercase; color: var(--encre-douce); }
-.facts dd { margin: 0; font-weight: 500; font-size: .98rem; }
-.tags { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
-.tags li {
-  font-family: var(--f-display); font-weight: 700; font-size: .9rem; line-height: 1.2;
-  padding: 4px 10px 3px; background: var(--papier-2); border-radius: 8px 12px 7px 11px;
-  border: 1.5px solid rgba(29, 43, 79, .18);
-}
 .jeux-more { max-width: 1240px; margin: 48px auto 0; text-align: right; }
 
 @media (min-width: 700px) {
-  .jeux-list { grid-template-columns: repeat(2, 1fr); gap: 32px 28px; }
-  .jeu:nth-child(2n) { margin-top: 36px; }
+  .jeux-list { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 32px 28px; align-items: start; }
+  .jeux-list > .cat-mini:nth-child(2n) { margin-top: 36px; }
 }
 @media (min-width: 1040px) {
   .jeux-grid { grid-template-columns: 4fr 8fr; gap: 56px; align-items: start; }
@@ -361,6 +324,7 @@ a { color: inherit; }
 .ch-grid { display: grid; gap: 36px; max-width: 1240px; margin: 0 auto; }
 .ch-head h2 { max-width: 11em; }
 .ch-head p { margin-top: 16px; max-width: 24em; color: #dfe4ef; }
+.ch-head .ch-gratuit { display: inline-block; margin-top: 22px; padding: 6px 14px 7px; border: 2px solid var(--soleil); border-radius: 6px 14px 8px 12px; color: var(--soleil); font-family: var(--f-display); font-weight: 700; font-size: 1.15rem; }
 .promises { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px 30px; }
 .promises li {
   display: flex; gap: 14px; align-items: center; padding: 12px 0;
@@ -370,15 +334,9 @@ a { color: inherit; }
 .promises svg { flex: none; width: 28px; height: 28px; fill: none; stroke: var(--soleil); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
 .promises .yes { color: var(--soleil); }
 .promises .yes svg { stroke: var(--encre); background: var(--soleil); border-radius: 9px 12px 8px 11px; padding: 3px; }
-.donnees {
-  display: flex; gap: 18px; align-items: flex-start;
-  background: var(--soleil); color: var(--encre); padding: 24px 24px 18px;
-  border-radius: var(--r-paper); transform: rotate(-.8deg);
-  box-shadow: 5px 6px 0 var(--soleil-fonce), 10px 12px 0 rgba(0, 0, 0, .2);
-}
-.donnees svg { flex: none; width: 46px; height: 46px; fill: none; stroke: var(--encre); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
-.donnees-title { font-family: var(--f-edito); font-weight: 650; font-size: clamp(1.4rem, 3vw, 2rem); line-height: 1.1; margin-bottom: .4em; }
-.donnees p:last-child { margin: 0; }
+/* Les données : une ligne sobre sous les promesses, pas un encart (Julien, 2026-11-18 : « faut pas s'enflammer »). */
+.donnees { margin: 4px 0 0; font-size: .95rem; line-height: 1.45; color: rgba(251, 247, 238, .72); }
+.donnees p { margin: 0; }
 @media (min-width: 760px) {
   .promises { grid-template-columns: 1fr 1fr; }
   .promises .yes { grid-column: 1 / -1; }
@@ -386,7 +344,7 @@ a { color: inherit; }
 @media (min-width: 1040px) {
   .ch-grid { grid-template-columns: 5fr 7fr; column-gap: 64px; row-gap: 56px; }
   .ch-head { grid-row: 1 / 3; }
-  .donnees { grid-column: 2; margin-left: -120px; }
+  .donnees { grid-column: 2; }
 }
 
 /* ---------- 6. À regarder aussi ---------- */

@@ -2,6 +2,7 @@
   "ludi": 1,
   "id": "pluie-de-cochons",
   "status": "draft",
+  "added": "2026-10-28",
   "title": { "fr": "Pluie de Cochons", "en": "Raining Pigs" },
   "pitch": {
     "fr": "Une grange de 7 sur 8 : combien de cochons ? Tape ta réponse et autant de cochons tombent du ciel. Il en manque, c'est juste, ou ça déborde.",
@@ -9,6 +10,12 @@
   },
   "url": "https://pikifou.github.io/pluie-de-cochons/",
   "icon": "https://pikifou.github.io/pluie-de-cochons/icon-512.png",
+  "screenshots": [
+    { "src": "img/pluie-de-cochons-1.webp", "alt": { "fr": "Les cochons remplissent la grange", "en": "Pigs fill up the barn" } },
+    { "src": "img/pluie-de-cochons-2.webp", "alt": { "fr": "La grange montre le bon résultat", "en": "The barn shows the right answer" } },
+    { "src": "img/pluie-de-cochons-3.webp", "alt": { "fr": "Les tables de multiplication à travailler", "en": "Multiplication tables to practise" } }
+  ],
+  "screens": "landscape",
   "color": "#070a24",
   "author": { "name": "Julien", "url": "https://github.com/pikifou/pluie-de-cochons" },
   "languages": ["fr"],
@@ -30,6 +37,10 @@
   "content": {
     "fr": "Compétition contre des rivaux fictifs (animaux), chrono et cœurs. Aucun vrai joueur.",
     "en": "Competition against fictional animal rivals, with a timer and hearts. No real players."
+  },
+  "after": {
+    "fr": "Et si tu rangeais des Lego, des pâtes ou des bouchons en grange de 3 sur 4, et que tu les comptais ?",
+    "en": "How about lining up Lego bricks, pasta or bottle caps in a 3 by 4 barn, and counting them?"
   },
   "devices": ["phone", "tablet", "computer"],
   "offline": true,

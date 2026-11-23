@@ -1,5 +1,6 @@
 /* Ludiworld : le compte du parent et la synchro, chez Supabase, en fetch simple (aucune dépendance).
-   N'est appelé que sur les pages du compte et, si le parent a activé la synchro, par l'appli. Le kit des jeux n'y touche jamais.
+   N'est appelé que sur les pages du compte, si le parent a activé la synchro par l'appli, et pour les avis de parents
+   (la fiche d'un jeu les lit sans compte ; le parent connecté donne le sien). Le kit des jeux n'y touche jamais.
    Testé dans tests/nuage.test.js. L'adresse et la clé publique sont dans site/barre.js. */
 (function (root) {
   'use strict';
@@ -29,6 +30,11 @@
       var texte = typeof atob === 'function' ? atob(b) : Buffer.from(b, 'base64').toString('binary');
       return JSON.parse(decodeURIComponent(escape(texte)));
     } catch (e) { return {}; }
+  }
+  function masquer(email) {
+    var i = String(email).lastIndexOf('@');
+    if (i < 1) return '•••';
+    return email.charAt(0) + '•••' + email.slice(i);
   }
   function sansActif(f) { var c = Object.assign({}, f); delete c.actif; return c; }
 
@@ -140,6 +146,33 @@
         });
       });
     }
+    // ---------- Les avis de parents (plan 5) ----------
+    // Un nom de jeu sert dans l'adresse : seulement des lettres, des chiffres et des tirets.
+    function idJeu(jeu) { return typeof jeu === 'string' && /^[a-z0-9-]{1,60}$/.test(jeu); }
+    // Ce que voient les familles : null sous 5 avis. Sans jeton, même connecté : c'est la lecture publique.
+    function avisPublics(jeu, langue) {
+      if (!idJeu(jeu)) return Promise.reject(erreur('jeu'));
+      return requete('/rest/v1/rpc/avis_publics', { method: 'POST', corps: { p_jeu: jeu, p_langue: langue === 'en' ? 'en' : 'fr' } }, null)
+        .then(function (r) { return r && typeof r === 'object' && r.total >= 5 ? r : null; });
+    }
+    // Mon avis sur ce jeu, ou null.
+    function lireAvis(jeu) {
+      if (!idJeu(jeu)) return Promise.reject(erreur('jeu'));
+      return lireTable('avis?select=etoiles,marche,mot,mot_etat,maj_le&jeu=eq.' + jeu).then(function (l) { return l && l[0] ? l[0] : null; });
+    }
+    // a : { etoiles (1 à 5), marche, mot, langue }. La base pose elle-même l'état de relecture du mot.
+    function donnerAvis(jeu, a) {
+      if (!idJeu(jeu)) return Promise.reject(erreur('jeu'));
+      a = a || {};
+      var n = Number(a.etoiles);
+      if (!(n >= 1 && n <= 5 && Math.floor(n) === n)) return Promise.reject(erreur('etoiles'));
+      return rpc('donner_avis', { p_jeu: jeu, p_etoiles: n, p_marche: a.marche, p_mot: a.mot || null, p_langue: a.langue === 'en' ? 'en' : 'fr' });
+    }
+    function retirerAvis(jeu) {
+      if (!idJeu(jeu)) return Promise.reject(erreur('jeu'));
+      return moi('/rest/v1/avis?jeu=eq.' + jeu, { method: 'DELETE' });
+    }
+
     function trie(v) {
       return JSON.stringify(v, function (k, x) {
         if (x && typeof x === 'object' && !Array.isArray(x)) {
@@ -172,6 +205,45 @@
           ecrire(CLE_LIAISON, { compte: session().id });
         });
       },
+      // « Code oublié ? » sur un appareil connecté : le mot de passe du compte ouvert ici, vérifié par Supabase par le même appel
+      // que la connexion. La session de l'appareil ne change pas, la liaison non plus ; la session que la vérification ouvre
+      // est refermée aussitôt. Le mot de passe n'est gardé nulle part. Résout si c'est le bon, rejette sinon (codes comme ailleurs).
+      verifierMotDePasse: function (motDePasse) {
+        var s = session();
+        if (!s || !s.id || !s.email) return Promise.reject(erreur('session'));
+        return requete('/auth/v1/token?grant_type=password', { method: 'POST', corps: { email: s.email, password: motDePasse } }).then(function (r) {
+          var id = (r && r.user && r.user.id) || lireJwt(r && r.access_token).sub;
+          if (id !== s.id) throw erreur('identifiants');
+          return requete('/auth/v1/logout?scope=local', { method: 'POST' }, r.access_token).catch(function () { /* rien : elle expirera seule */ });
+        }).then(function () { return true; });
+      },
+      // « Code oublié ? » sans le mot de passe : un code à 6 chiffres envoyé par e-mail à l'adresse du compte ouvert ici
+      // (modèle « Magic Link » de Supabase, qui doit contenir {{ .Token }}). Jamais de compte créé (create_user: false).
+      envoyerCodeEmail: function () {
+        var s = session();
+        if (!s || !s.id || !s.email) return Promise.reject(erreur('session'));
+        return requete('/auth/v1/otp', { method: 'POST', corps: { email: s.email, create_user: false } }).then(function () { return true; });
+      },
+      // Le code reçu, vérifié par Supabase. Même logique que verifierMotDePasse : la session ouverte par la vérification est
+      // refermée aussitôt, celle de l'appareil ne change pas, rien n'est gardé. Code refusé ou périmé : rejette avec 'code'.
+      verifierCodeEmail: function (code) {
+        var s = session();
+        if (!s || !s.id || !s.email) return Promise.reject(erreur('session'));
+        code = String(code || '').replace(/\s/g, '');
+        if (!/^\d{6}$/.test(code)) return Promise.reject(erreur('code'));
+        return requete('/auth/v1/verify', { method: 'POST', corps: { type: 'email', email: s.email, token: code } }).catch(function (e) {
+          if (e.status >= 400 && e.status < 429) e.code = 'code';
+          throw e;
+        }).then(function (r) {
+          var id = (r && r.user && r.user.id) || lireJwt(r && r.access_token).sub;
+          if (!r || !r.access_token) throw erreur('code');
+          var fermer = requete('/auth/v1/logout?scope=local', { method: 'POST' }, r.access_token).catch(function () { /* rien : elle expirera seule */ });
+          if (id !== s.id) return fermer.then(function () { throw erreur('code'); });
+          return fermer;
+        }).then(function () { return true; });
+      },
+      // L'adresse du compte ouvert ici, masquée : « p•••@gmail.com ». null sans compte.
+      emailMasque: function () { var s = session(); return s && s.email ? masquer(s.email) : null; },
       renvoyer: function (email, retour) {
         return requete('/auth/v1/resend' + retourParam(retour), { method: 'POST', corps: { type: 'signup', email: email } });
       },
@@ -205,7 +277,11 @@
       appareilAutorise: appareilAutorise,
       lierAppareil: lierAppareil,
       synchroLocale: synchroLocale,
-      poserSynchroLocale: poserSynchroLocale
+      poserSynchroLocale: poserSynchroLocale,
+      avisPublics: avisPublics,
+      lireAvis: lireAvis,
+      donnerAvis: donnerAvis,
+      retirerAvis: retirerAvis
     };
   }
 
@@ -218,7 +294,8 @@
       url: c.url, cle: c.cle,
       fetch: function (u, f) { return root.fetch(u, f); },
       stockage: root.localStorage,
-      fusionner: root.LudiSynchro.fusionner
+      // Les pages du site ne chargent pas la fusion (synchro.js) : elles ne lisent que les avis publics.
+      fusionner: root.LudiSynchro ? root.LudiSynchro.fusionner : function () { return null; }
     });
   }
 })(this);

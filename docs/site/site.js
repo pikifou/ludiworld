@@ -1,11 +1,13 @@
-/* Ludiworld, le site : langue FR / EN, barre et pied communs, cartes des jeux (accueil) et fiches de « Ludiworld aime bien ».
-   La page des jeux a son propre script (les-jeux/vitrine.js), qui reprend les textes communs d'ici.
-   Le français est écrit dans chaque page (data-t) ; l'anglais vient de en.js à côté de la page (LudiSite.en). Aucune dépendance. */
+/* Ludiworld, le site : langue FR / EN, barre et pied communs, aperçu des jeux (accueil) et fiches de « Ludiworld aime bien ».
+   La page des jeux a son propre script (les-jeux/jeux.js) et le catalogue commun au site et à l'appli (site/catalogue.js).
+   Le français est écrit dans chaque page (data-t) ; l'anglais vient de en.js à côté de la page (LudiSite.en).
+   Seul l'accueil a besoin du catalogue (site/catalogue.js), pour l'aperçu des jeux. */
 (function () {
   'use strict';
 
   var LANG_KEY = 'ludiworld.lang';
-  var BASE = '../'; // toutes les pages du site sont à un dossier de la racine
+  // Les pages du site sont à un dossier de la racine ; l'accueil, à la racine même (data-base="").
+  var BASE = document.body && document.body.hasAttribute('data-base') ? document.body.getAttribute('data-base') : '../';
   var GH = 'https://github.com/pikifou/ludiworld';
 
   // Textes communs à toutes les pages.
@@ -15,32 +17,10 @@
       footPrivacy: 'Ce que Ludiworld fait des données',
       footCode: 'Le code sur GitHub',
       years: function (a, b) { return a + ' à ' + b + ' ans'; },
-      mins: function (a, b) { return a === b ? a + ' min' : a + ' à ' + b + ' min'; },
-      fAge: 'Âge', fSession: 'Partie', fReading: 'Lecture', fLang: 'Langues', fDevices: 'Appareils', fOffline: 'Réseau',
-      reading: { none: 'Sans lecture', some: 'Quelques mots', fluent: 'Bien lire' },
-      goal: { core: 'Apprendre est le but', side: 'On apprend en passant', none: 'Pour le plaisir' },
       langs: { fr: 'français', en: 'anglais' },
-      devices: { phone: 'téléphone', tablet: 'tablette', computer: 'ordinateur' },
-      healthy: {
-        no_ads: 'Aucune publicité', no_purchases: 'Rien à acheter', no_subscription: 'Pas d\'abonnement',
-        no_loot_boxes: 'Pas de récompense au hasard', no_daily_pressure: 'Pas de « reviens demain »',
-        no_notifications: 'Aucune notification', no_strangers: 'Aucun inconnu', no_tracking: 'Aucune donnée envoyée',
-        natural_stops: 'On peut s\'arrêter sans rien perdre'
-      },
-      domains: {
-        'maths.multiplication': 'Tables de multiplication', 'maths.calcul-mental': 'Calcul mental',
-        'sciences.magnetisme': 'Magnétisme', 'sciences.physique': 'Physique', 'geographie.pays': 'Pays du monde',
-        'histoire.prehistoire': 'Préhistoire', 'histoire.techniques': 'Histoire des techniques',
-        'logique.puzzle': 'Logique', 'memoire.sequences': 'Mémoire', 'gestion.ressources': 'Gestion',
-        'motricite.reflexes': 'Réflexes', 'strategie.choix': 'Stratégie', 'emotions.frustration': 'Gérer la frustration'
-      },
       gError: 'Les fiches n\'ont pas pu se charger. Réessayez avec du réseau.',
-      learnWhat: 'Ce qu\'on y apprend', learnHow: 'Comment', content: 'À savoir', promises: 'Engagements',
-      thirdNone: 'Ne contacte aucun autre site.', third: function (l) { return 'Contacte aussi : ' + l + '.'; },
-      by: function (n) { return 'par ' + n; },
-      draft: 'Fiche écrite, pas encore relue par son auteur.',
-      tryGame: 'Essayer le jeu seul', tryNote: 'Hors de Ludiworld, le temps de jeu n\'est pas compté.',
-      code: 'Le code du jeu',
+      gTry: 'Essayer le jeu', gSetup: 'Préparer Ludiworld',
+      gAll: function (n) { return 'Voir les ' + n + ' jeux'; },
       recoType: { serie: 'Série', film: 'Film', appli: 'Appli' },
       recoBy: function (n) { return 'Recommandé par ' + n; },
       recoQueue: function (n) { return 'Proposé par ' + n + ', pas encore validé'; },
@@ -58,32 +38,10 @@
       footPrivacy: 'What Ludiworld does with data',
       footCode: 'The code on GitHub',
       years: function (a, b) { return 'ages ' + a + ' to ' + b; },
-      mins: function (a, b) { return a === b ? a + ' min' : a + ' to ' + b + ' min'; },
-      fAge: 'Age', fSession: 'Session', fReading: 'Reading', fLang: 'Languages', fDevices: 'Devices', fOffline: 'Connection',
-      reading: { none: 'No reading', some: 'A few words', fluent: 'Fluent reading' },
-      goal: { core: 'Learning is the point', side: 'Some learning on the way', none: 'Just for fun' },
       langs: { fr: 'French', en: 'English' },
-      devices: { phone: 'phone', tablet: 'tablet', computer: 'computer' },
-      healthy: {
-        no_ads: 'No ads', no_purchases: 'Nothing to buy', no_subscription: 'No subscription',
-        no_loot_boxes: 'No random rewards', no_daily_pressure: 'No "come back tomorrow"',
-        no_notifications: 'No notifications', no_strangers: 'No strangers', no_tracking: 'No data sent',
-        natural_stops: 'You can stop without losing anything'
-      },
-      domains: {
-        'maths.multiplication': 'Times tables', 'maths.calcul-mental': 'Mental maths',
-        'sciences.magnetisme': 'Magnetism', 'sciences.physique': 'Physics', 'geographie.pays': 'Countries of the world',
-        'histoire.prehistoire': 'Prehistory', 'histoire.techniques': 'History of techniques',
-        'logique.puzzle': 'Logic', 'memoire.sequences': 'Memory', 'gestion.ressources': 'Resource management',
-        'motricite.reflexes': 'Reflexes', 'strategie.choix': 'Strategy', 'emotions.frustration': 'Handling frustration'
-      },
       gError: 'The cards could not load. Try again with a connection.',
-      learnWhat: 'What it teaches', learnHow: 'How', content: 'Worth knowing', promises: 'Commitments',
-      thirdNone: 'Contacts no other site.', third: function (l) { return 'Also contacts: ' + l + '.'; },
-      by: function (n) { return 'by ' + n; },
-      draft: 'Card written, not yet reviewed by its author.',
-      tryGame: 'Try the game on its own', tryNote: 'Outside Ludiworld, play time is not counted.',
-      code: 'The game\'s code',
+      gTry: 'Try the game', gSetup: 'Set up Ludiworld',
+      gAll: function (n) { return 'See all ' + n + ' games'; },
       recoType: { serie: 'Series', film: 'Film', appli: 'App' },
       recoBy: function (n) { return 'Recommended by ' + n; },
       recoQueue: function (n) { return 'Suggested by ' + n + ', not validated yet'; },
@@ -135,9 +93,6 @@
     return s;
   }
   var ICO = {
-    core: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1" class="fill"/>',
-    side: '<circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" class="fill"/>',
-    none: '<path d="M12 3l2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.4 6.7 19.4l1.2-6L3.4 9.3l6-.7z"/>',
     serie: '<rect x="3" y="6.5" width="18" height="12.5" rx="2.5"/><path d="M8.5 2.5l3.5 4 3.5-4M9 22h6"/>',
     film: '<rect x="3" y="9.5" width="18" height="11" rx="1.5"/><path d="M3.4 9.5l1.4-5 15.8-1.2.4 3.6zM8.5 4.2l1.6 4.6M14.2 3.8l1.6 4.6"/>',
     appli: '<rect x="5.5" y="2.5" width="13" height="19" rx="2.5"/><path d="M10.5 18h3"/>',
@@ -194,63 +149,37 @@
     ]));
   }
 
-  // ---------- Jeux ----------
-  var games = null, gamesFailed = false;
-  function safeColor(c) { return /^#[0-9a-f]{3,8}$/i.test(c || '') ? c : '#1d2b4f'; }
-  function goalBadge(level) {
-    if (!ICO[level]) level = 'none';
-    return el('p', { class: 'goal goal-' + level }, [svg(ICO[level]), el('span', { text: C().goal[level] })]);
-  }
-  function gameIco(g) {
-    var title = pick(g.title);
-    var ico = el('div', { class: 'jeu-ico', 'aria-hidden': 'true', text: (title || '?').charAt(0) });
-    if (g.icon && /^https?:\/\//.test(g.icon)) {
-      var img = el('img', { src: g.icon, alt: '', loading: 'lazy', width: '64', height: '64' });
-      img.addEventListener('error', function () { img.remove(); });
-      img.addEventListener('load', function () { if (ico.firstChild && ico.firstChild.nodeType === 3) ico.removeChild(ico.firstChild); });
-      ico.appendChild(img);
+  // ---------- Jeux (accueil) ----------
+  // Les premiers jeux en mini-fiches, avec leurs images (site/catalogue.js), et leur fiche au toucher, sur place.
+  // La page « Les jeux » les montre tous ; le lien en dessous dit combien il y en a.
+  var games = null, gamesFailed = false, APERCU = 4;
+  function gameActions(g) {
+    var out = [];
+    function lien(cls, href, texte, onglet) {
+      var a = el('a', { class: cls, href: href, text: texte });
+      if (onglet) { a.target = '_blank'; a.rel = 'noopener'; }
+      return a;
     }
-    return ico;
+    if (/^https?:\/\//i.test(g.url || '')) out.push(lien('cat-bouton', g.url, C().gTry, true));
+    if (!(window.LudiBarre && LudiBarre.configure())) out.push(lien('cat-bouton creux', LudiBarre.lienApp(BASE), C().gSetup));
+    return out;
   }
-  function facts(g) {
-    var c = C();
-    var rows = [
-      g.age ? [c.fAge, c.years(g.age.min, g.age.max)] : null,
-      g.session && g.session.minutes ? [c.fSession, c.mins(g.session.minutes[0], g.session.minutes[1])] : null,
-      g.reading ? [c.fReading, c.reading[g.reading] || g.reading] : null
-    ];
-    return el('dl', { class: 'facts' }, rows.map(function (r) { return r ? el('div', null, [el('dt', { text: r[0] }), el('dd', { text: r[1] })]) : null; }));
-  }
-  function tags(g) {
-    var domains = (g.learning && g.learning.domains) || [];
-    return domains.length ? el('ul', { class: 'tags', 'aria-label': C().learnWhat }, domains.map(function (d) { return el('li', { text: C().domains[d] || d.split('.').pop() }); })) : null;
-  }
-  // Carte courte (accueil).
-  function card(g) {
-    var a = el('article', { class: 'jeu' }, [
-      el('div', { class: 'jeu-top' }, [gameIco(g), el('div', null, [el('h3', null, [el('a', { href: BASE + 'les-jeux/#' + g.id, text: pick(g.title) })]), goalBadge(g.learning && g.learning.level)])]),
-      el('p', { class: 'jeu-pitch', text: pick(g.pitch) }),
-      facts(g),
-      tags(g)
-    ]);
-    a.style.setProperty('--jc', safeColor(g.color));
-    return a;
-  }
+  function openGame(g) { LudiCatalogue.ouvrir(g, { lang: lang, actions: gameActions(g) }); }
   function renderGames() {
     var list = document.getElementById('jeux-list');
     if (!list) return;
     if (gamesFailed) { list.replaceChildren(el('p', { class: 'jeux-wait', text: C().gError })); return; }
-    if (games) list.replaceChildren.apply(list, games.map(card));
+    if (!games) return;
+    list.replaceChildren.apply(list, games.slice(0, APERCU).map(function (g) { return LudiCatalogue.miniFiche(g, { lang: lang, onOuvrir: openGame }); }));
+    var plus = document.getElementById('jeux-tous');
+    if (plus) plus.textContent = C().gAll(games.length);
+    var ouverte = LudiCatalogue.ouverte();
+    if (ouverte) openGame(ouverte); // la langue a changé : la fiche ouverte se redessine
   }
   function loadGames() {
-    if (!document.getElementById('jeux-list')) return;
-    getJSON(BASE + 'jeux/index.json').then(function (idx) {
-      return Promise.all(((idx && idx.games) || []).map(function (f) {
-        if (!/^[a-z0-9-]+\.json$/i.test(f)) return null;
-        return getJSON(BASE + 'jeux/' + f).catch(function () { return null; });
-      }));
-    }).then(function (list) {
-      games = list.filter(function (g) { return g && g.title; });
+    if (!document.getElementById('jeux-list') || !window.LudiCatalogue) return;
+    LudiCatalogue.charger(BASE).then(function (list) {
+      games = list;
       if (!games.length) gamesFailed = true;
       renderGames();
     }).catch(function () { gamesFailed = true; renderGames(); });
@@ -352,8 +281,7 @@
 
   window.LudiSite = {
     en: function (dict) { Object.keys(dict).forEach(function (k) { EN[k] = dict[k]; }); },
-    texte: D, langue: function () { return lang; }, rafraichir: barre, surLangue: function (f) { surLangue.push(f); },
-    commun: C, pick: pick
+    texte: D, langue: function () { return lang; }, rafraichir: barre, surLangue: function (f) { surLangue.push(f); }
   };
 
   document.addEventListener('DOMContentLoaded', function () {

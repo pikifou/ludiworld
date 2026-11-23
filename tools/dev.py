@@ -4,7 +4,8 @@
   python3 tools/dev.py [<dossier_des_jeux>] [--port 7357]
 
 Par défaut, le dossier des jeux est le parent de ce dépôt (les clones sont à côté de ludiworld/).
-  http://localhost:7357/ludiworld/   le launcher (docs/ de ce dépôt)
+  http://localhost:7357/ludiworld/       le site (docs/ de ce dépôt)
+  http://localhost:7357/ludiworld/app/   l'appli (préparation, côté enfant, côté parent)
   http://localhost:7357/<jeu>/       un jeu ouvert seul (docs/ de son clone, ou la racine du clone s'il est publié tel quel)
   http://localhost:7357/<depot>/<jeu>/   un jeu d'un dépôt qui en regroupe plusieurs (ludigames : un dossier par jeu)
 
@@ -109,6 +110,23 @@ class Dev(BaseHTTPRequestHandler):
                 if jeu in jeux_du_depot(d): f = d / jeu / 'ludi.json'
         if not f.is_file(): return None
         texte = f.read_text(encoding='utf-8')
+        # Les images du jeu (screenshots) vivent dans le catalogue : on les reprend si la fiche du clone n'en a pas.
+        copie = ROOT / 'docs/jeux' / (jeu + '.json')
+        if f != copie and copie.is_file():
+            try:
+                fiche, cat = json.loads(texte), json.loads(copie.read_text(encoding='utf-8'))
+                change = False
+                if 'screenshots' not in fiche and 'screenshots' in cat:
+                    fiche['screenshots'], fiche['screens'] = cat['screenshots'], cat.get('screens')
+                    change = True
+                # La date d'entrée au catalogue (« Nouveau ») est celle du catalogue, jamais celle du clone.
+                if 'added' in cat and fiche.get('added') != cat['added']:
+                    fiche['added'] = cat['added']
+                    change = True
+                if change:
+                    texte = json.dumps(fiche, ensure_ascii=False, indent=2)
+            except ValueError:
+                pass
         ici = 'http://' + (self.headers.get('Host') or 'localhost')
         for nom in list(locaux) + ['ludiworld']:
             texte = texte.replace(f'{PROD}/{nom}/', f'{ici}/{nom}/')
@@ -135,7 +153,12 @@ class Dev(BaseHTTPRequestHandler):
                 err = reconstruire_si_besoin(site, locaux[site])
                 if err: return self.envoyer(500, ('Le build a échoué :\n\n' + err).encode('utf-8'))
         f = (base / (reste or 'index.html')).resolve()
-        if f.is_dir(): f = f / 'index.html'
+        if f.is_dir():
+            # Un dossier sans « / » final (…/app) : on le rajoute, sinon les adresses relatives de la page partent du mauvais dossier.
+            if not chemin.endswith('/'):
+                q = urlsplit(self.path).query
+                return self.envoyer(302, b'', Location=chemin + '/' + ('?' + q if q else ''))
+            f = f / 'index.html'
         if base.resolve() not in f.parents or not f.is_file(): return self.envoyer(404, b'')
         self.envoyer(200, f.read_bytes(), TYPES.get(f.suffix.lower(), 'application/octet-stream'))
 
@@ -153,7 +176,7 @@ def main():
     Dev.games = pathlib.Path(o.games).resolve()
     locaux = clones(Dev.games)
     jeux = sorted([f'{d}/{j}' for d in locaux for j in jeux_du_depot(locaux[d])] + [d for d in locaux if not jeux_du_depot(locaux[d])])
-    print(f'Launcher : http://localhost:{o.port}/ludiworld/')
+    print(f'Site : http://localhost:{o.port}/ludiworld/   Appli : http://localhost:{o.port}/ludiworld/app/')
     for j in jeux: print(f'  {j} seul : http://localhost:{o.port}/{j}/')
     if not jeux: print(f'  (aucun clone de jeu trouvé dans {Dev.games})')
     try:

@@ -54,6 +54,36 @@ function validate(f, domains = knownDomains()) {
   HEALTHY.forEach((k) => { if (h[k] !== true) err.push(`healthy.${k} : doit être true pour entrer dans Ludiworld`); });
   if (!Array.isArray(f.third_parties)) err.push('third_parties : liste (vide si aucun)');
   if (typeof f.kit !== 'boolean') err.push('kit : true ou false');
+  if (f.together !== undefined && typeof f.together !== 'boolean') err.push('together : true ou false');
+  // La date d'ajout au catalogue (« Nouveau » côté parent pendant 30 jours) : AAAA-MM-JJ, une vraie date, pas dans le futur.
+  if (f.added !== undefined) {
+    const d = typeof f.added === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(f.added) ? new Date(f.added + 'T00:00:00Z') : null;
+    if (!d || isNaN(d) || d.toISOString().slice(0, 10) !== f.added) err.push('added : date AAAA-MM-JJ');
+    else if (d.getTime() > Date.now() + 864e5) err.push('added : pas une date future');
+  }
+  // Une idée hors écran pour la fin de la journée (facultative) : une phrase courte, fr et en.
+  if (f.after !== undefined) {
+    bi('after', f.after);
+    if (f.after && ['fr', 'en'].some((l) => typeof f.after[l] === 'string' && f.after[l].length > 160)) err.push('after : une phrase de 160 signes au plus');
+  }
+
+  // Images du jeu (facultatives) : 1 à 5, une copie dans docs/jeux/img/ ou une adresse https.
+  if (f.screenshots !== undefined) {
+    const shots = f.screenshots;
+    if (!Array.isArray(shots) || shots.length < 1 || shots.length > 5) err.push('screenshots : liste de 1 à 5 images');
+    else shots.forEach((s, i) => {
+      const k = `screenshots[${i}]`;
+      if (!s || typeof s !== 'object') { err.push(`${k} : { "src": …, "alt": { "fr": …, "en": … } } attendu`); return; }
+      const local = typeof s.src === 'string' && new RegExp(`^img/${f.id}-[1-9]\\.webp$`).test(s.src);
+      if (!local) {
+        let ok = false;
+        try { ok = typeof s.src === 'string' && new URL(s.src).protocol === 'https:'; } catch (e) { ok = false; }
+        if (!ok) err.push(`${k}.src : img/${f.id}-N.webp ou adresse https`);
+      }
+      bi(`${k}.alt`, s.alt);
+    });
+    if (!['portrait', 'landscape'].includes(f.screens)) err.push('screens : portrait ou landscape (requis avec screenshots)');
+  } else if (f.screens !== undefined) err.push('screens : seulement avec screenshots');
   return err;
 }
 

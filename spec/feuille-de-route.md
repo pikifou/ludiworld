@@ -18,14 +18,14 @@ Avancer petit, publier, en parler, laisser venir.
 - [x] Direction artistique « Le soleil de Ludiworld » : île en papier découpé, soleil qui descend avec le temps de jeu, marmotte qui s'endort.
 - [x] Première ouverture : le parent prépare Ludiworld (pseudo, âge, jeux, temps, code).
 - [x] Carnet parent derrière un code (appui long sur « Parents ») : aujourd'hui, jeux (recherche, filtres âge / notion / lecture), temps, réglages.
-- [x] Temps par jour (jours d'école et sans école), limite par jeu, +10 min ou « fini pour aujourd'hui ».
+- [x] Temps par jour (les jours choisis et les autres), limite par jeu, +10 min (même après l'heure de fin, ce soir seulement) ou « fini pour aujourd'hui ».
 - [x] Fin douce (attend `Ludi.checkpoint`, délai max) ou fin nette ; prévenir 5 min avant (`ludi:wrapup`).
 - [x] Tableau de suivi : temps du jour et de la semaine, notions acquises et à revoir, records.
-- [x] Vitrine `docs/decouvrir/` : ce qu'est Ludiworld, pour les parents qui découvrent.
+- [x] Vitrine `docs/decouvrir/` : ce qu'est Ludiworld, pour les parents qui découvrent. Depuis le 2026-11-18, elle est à la racine du site (`docs/index.html`) et l'appli sous `app/`.
 - [x] Le site autour de l'appli : accueil, les jeux (fiches complètes), créer un jeu (pas à pas pour un parent qui n'a jamais codé), « Ludiworld aime bien ». Le carnet parent devient l'onglet « Mon Ludiworld ».
 - [ ] « Ludiworld aime bien » : Julien relit les 9 fiches (Petit Malabar et Kididocs sont partielles, « où regarder » à vérifier), puis remplir la file « Proposé » (recherche de séries, films et applis).
 - [x] Plusieurs enfants par appareil : chacun ses jeux, son temps, son suivi ; « Pas toi ? » (code parent par défaut).
-- [x] Heures de jeu (pas de jeu avant / après), vacances scolaires, jeu réservé aux jours sans école.
+- [x] Heures de jeu (pas de jeu avant / après), vacances, jeu réservé à certains jours.
 - [x] Code parent : 3 erreurs = 30 s de pause ; « code oublié » = 30 min d'attente pendant lesquelles on ne joue pas.
 - [x] Kit 0.2.0 (`checkpoint`, `onWrapUp`) dans les cinq jeux de Julien (clones à côté, non publiés).
 - [x] Plein écran décidé par Ludiworld (réglage du carnet) ; les jeux n'y ont pas droit dans l'appli et cachent leur bouton.

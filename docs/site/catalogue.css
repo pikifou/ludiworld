@@ -1,0 +1,396 @@
+/* Ludiworld : le catalogue des jeux (mini-fiche et fiche). Chargé par le site (site.css) et par l'appli (style.css) :
+   les couleurs passent par des variables avec des valeurs de secours, les classes commencent toutes par cat-.
+   Le papier, l'encre et le soleil de Ludiworld ; la couleur de chaque jeu (--jc) ne sert qu'au bandeau de ses images. */
+
+.cat-mini, .cat-fiche {
+  --cat-encre: var(--encre, #1d2b4f);
+  --cat-doux: var(--encre-douce, #4c5b7c);
+  --cat-papier: var(--papier, #fbf7ee);
+  --cat-papier-2: var(--papier-2, #f3ecdc);
+  --cat-carte: var(--carte, #fffdf7);
+  --cat-soleil: var(--soleil, #ffc83d);
+  --cat-soleil-fonce: var(--soleil-fonce, #e0a400);
+  --cat-nuit: var(--nuit, #16204a);
+  --cat-ciel: var(--ciel, #cbe6f7);
+  --cat-ombre: 3px 4px 0 rgba(29, 43, 79, .13), 9px 12px 0 rgba(29, 43, 79, .06);
+  --cat-f-titre: "Baloo 2", "Trebuchet MS", sans-serif;
+  --cat-f-edito: "Fraunces", Georgia, serif;
+  --cat-f-texte: "Lexend", "Segoe UI", sans-serif;
+  color: var(--cat-encre);
+  font-family: var(--cat-f-texte);
+}
+.cat-svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+.cat-svg .plein { fill: currentColor; stroke: none; }
+
+/* ---------- L'icône d'un jeu ---------- */
+.cat-icone {
+  --cat-taille: 56px;
+  position: relative; flex: none; display: grid; place-items: center;
+  width: var(--cat-taille); height: var(--cat-taille);
+  background: var(--jc, #1d2b4f); border-radius: 30% 36% 26% 34% / 32% 28% 36% 30%;
+  box-shadow: 2px 3px 0 rgba(29, 43, 79, .22);
+}
+.cat-icone img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: inherit; max-width: none; }
+.cat-initiale { font: 800 calc(var(--cat-taille) * .48)/1 "Baloo 2", "Trebuchet MS", sans-serif; color: #fbf7ee; text-shadow: 0 1px 0 rgba(0, 0, 0, .25); }
+.cat-icone.cat-chargee .cat-initiale { visibility: hidden; }
+.cat-marque {
+  position: absolute; z-index: 1; left: 50%; bottom: -9px; transform: translateX(-50%) rotate(-3deg);
+  max-width: calc(var(--cat-taille) + 26px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  padding: 2px 7px 1px; font: 800 .74rem/1.25 "Baloo 2", "Trebuchet MS", sans-serif; letter-spacing: .01em;
+  color: var(--cat-encre, #1d2b4f); background: var(--cat-soleil, #ffc83d);
+  border-radius: 8px 11px 7px 10px; box-shadow: 1px 2px 0 var(--cat-soleil-fonce, #e0a400);
+}
+
+/* ---------- La mini-fiche ---------- */
+.cat-mini {
+  position: relative; display: flex; flex-direction: column; min-width: 0;
+  background: var(--cat-carte); padding: 18px 18px 16px;
+  border-radius: 10px 22px 16px 28px; box-shadow: var(--cat-ombre);
+  cursor: pointer; transition: transform .18s ease, box-shadow .18s ease;
+}
+.cat-mini:nth-child(3n+2) { border-radius: 22px 12px 28px 16px; }
+.cat-mini:nth-child(3n) { border-radius: 16px 28px 12px 22px; }
+.cat-mini:hover { transform: translate(-1px, -3px); box-shadow: 4px 6px 0 rgba(29, 43, 79, .16), 12px 16px 0 rgba(29, 43, 79, .07); }
+.cat-mini:active { transform: translate(1px, 1px); }
+.cat-mini:focus-within { box-shadow: var(--cat-ombre), 0 0 0 3px var(--cat-soleil-fonce); }
+
+.cat-mini-tete { display: flex; gap: 14px; align-items: flex-start; }
+.cat-mini-ico { padding-top: 2px; }
+.cat-mini-nom { min-width: 0; flex: 1; }
+.cat-mini h3 { margin: 0; font-size: 1rem; line-height: 1; }
+/* « Nouveau » : une petite marque écrite au-dessus du nom, en italique, soulignée d'un trait de soleil. Rien qui clignote. */
+.cat-nouveau {
+  display: inline-block; margin: 0 0 -2px; padding: 0 2px;
+  font: italic 600 .86rem/1.3 var(--cat-f-edito); color: var(--cat-encre); letter-spacing: .01em;
+  background: linear-gradient(transparent 62%, var(--cat-soleil) 62%, var(--cat-soleil) 92%, transparent 92%);
+}
+.cat-mini-ouvrir {
+  display: block; width: 100%; min-height: 44px; margin: 0; padding: 4px 0 0; border: 0; background: none; cursor: pointer; text-align: left;
+  font: 800 1.42rem/1.08 var(--cat-f-titre); color: var(--cat-encre); letter-spacing: -.005em;
+}
+.cat-mini-ouvrir:focus { outline: none; }
+.cat-mini-ouvrir:focus-visible { outline: 3px solid var(--cat-soleil-fonce); outline-offset: 3px; border-radius: 6px; }
+.cat-mini-phrase {
+  margin: 4px 0 0; font-size: .96rem; font-weight: 350; line-height: 1.45; color: var(--cat-encre);
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+}
+
+/* Ce qu'on y apprend, en quelques mots : la même ligne sur la mini-fiche et dans la fiche. */
+.cat-sujets {
+  display: flex; align-items: flex-start; gap: 7px; margin: 0;
+  font: 700 1rem/1.3 var(--cat-f-titre); color: var(--cat-encre);
+}
+.cat-sujets .cat-svg { width: 20px; height: 20px; margin-top: 1px; stroke-width: 2; color: var(--cat-soleil-fonce); }
+.cat-mini-sujets { margin-top: 2px; }
+.cat-cache { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
+
+/* Une bande d'images qu'on fait défiler : au doigt, ou à la souris avec deux flèches discrètes et le glisser (pas de barre). */
+.cat-bande { position: relative; }
+.cat-bande > :first-child { scrollbar-width: none; }
+.cat-bande > :first-child::-webkit-scrollbar { display: none; }
+.cat-fleche {
+  display: none; position: absolute; z-index: 2; top: 50%; transform: translateY(-50%);
+  width: 40px; height: 40px; place-items: center; padding: 0; cursor: pointer;
+  color: var(--cat-encre); background: rgba(255, 253, 247, .94); border: 0;
+  border-radius: 50% 46% 52% 48%; box-shadow: 2px 3px 0 rgba(0, 0, 0, .25);
+  opacity: 0; transition: opacity .18s ease;
+}
+.cat-fleche .cat-svg { width: 20px; height: 20px; stroke-width: 3; }
+.cat-fleche-avant { left: 8px; }
+.cat-fleche-apres { right: 8px; }
+@media (hover: hover) and (pointer: fine) {
+  .cat-bande.cat-plus-avant .cat-fleche-avant, .cat-bande.cat-plus-apres .cat-fleche-apres { display: grid; }
+  .cat-bande:hover .cat-fleche { opacity: 1; }
+  .cat-bande.cat-plus-avant > :first-child, .cat-bande.cat-plus-apres > :first-child { cursor: grab; }
+  .cat-bande.cat-glisse > :first-child { cursor: grabbing; scroll-snap-type: none; }
+}
+.cat-fleche:hover { background: #fffdf7; }
+
+/* Le bandeau des images de la mini-fiche : la couleur du jeu, posé dans la carte (ses bords restent ceux de la carte).
+   Les images se règlent sur la largeur de la carte, jamais sur une hauteur fixe : une image entière se voit toujours,
+   et s'il y en a d'autres, la suivante dépasse à droite, ce qui dit qu'on peut faire défiler. */
+.cat-mini-bande { margin: 16px 0 0; background: var(--jc, #1d2b4f); border-radius: 12px 16px 10px 14px; overflow: hidden; }
+.cat-mini-images {
+  display: flex; gap: 8px; align-items: center;
+  padding: 10px;
+  overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory; scroll-padding-inline: 10px;
+  -webkit-overflow-scrolling: touch;
+  -webkit-user-select: none; user-select: none;
+  container-type: inline-size;
+}
+.cat-mini-images::after { content: ""; flex: none; width: 2px; } /* la marge de droite, que le défilement oublie sinon */
+.cat-mini-images.cat-portrait:not(.cat-n4)::after { display: none; } /* trois en hauteur tiennent : rien à faire défiler */
+.cat-mini-img {
+  flex: none; height: auto; max-width: none; display: block; box-sizing: border-box;
+  object-fit: contain; /* une image d'un autre format se voit entière, sur le fond du cadre */
+  scroll-snap-align: start; background: rgba(0, 0, 0, .22);
+  border: 3px solid var(--cat-carte); border-radius: 6px 9px 5px 8px;
+  box-shadow: 2px 3px 0 rgba(0, 0, 0, .25);
+  -webkit-user-select: none; user-select: none;
+}
+.cat-mini-images.cat-paysage .cat-mini-img { aspect-ratio: 16 / 9; width: 260px; }
+.cat-mini-images.cat-portrait .cat-mini-img { aspect-ratio: 9 / 16; width: 120px; }
+@supports (width: 1cqw) {
+  /* En largeur : une image prend la carte ; plusieurs, la suivante dépasse de 40 px. */
+  .cat-mini-images.cat-paysage .cat-mini-img { width: calc(100cqw - 40px); }
+  .cat-mini-images.cat-paysage.cat-n1 .cat-mini-img { width: 100cqw; }
+  /* En hauteur : jusqu'à trois tiennent côte à côte ; au-delà, la quatrième dépasse. */
+  .cat-mini-images.cat-portrait .cat-mini-img { width: calc((100cqw - 16px) / 3); }
+  .cat-mini-images.cat-portrait.cat-n1 .cat-mini-img, .cat-mini-images.cat-portrait.cat-n2 .cat-mini-img { width: calc((100cqw - 16px) / 3); }
+  .cat-mini-images.cat-portrait.cat-n4 .cat-mini-img { width: calc((100cqw - 24px) / 3.35); }
+}
+.cat-mini-img:nth-child(2n) { border-radius: 9px 5px 8px 6px; }
+
+.cat-mini-faits { margin: 12px 0 0; font-size: .92rem; font-weight: 450; line-height: 1.4; color: var(--cat-doux); }
+.cat-mini-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; cursor: default; }
+
+/* Boutons prêts à l'emploi pour o.actions (facultatifs) */
+.cat-bouton {
+  display: inline-flex; align-items: center; justify-content: center; gap: .45em;
+  min-height: 48px; padding: .5em 1.15em .42em; cursor: pointer;
+  font: 800 1.05rem/1.1 "Baloo 2", "Trebuchet MS", sans-serif; text-decoration: none; text-align: center;
+  color: var(--cat-encre, #1d2b4f); background: var(--cat-soleil, #ffc83d); border: 0;
+  border-radius: 14px 20px 12px 18px; box-shadow: 3px 4px 0 var(--cat-soleil-fonce, #e0a400);
+  transition: transform .15s ease;
+}
+.cat-bouton:hover { transform: translate(-1px, -2px); }
+.cat-bouton:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--cat-soleil-fonce, #e0a400); }
+.cat-bouton.creux {
+  background: transparent; color: var(--cat-encre, #1d2b4f);
+  box-shadow: inset 0 0 0 2px var(--cat-encre, #1d2b4f); border-radius: 20px 13px 18px 12px;
+}
+.cat-bouton .cat-svg { width: 20px; height: 20px; }
+.cat-bouton:focus-visible { outline: 3px solid var(--cat-soleil-fonce, #e0a400); outline-offset: 3px; }
+
+/* ---------- La fiche ---------- */
+html.cat-verrou { overflow: hidden; }
+.cat-fiche {
+  position: fixed; inset: 0; width: 100%; height: 100%; max-width: none; max-height: none;
+  margin: 0; padding: 0; border: 0; background: transparent; overflow: hidden;
+}
+.cat-fiche:not([open]) { display: none; }
+.cat-fiche::backdrop { background: rgba(22, 32, 74, .62); }
+.cat-fiche[open]::backdrop { animation: cat-fond .3s ease both; }
+
+.cat-panneau {
+  position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain;
+  background-color: var(--cat-papier);
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .35 0 0 0 0 .27 0 0 0 0 .15 0 0 0 .08 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  padding: 0 20px max(32px, env(safe-area-inset-bottom));
+  border-top: 8px solid var(--cat-soleil);
+}
+.cat-panneau:focus { outline: none; } /* le panneau reçoit le focus à l'ouverture (pour défiler au clavier), sans cadre */
+.cat-fiche[open] .cat-panneau { animation: cat-monte .38s cubic-bezier(.2, .9, .3, 1) both; }
+
+.cat-haut { position: sticky; top: 0; z-index: 3; height: 0; display: flex; justify-content: flex-end; }
+/* Quand on fait défiler, une bande de papier se pose sous la croix : le texte passe dessous, pas sous la croix seule. */
+.cat-haut::before {
+  content: ""; position: absolute; top: 0; left: -20px; right: -20px; height: 66px; pointer-events: none;
+  background: var(--cat-papier); box-shadow: 0 2px 0 rgba(29, 43, 79, .1), 0 8px 14px -8px rgba(29, 43, 79, .25);
+  opacity: 0; transition: opacity .15s ease;
+}
+.cat-defilee .cat-haut::before { opacity: 1; }
+.cat-fermer {
+  position: relative; z-index: 1;
+  margin: 9px -8px 0 0; width: 48px; height: 48px; display: grid; place-items: center; cursor: pointer;
+  color: var(--cat-papier); background: var(--cat-encre); border: 0;
+  border-radius: 46% 54% 50% 50% / 52% 46% 54% 48%; box-shadow: 2px 3px 0 rgba(29, 43, 79, .28);
+}
+.cat-fermer:hover { background: var(--cat-nuit); }
+.cat-fermer:focus-visible { outline: 3px solid var(--cat-soleil-fonce); outline-offset: 3px; }
+
+.cat-f-tete { display: flex; align-items: center; gap: 16px; padding: 22px 56px 0 0; }
+.cat-f-tete h2 {
+  margin: 0; font: 650 clamp(1.7rem, 6vw, 2.25rem)/1.02 var(--cat-f-edito); letter-spacing: -.015em; text-wrap: balance;
+}
+.cat-auteur { margin: 4px 0 0; font-size: .95rem; color: var(--cat-doux); }
+.cat-f-actions { display: flex; flex-wrap: wrap; gap: 10px 12px; margin-top: 18px; }
+/* Ce que l'appelant pose juste après les boutons (côté parent : ce qui concerne l'enfant). */
+.cat-avant { margin-top: 18px; }
+.cat-avant > * + * { margin-top: 12px; }
+
+/* Les images : on les fait défiler sur un téléphone ; sur un panneau large, elles tiennent toutes, sans rien de coupé.
+   Toucher une image l'agrandit dans la fiche. */
+.cat-galerie-bande { margin: 20px -20px 0; background: var(--jc, #1d2b4f); }
+.cat-galerie {
+  display: flex; gap: 14px; padding: 16px 20px 12px;
+  overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory; scroll-padding-inline: 20px;
+  -webkit-user-select: none; user-select: none;
+}
+.cat-galerie::after { content: ""; flex: none; width: 6px; }
+.cat-vue { flex: none; margin: 0; scroll-snap-align: start; min-width: 0; }
+.cat-paysage .cat-vue { width: min(86%, 520px); }
+.cat-portrait .cat-vue { width: min(44%, 210px); }
+.cat-vignette {
+  position: relative; display: block; width: 100%; padding: 0; cursor: zoom-in;
+  background: rgba(0, 0, 0, .2); border: 3px solid var(--cat-carte); border-radius: 8px 12px 7px 11px;
+  box-shadow: 3px 4px 0 rgba(0, 0, 0, .28); overflow: hidden;
+}
+.cat-vue:nth-child(2n) .cat-vignette { border-radius: 12px 7px 11px 8px; }
+.cat-vue-img { display: block; width: 100%; height: auto; max-width: none; }
+.cat-paysage .cat-vue-img { aspect-ratio: 16 / 9; }
+.cat-portrait .cat-vue-img { aspect-ratio: 9 / 16; }
+.cat-vue-loupe {
+  position: absolute; right: 8px; bottom: 8px; width: 34px; height: 34px; padding: 6px;
+  color: var(--cat-encre); background: rgba(255, 253, 247, .92); border-radius: 50% 46% 52% 48%; stroke-width: 2.6;
+}
+.cat-vignette:focus-visible { outline: 3px solid var(--cat-soleil); outline-offset: 2px; }
+/* La légende sur une étiquette d'encre : lisible sur toutes les couleurs de jeu, claires comme foncées. */
+.cat-vue figcaption { margin: 8px 0 0; line-height: 1; }
+.cat-vue figcaption span {
+  display: inline-block; max-width: 100%; padding: 4px 9px 3px;
+  font-size: .84rem; line-height: 1.3; color: #fbf7ee; background: rgba(15, 23, 56, .86);
+  border-radius: 7px 10px 6px 9px;
+}
+
+.cat-pitch { margin: 22px 0 0; font: 400 1.08rem/1.55 var(--cat-f-texte); max-width: 36em; }
+.cat-pitch.cat-sans-images { margin-top: 18px; }
+
+/* Les faits en une rangée, sur une bande de papier */
+.cat-faits {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0; margin: 20px 0 0;
+  background: var(--cat-papier-2); border-radius: 12px 20px 10px 18px; overflow: hidden;
+  box-shadow: inset 0 0 0 1.5px rgba(29, 43, 79, .1);
+}
+.cat-faits > div { padding: 10px 14px 9px; min-width: 0; }
+.cat-faits > div + div { border-left: 1.5px dashed rgba(29, 43, 79, .2); }
+.cat-faits > div:nth-child(2n+1) { border-left: 0; }
+.cat-faits > div:nth-child(n+3) { border-top: 1.5px dashed rgba(29, 43, 79, .2); }
+.cat-faits dt { font: 700 .74rem/1.2 var(--cat-f-titre); letter-spacing: .09em; text-transform: uppercase; color: var(--cat-doux); }
+.cat-faits dd { margin: 3px 0 0; font: 800 1.08rem/1.15 var(--cat-f-titre); }
+@media (min-width: 520px) {
+  .cat-faits { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .cat-faits:has(> div:nth-child(5)) { grid-template-columns: repeat(5, minmax(0, 1fr)); } /* « À deux possible » : une cinquième case */
+  .cat-faits > div:nth-child(2n+1) { border-left: 1.5px dashed rgba(29, 43, 79, .2); }
+  .cat-faits > div:first-child { border-left: 0; }
+  .cat-faits > div:nth-child(n+3) { border-top: 0; }
+}
+
+.cat-sections { margin-top: 26px; }
+.cat-sections > * + * { margin-top: 18px; }
+
+.cat-sec { margin-top: 30px; }
+.cat-sec h3 {
+  display: flex; align-items: center; gap: 12px; margin: 0 0 10px;
+  font: 650 1.35rem/1.1 var(--cat-f-edito); letter-spacing: -.01em;
+}
+.cat-sec h3::after { content: ""; flex: 1; border-top: 2px dashed rgba(29, 43, 79, .22); }
+.cat-sec p { margin: 0 0 .8em; line-height: 1.6; max-width: 38em; }
+.cat-sec p:last-child { margin-bottom: 0; }
+.cat-niveau {
+  display: inline-block; padding: 3px 12px 2px; font: 800 .98rem/1.3 var(--cat-f-titre);
+  background: var(--cat-ciel); border-radius: 10px 14px 9px 13px;
+}
+.cat-niveau-core { background: var(--cat-soleil); }
+.cat-niveau-none { background: var(--cat-papier-2); box-shadow: inset 0 0 0 1.5px rgba(29, 43, 79, .2); }
+.cat-tiers, .cat-controle { font-size: .92rem; color: var(--cat-doux); }
+
+/* L'avis des parents : les étoiles moyennes (dessinées, et le chiffre), le nombre d'avis ; puis à part ceux chez qui le jeu
+   ne marche pas bien. Les étoiles pleines se lisent à leur forme remplie, et le chiffre est écrit : jamais la couleur seule. */
+.cat-avis[hidden] { display: none; }
+.cat-avis-note-moyenne { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; margin: 0 0 6px !important; }
+.cat-etoiles { position: relative; display: inline-flex; flex: none; line-height: 0; }
+.cat-etoiles-vides, .cat-etoiles-pleines { display: inline-flex; gap: 2px; }
+.cat-etoiles-pleines { position: absolute; left: 0; top: 0; overflow: hidden; white-space: nowrap; }
+.cat-etoiles .cat-svg { width: 30px; height: 30px; stroke: var(--cat-encre); stroke-width: 1.5; }
+.cat-etoiles-vides .cat-svg { fill: var(--cat-papier); }
+.cat-etoiles-pleines .cat-svg { fill: var(--cat-soleil); }
+.cat-avis-chiffre { font: 800 1.9rem/1 var(--cat-f-titre); letter-spacing: -.01em; }
+.cat-avis-nombre { font-weight: 700; color: var(--cat-doux); }
+.cat-avis-souci { position: relative; margin: 10px 0 0 !important; padding: 8px 12px 8px 40px; background: var(--cat-papier-2); border-radius: 4px 14px 10px 12px; line-height: 1.45; }
+.cat-avis-souci::before {
+  content: "!"; position: absolute; left: 11px; top: 9px; width: 20px; height: 20px; display: grid; place-items: center;
+  font: 800 .82rem/1 var(--cat-f-titre); color: var(--cat-papier); background: var(--cat-encre); border-radius: 50% 46% 52% 44%;
+}
+.cat-avis-mots-titre { margin: 14px 0 6px !important; font: 700 .78rem/1.2 var(--cat-f-titre); letter-spacing: .09em; text-transform: uppercase; color: var(--cat-doux); }
+.cat-avis-mots { display: grid; gap: 10px; }
+.cat-avis-mots blockquote { margin: 0; padding: 10px 16px 10px 18px; background: var(--cat-papier-2); border-left: 4px solid var(--cat-soleil); border-radius: 2px 14px 12px 2px; }
+.cat-avis-mots blockquote p { margin: 0; font: italic 400 1.02rem/1.5 var(--cat-f-edito); max-width: 36em; }
+.cat-avis-note { margin-top: 12px !important; font-size: .86rem; color: var(--cat-doux); }
+
+/* Ce qu'on y apprend : la ligne courte (la même que sur la mini-fiche), puis le niveau */
+.cat-apprend-tete { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin-bottom: 10px; }
+.cat-f-sujets { font-size: 1.1rem; }
+
+/* Toute la fiche, repliée : comment ça se joue, les sites contactés et leur contrôle, le code */
+.cat-tout { margin-top: 28px; border-top: 2px dashed rgba(29, 43, 79, .2); }
+.cat-tout > summary {
+  display: flex; align-items: center; gap: 8px; min-height: 52px; padding: 6px 0 2px; cursor: pointer; list-style: none;
+  font: 800 1.12rem/1.2 var(--cat-f-titre); color: var(--cat-encre);
+}
+.cat-tout > summary::-webkit-details-marker { display: none; }
+.cat-tout > summary:focus-visible { outline: 3px solid var(--cat-soleil-fonce); outline-offset: 2px; border-radius: 6px; }
+.cat-tout-fleche { width: 22px; height: 22px; padding: 3px; background: var(--cat-soleil); border-radius: 50% 46% 52% 48%; stroke-width: 3; transition: transform .2s ease; }
+.cat-tout[open] .cat-tout-fleche { transform: rotate(90deg); }
+.cat-tout > .cat-sec:first-of-type { margin-top: 10px; }
+.cat-tout .cat-sec { margin-top: 22px; }
+.cat-f-pied { margin-top: 22px; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 20px; }
+.cat-lien {
+  display: inline-flex; align-items: center; min-height: 44px;
+  font: 700 1rem/1.2 var(--cat-f-titre); color: var(--cat-encre); text-decoration: underline;
+  text-decoration-thickness: 2px; text-underline-offset: 4px; text-decoration-color: var(--cat-soleil-fonce);
+}
+
+/* L'image agrandie, au-dessus de la fiche */
+.cat-loupe {
+  position: fixed; inset: 0; z-index: 5; display: grid; grid-template-rows: minmax(0, 1fr) auto auto; justify-items: center; gap: 10px;
+  padding: max(14px, env(safe-area-inset-top)) 14px max(14px, env(safe-area-inset-bottom));
+  background: #0f1738; color: #fbf7ee;
+  animation: cat-fond .2s ease both;
+}
+.cat-loupe[hidden] { display: none; }
+.cat-loupe-img {
+  min-height: 0; max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; align-self: center; cursor: zoom-out;
+  border: 3px solid #fffdf7; border-radius: 8px 12px 7px 11px;
+}
+.cat-loupe-legende { margin: 0; text-align: center; font-size: 1rem; line-height: 1.4; max-width: 40em; }
+.cat-loupe-legende small { display: block; font-size: .85rem; color: #c9d2ee; }
+.cat-loupe-fermer {
+  display: inline-flex; align-items: center; gap: 8px; min-height: 48px; padding: 6px 18px 4px 14px; cursor: pointer;
+  font: 800 1.05rem/1 "Baloo 2", "Trebuchet MS", sans-serif; color: #1d2b4f; background: var(--cat-soleil, #ffc83d); border: 0;
+  border-radius: 14px 20px 12px 18px; box-shadow: 3px 4px 0 var(--cat-soleil-fonce, #e0a400);
+}
+.cat-loupe-fermer .cat-svg { width: 20px; height: 20px; }
+.cat-loupe-nav {
+  position: absolute; top: 50%; transform: translateY(-50%); width: 52px; height: 52px; display: grid; place-items: center; cursor: pointer;
+  color: #1d2b4f; background: rgba(255, 253, 247, .92); border: 0; border-radius: 50% 46% 52% 48%;
+}
+.cat-loupe-avant { left: 10px; }
+.cat-loupe-apres { right: 10px; }
+.cat-loupe button:focus-visible { outline: 3px solid var(--cat-soleil, #ffc83d); outline-offset: 3px; }
+
+/* Sur grand écran : un panneau à droite, le site reste visible derrière */
+@media (min-width: 760px) {
+  .cat-panneau {
+    left: auto; width: min(620px, 92vw); padding: 0 34px 40px;
+    border-top: 0; border-left: 8px solid var(--cat-soleil);
+    border-radius: 26px 0 0 18px; box-shadow: -10px 0 0 rgba(22, 32, 74, .18);
+  }
+  .cat-fiche[open] .cat-panneau { animation-name: cat-glisse; }
+  .cat-fermer { margin-right: -16px; margin-top: 12px; }
+  .cat-haut::before { left: -34px; right: -34px; height: 72px; }
+  .cat-galerie-bande { margin-inline: -34px; }
+  .cat-galerie { padding-inline: 34px; scroll-padding-inline: 34px; }
+  /* Toutes les images à la fois, rien de coupé : en hauteur, côte à côte ; en largeur, une grande et deux petites. */
+  .cat-galerie.cat-portrait:not(.cat-n4) .cat-vue { width: calc((100% - 28px) / 3); }
+  .cat-galerie.cat-paysage.cat-n3 { display: grid; grid-template-columns: 2fr 1fr; grid-template-rows: auto 1fr; align-items: start; }
+  .cat-galerie.cat-paysage.cat-n3 > .cat-vue { width: auto; }
+  .cat-galerie.cat-paysage.cat-n3 > .cat-vue:first-child { grid-row: span 2; }
+  .cat-galerie.cat-paysage.cat-n2 .cat-vue { width: calc((100% - 14px) / 2); }
+  .cat-galerie.cat-paysage.cat-n1 .cat-vue { width: 100%; }
+  .cat-galerie:not(.cat-n4)::after { display: none; }
+  .cat-f-tete { padding-top: 30px; }
+}
+
+@keyframes cat-monte { from { transform: translateY(40px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes cat-glisse { from { transform: translateX(60px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes cat-fond { from { opacity: 0; } to { opacity: 1; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .cat-mini, .cat-bouton { transition: none; }
+  .cat-mini:hover, .cat-bouton:hover { transform: none; }
+  .cat-fiche[open] .cat-panneau, .cat-fiche[open]::backdrop, .cat-loupe { animation: none; }
+  .cat-mini-images, .cat-galerie { scroll-behavior: auto; }
+}

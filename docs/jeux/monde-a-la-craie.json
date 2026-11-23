@@ -2,6 +2,7 @@
   "ludi": 1,
   "id": "monde-a-la-craie",
   "status": "draft",
+  "added": "2026-11-01",
   "title": { "fr": "Le Monde à la craie", "en": "The World in Chalk" },
   "pitch": {
     "fr": "Un nom de pays s'écrit à la craie au tableau : trouve-le sur la carte et touche-le. Continent par continent, douze pays par manche, en trois niveaux : d'abord les pays qu'on connaît un peu, puis les autres. Après chaque réponse, un petit « Le savais-tu ? » fait connaître le pays. Et pour regarder sans être interrogé, on touche les pays pour lire leur nom, leur capitale et trois petits secrets.",
@@ -9,6 +10,12 @@
   },
   "url": "https://pikifou.github.io/ludigames/monde-a-la-craie/",
   "icon": "https://pikifou.github.io/ludigames/monde-a-la-craie/icons/icon-512.png",
+  "screenshots": [
+    { "src": "img/monde-a-la-craie-1.webp", "alt": { "fr": "Trouver la Suisse sur la carte", "en": "Find Switzerland on the map" } },
+    { "src": "img/monde-a-la-craie-2.webp", "alt": { "fr": "Le savais-tu ? La Pologne", "en": "Did you know? Poland" } },
+    { "src": "img/monde-a-la-craie-3.webp", "alt": { "fr": "Douze pays trouvés en Europe", "en": "Twelve countries found in Europe" } }
+  ],
+  "screens": "landscape",
   "color": "#2b3f37",
   "author": { "name": "Julien", "url": "https://github.com/pikifou/ludigames" },
   "languages": ["fr", "en"],
@@ -30,6 +37,10 @@
   "content": {
     "fr": "Une carte, des noms de pays et de petits savoirs pour enfants (animaux, plats, monuments, records), sans guerre ni politique. Pour Israël et la Palestine, dont la capitale est disputée, on n'en montre pas. Les frontières disputées suivent un atlas scolaire français (la Crimée en Ukraine, le Kosovo comme pays). Une voix peut lire les noms, en option, avec les voix de l'appareil.",
     "en": "A map, country names and little child-friendly facts (animals, food, landmarks, records), with no war or politics. For Israel and Palestine, whose capital is disputed, none is shown. Disputed borders follow a French school atlas (Crimea in Ukraine, Kosovo as a country). A voice can read the names, as an option, using the device's own voices."
+  },
+  "after": {
+    "fr": "Et si tu cherchais le dernier pays de ta partie sur une vraie carte, ou sur un globe ?",
+    "en": "How about finding the last country from your game on a real map, or on a globe?"
   },
   "devices": ["tablet", "phone", "computer"],
   "offline": true,

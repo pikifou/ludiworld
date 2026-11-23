@@ -84,6 +84,8 @@ Le launcher prévient que le temps de jeu touche à sa fin : `fn(minutes)` reço
 
 Messages `postMessage`, toujours avec une origine cible précise (jamais `*`).
 
+Le kit ne regarde que l'origine du launcher, jamais son chemin : l'appli sous `app/` (`https://ludiworld.app/app/`, `https://pikifou.github.io/ludiworld/app/`) a les mêmes origines autorisées qu'avant.
+
 | Sens | `type` | Contenu |
 |---|---|---|
 | jeu → launcher | `ludi:hello` | `{ game, kit }` (version du kit) |

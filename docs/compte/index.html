@@ -30,8 +30,8 @@
     <!-- Les comptes ne sont pas encore ouverts -->
     <section class="feuille" data-vue="ferme" hidden>
       <h1 tabindex="-1" data-t="fermeT">Les comptes ouvrent bientôt.</h1>
-      <p data-t="fermeP">En attendant, Ludiworld marche très bien sans compte&nbsp;: tout reste sur la tablette.</p>
-      <a class="btn btn-sun" href="../#demarrer" data-t="plusTardGo">Préparer la tablette</a>
+      <p data-t="fermeP">En attendant, Ludiworld marche très bien sans compte&nbsp;: tout reste sur l'appareil.</p>
+      <a class="btn btn-sun" href="../app/#demarrer" data-t="plusTardGo">Préparer Ludiworld</a>
     </section>
 
     <!-- Essayer : quelques questions, une par écran -->
@@ -109,7 +109,7 @@
     <!-- Créer son compte -->
     <section class="feuille" data-vue="creer" hidden>
       <h1 tabindex="-1" data-t="cT">Créez votre compte de parent</h1>
-      <p data-t="cP">Gratuit. Vos réglages et les résultats des jeux sont synchronisés pour les retrouver sur votre téléphone, votre tablette et votre ordinateur. Vous pouvez désactiver la synchronisation dans votre compte.</p>
+      <p data-t="cP">Gratuit pour l'instant. Une copie en ligne garde vos réglages et les résultats des jeux, pour les retrouver sur votre téléphone, votre tablette et votre ordinateur. Vous pouvez la désactiver dans votre compte.</p>
       <form id="f-creer" novalidate>
         <label for="c-email" data-t="email">Adresse e-mail</label>
         <input id="c-email" type="email" autocomplete="email" inputmode="email" required>
@@ -120,11 +120,11 @@
         <label class="case"><input id="c-nouvelles" type="checkbox"> <span data-t="nouvelles">Écrivez-moi quand il y a du nouveau, ou pour tester un jeu. Pas plus d'un message par mois.</span></label>
         <p class="alerte" role="alert" hidden></p>
         <div class="actions">
-          <button type="submit" class="btn btn-sun" data-t="cGo">Créer mon compte et synchroniser</button>
+          <button type="submit" class="btn btn-sun" data-t="cGo">Créer mon compte</button>
         </div>
       </form>
       <p class="autre"><span data-t="dejaCompte">Vous avez déjà un compte&nbsp;?</span> <a href="#connexion" data-t="seConnecter">Se connecter</a></p>
-      <p class="autre"><a href="../#demarrer" data-t="plusTard">Plus tard&nbsp;: préparer la tablette sans compte</a></p>
+      <p class="autre"><a href="../app/#demarrer" data-t="plusTard">Plus tard&nbsp;: préparer Ludiworld sans compte</a></p>
     </section>
 
     <!-- Vérifier sa boîte -->
@@ -134,20 +134,20 @@
       <p class="q-aide" data-t="vH">Rien après quelques minutes&nbsp;? Regardez dans les indésirables.</p>
       <p class="alerte" role="alert" hidden></p>
       <div class="actions">
-        <a class="btn btn-sun" href="../#demarrer" data-t="plusTardGo2">Préparer la tablette en attendant</a>
+        <a class="btn btn-sun" href="../app/#demarrer" data-t="plusTardGo2">Préparer Ludiworld en attendant</a>
         <button type="button" class="lien-doux" id="v-renvoyer" data-t="vRe">Renvoyer le message</button>
       </div>
     </section>
 
     <!-- Se connecter -->
     <section class="feuille" data-vue="connexion" hidden>
-      <h1 tabindex="-1" data-t="sT">Bon retour sur l'île</h1>
+      <h1 tabindex="-1" data-t="sT">Se connecter</h1>
       <form id="f-connexion" novalidate>
         <label for="s-email" data-t="email2">Adresse e-mail</label>
         <input id="s-email" type="email" autocomplete="email" inputmode="email" required>
         <label for="s-mdp" data-t="mdp2">Mot de passe</label>
         <input id="s-mdp" type="password" autocomplete="current-password" required>
-        <p class="q-aide" data-t="sSy">Si la synchronisation est activée dans votre compte, cet appareil retrouve automatiquement vos réglages et vos résultats.</p>
+        <p class="q-aide" data-t="sSy">Si la copie en ligne est activée dans votre compte, cet appareil retrouve vos réglages et vos résultats.</p>
         <p class="alerte" role="alert" hidden></p>
         <button type="button" class="lien-doux" id="s-renvoyer" hidden data-t="vRe2">Renvoyer le message de confirmation</button>
         <div class="actions">
@@ -155,7 +155,7 @@
           <a class="lien-doux" href="#oublie" data-t="oublie">Mot de passe oublié&nbsp;?</a>
         </div>
       </form>
-      <p class="autre"><span data-t="pasCompte">Pas encore de compte&nbsp;?</span> <a href="#essayer" data-t="essayer">Essayer</a></p>
+      <p class="autre"><span data-t="pasCompte">Pas encore de compte&nbsp;?</span> <a href="#creer" data-t="creerCompte">Créer un compte</a></p>
     </section>
 
     <!-- Mot de passe oublié -->
@@ -193,8 +193,9 @@
   <main id="espace" class="espace" hidden>
     <div class="e-code" id="e-code" hidden>
       <h1 tabindex="-1" data-t="eCodeT">Cet espace demande le code parent</h1>
-      <p data-t="eCodeP">Cette tablette est préparée pour un enfant. Ouvrez le carnet avec votre code, puis revenez ici.</p>
-      <a class="btn btn-sun" href="../#carnet" data-t="eCodeGo">Ouvrir le carnet</a>
+      <p class="bien" id="e-code-retour" role="status" hidden></p>
+      <p data-t="eCodeP">Ludiworld est préparé ici pour un enfant. Votre compte s'ouvre depuis le côté parent, avec votre code.</p>
+      <a class="btn btn-sun" href="../app/#carnet" data-t="eCodeGo">Ouvrir le côté parent</a>
     </div>
 
     <div id="e-corps" hidden>
@@ -216,10 +217,10 @@
         </section>
 
         <section class="e-bloc e-large">
-          <h2 data-t="eSyT">Retrouver Ludiworld sur mes appareils</h2>
-          <label class="case"><input id="e-synchro" type="checkbox" disabled aria-describedby="e-synchro-aide"> <span data-t="eSyL">Synchroniser mes réglages et les résultats sur mes appareils</span></label>
-          <p data-t="eSyP">Partent en ligne&nbsp;: le pseudo et l'âge des enfants, les jeux choisis, le temps de jeu, les records et les notions, et votre code parent sous une forme brouillée. Le bureau de Ludiworld n'y a pas accès. Elles ne sont pas chiffrées dans la base&nbsp;: techniquement, son administrateur pourrait les lire, et il s'engage à ne pas le faire.</p>
-          <p class="q-aide" id="e-synchro-aide" data-t="eSyH">Si vous désactivez la synchronisation, les nouvelles parties restent sur l'appareil où l'enfant joue. Les résultats de la tablette ne seront plus consultables depuis votre téléphone ou un autre ordinateur. La copie en ligne est effacée ; les données déjà présentes sur les appareils restent en place.</p>
+          <h2 data-t="eSyT">La copie en ligne</h2>
+          <label class="case"><input id="e-synchro" type="checkbox" disabled aria-describedby="e-synchro-aide"> <span data-t="eSyL">Garder une copie en ligne, pour retrouver Ludiworld sur mes autres appareils</span></label>
+          <p data-t="eSyP">Partent en ligne&nbsp;: le prénom (ou le surnom) et l'âge des enfants, leurs jeux, le temps de jeu, les records et ce que chaque jeu a noté de ses réussites, la sauvegarde de chaque jeu, le code parent sous une forme brouillée, et, si vous en avez noté, ce que l'enfant a aimé ou appris et les sujets qui vous font envie. Le bureau de Ludiworld n'y a pas accès&nbsp;; elles ne sont pas chiffrées dans la base&nbsp;: techniquement, son administrateur pourrait les lire, et il s'engage à ne pas le faire.</p>
+          <p class="q-aide" id="e-synchro-aide" data-t="eSyH" hidden>Si vous la désactivez, la copie en ligne est effacée. Les nouvelles parties restent sur l'appareil où l'enfant joue : on ne les voit plus depuis un autre téléphone, une autre tablette ou un ordinateur. Ce qui est déjà sur chaque appareil y reste.</p>
           <p class="bien" id="e-synchro-etat" role="status" hidden></p>
         </section>
 
@@ -243,7 +244,7 @@
           <button type="button" class="btn-ligne" id="e-exporter" data-t="eEx">Télécharger mes données</button>
           <details class="e-effacer">
             <summary data-t="eEfS">Effacer mon compte</summary>
-            <p data-t="eEfP">Le compte, la copie en ligne et vos réponses disparaissent aussitôt, sans retour possible. Ce qui est sur les appareils y reste&nbsp;: effacez-le depuis le carnet de chacun.</p>
+            <p data-t="eEfP">Le compte, la copie en ligne et vos réponses disparaissent aussitôt, sans retour possible. Ce qui est sur les appareils y reste&nbsp;: effacez-le depuis le côté parent de chacun (Réglages).</p>
             <form id="f-effacer" novalidate>
               <label for="e-mot" data-t="eEfL">Pour confirmer, écrivez EFFACER</label>
               <input id="e-mot" type="text" autocomplete="off">
@@ -281,16 +282,23 @@
     <span data-t="reRenvoye">Message renvoyé.</span>
     <span data-t="mdpChange">Mot de passe changé.</span>
     <span data-t="erreurAutreCompte">Un autre compte est déjà ouvert sur cet appareil. Déconnectez-vous d'abord, puis rouvrez le lien.</span>
-    <span data-t="syAutre">Connectez-vous avec votre mot de passe pour retrouver vos réglages et vos résultats sur cet appareil.</span>
-    <span data-t="syOn">Réglages et résultats synchronisés.</span>
-    <span data-t="syOff">Synchronisation désactivée. Les nouvelles parties restent sur l'appareil utilisé.</span>
+    <span data-t="syAutre">Connectez-vous avec votre mot de passe pour retrouver la copie en ligne sur cet appareil.</span>
+    <span data-t="syOn">Copie en ligne active : vos réglages et les résultats suivent sur vos appareils.</span>
+    <span data-t="syOff">Copie en ligne désactivée. Les nouvelles parties restent sur l'appareil utilisé.</span>
     <span data-t="synchroPrete">Votre Ludiworld est retrouvé sur cet appareil.</span>
-    <span data-t="appPret">Ludiworld est préparé ici.</span>
+    <span data-t="appPret">Ludiworld est préparé ici pour {n}.</span>
     <span data-t="appVide">Ludiworld n'est pas encore préparé sur cet appareil.</span>
     <span data-t="appOuvrir">Ouvrir Ludiworld</span>
-    <span data-t="appPreparer">Préparer la tablette</span>
+    <span data-t="appReglages">Retour aux réglages</span>
+    <span data-t="appPreparer">Préparer Ludiworld ici</span>
+    <span data-t="retourUn">{n} est de retour sur {a}.</span>
+    <span data-t="retourPlusieurs">{n} sont de retour sur {a}.</span>
+    <span data-t="et">et</span>
+    <span data-t="aTelephone">ce téléphone</span>
+    <span data-t="aTablette">cette tablette</span>
+    <span data-t="aOrdi">cet ordinateur</span>
     <span data-t="efface">Votre compte est effacé.</span>
-    <span data-t="formuleLibre">Tout Ludiworld est gratuit.</span>
+    <span data-t="formuleLibre">Ludiworld est gratuit pour l'instant.</span>
   </div>
 
   <script src="../site/barre.js" defer></script>

@@ -97,10 +97,12 @@
   // Ce qui attend le jugement de Julien, à un seul endroit.
   function rendreAttente() {
     var hote = vider($('ap-attente'));
-    Promise.all([catalogue(), github().catch(function () { return null; }), N.rpc('bureau_envies', { p_limite: 1000 }).catch(function () { return []; })]).then(function (r) {
+    Promise.all([catalogue(), github().catch(function () { return null; }), N.rpc('bureau_envies', { p_limite: 1000 }).catch(function () { return []; }),
+      N.rpc('bureau_avis', { p_limite: 1000 }).catch(function () { return null; })]).then(function (r) {
       var c = r[0], gh = r[1];
       var messages = r[2].filter(function (e) { return e.message; }).length;
       var items = [
+        [r[3] === null ? '?' : r[3].filter(function (a) { return a.mot_etat === 'a-relire'; }).length, 'mots de parents à relire', '#avis'],
         [gh === null ? '?' : gh.length, 'demandes ouvertes sur GitHub', '#catalogue'],
         [c.jeux.filter(function (g) { return g.status !== 'published'; }).length, 'fiches de jeux à relire', '#catalogue'],
         [c.recos.filter(function (x) { return x.status !== 'valide'; }).length, 'recommandations proposées', '#catalogue'],
@@ -163,6 +165,85 @@
       t.appendChild(b);
       if (!comptes.length) t.appendChild(el('caption', { class: 'b-vide', text: q ? 'Aucune adresse ne contient ces lettres.' : 'Pas encore de compte.' }));
     }).catch(function (e) { erreur($('co-table'), e); });
+  }
+
+  // ---------- Les avis de parents ----------
+  // Les mots libres passent ici avant d'être montrés. Tout s'affiche en textContent : ce sont des textes de parents.
+  var MARCHE = { oui: 'marche bien', 'pas-toujours': 'marche pas toujours', non: 'ne marche pas' };
+  var ETAT_MOT = { 'a-relire': 'à relire', accepte: '✓ montré', refuse: '✗ pas montré' };
+  var SEUIL_AVIS = 5;
+  function nomJeu(c, id) {
+    var g = c.jeux.filter(function (x) { return x.id === id; })[0];
+    return g ? fr(g.title) : id;
+  }
+  // « ★★★☆☆ 3 » : les étoiles pleines et vides, et le chiffre écrit.
+  function etoiles(n) {
+    n = Math.max(0, Math.min(5, Number(n) || 0));
+    return '★★★★★'.slice(0, n) + '☆☆☆☆☆'.slice(0, 5 - n) + ' ' + n;
+  }
+  function virgule(x) { return x.toFixed(1).replace('.', ','); }
+  function rendreAvis() {
+    Promise.all([N.rpc('bureau_avis', { p_limite: 1000 }), catalogue().catch(function () { return { jeux: [] }; })]).then(function (r) {
+      var l = r[0] || [], c = r[1];
+      // Les mots à relire, le plus ancien en dernier : accepter ou refuser, un par un.
+      var aRelire = l.filter(function (a) { return a.mot_etat === 'a-relire'; });
+      $('av-relire-t').textContent = 'Mots à relire (' + aRelire.length + ')';
+      var hote = vider($('av-relire'));
+      if (!aRelire.length) hote.appendChild(el('p', { class: 'b-vide', text: 'Aucun mot à relire.' }));
+      aRelire.forEach(function (a) {
+        var msg = el('div', { class: 'b-avis-msg', role: 'status' });
+        function relire(oui) {
+          return function () {
+            N.rpc('bureau_relire_mot', { p_compte: a.compte_id, p_jeu: a.jeu, p_mot: a.mot, p_accepte: oui }).then(function (fait) {
+              if (fait === true) return rendreAvis();
+              vider(msg).appendChild(el('p', { class: 'alerte', text: 'Le parent a changé son mot entre-temps. Rechargez la page pour lire la nouvelle version.' }));
+            }).catch(function (e) { erreur(msg, e); });
+          };
+        }
+        hote.appendChild(el('article', { class: 'b-avis', 'data-avis': a.jeu }, [
+          el('p', { class: 'b-avis-tete' }, [el('b', { text: nomJeu(c, a.jeu) }), ' · ' + date(a.maj_le) + ' · ' + (a.langue === 'en' ? 'en anglais' : 'en français')]),
+          el('p', { class: 'b-avis-note' }, [el('span', { class: 'b-etoiles', text: etoiles(a.etoiles) }), ' · ' + (MARCHE[a.marche] || a.marche)]),
+          el('blockquote', { class: 'b-avis-mot', lang: a.langue, text: a.mot }),
+          el('div', { class: 'b-avis-boutons' }, [
+            el('button', { type: 'button', class: 'btn-ligne b-accepter', text: 'Accepter : le montrer' }),
+            el('button', { type: 'button', class: 'btn-ligne b-refuser', text: 'Refuser : ne pas le montrer' })
+          ]),
+          msg
+        ]));
+        var b = hote.lastChild.querySelectorAll('button');
+        b[0].addEventListener('click', relire(true));
+        b[1].addEventListener('click', relire(false));
+      });
+      // Par jeu : comme les familles le liront (rien sur la fiche sous 5 avis).
+      var parJeu = {};
+      l.forEach(function (a) {
+        var j = parJeu[a.jeu] || (parJeu[a.jeu] = { n: 0, somme: 0, marche: {}, nBien: 0, sommeBien: 0 });
+        j.n++; j.somme += Number(a.etoiles) || 0;
+        j.marche[a.marche] = (j.marche[a.marche] || 0) + 1;
+        if (a.marche === 'oui') { j.nBien++; j.sommeBien += Number(a.etoiles) || 0; }
+      });
+      function compte(o) { return Object.keys(MARCHE).filter(function (k) { return o[k]; }).map(function (k) { return o[k] + ' ' + MARCHE[k]; }).join(', '); }
+      var tj = vider($('av-jeux'));
+      tj.appendChild(el('thead', null, [el('tr', null, ['Jeu', 'Avis', 'Étoiles (moyenne)', 'Le jeu marche chez eux', 'Moyenne là où il marche bien', 'Sur la fiche'].map(function (h) { return el('th', { scope: 'col', text: h }); }))]));
+      var bj = el('tbody');
+      Object.keys(parJeu).sort(function (x, y) { return parJeu[y].n - parJeu[x].n; }).forEach(function (id) {
+        var j = parJeu[id];
+        bj.appendChild(el('tr', null, [el('td', { text: nomJeu(c, id) }), el('td', { text: j.n }), el('td', { class: 'nowrap', text: virgule(j.somme / j.n) }),
+          el('td', { text: compte(j.marche) }), el('td', { text: j.nBien ? virgule(j.sommeBien / j.nBien) : '' }),
+          el('td', { text: j.n >= SEUIL_AVIS ? '✓ montré' : 'pas encore (' + j.n + ' sur ' + SEUIL_AVIS + ')' })]));
+      });
+      tj.appendChild(bj);
+      if (!l.length) tj.appendChild(el('caption', { class: 'b-vide', text: 'Pas encore d\'avis.' }));
+      var t = vider($('av-table'));
+      t.appendChild(el('thead', null, [el('tr', null, ['Date', 'Jeu', 'Étoiles', 'Le jeu chez eux', 'Mot', 'Mot sur la fiche'].map(function (h) { return el('th', { scope: 'col', text: h }); }))]));
+      var b = el('tbody');
+      l.forEach(function (a) {
+        b.appendChild(el('tr', null, [el('td', { class: 'nowrap', text: date(a.maj_le) }), el('td', { text: nomJeu(c, a.jeu) }),
+          el('td', { class: 'nowrap b-etoiles', text: etoiles(a.etoiles) }), el('td', { text: MARCHE[a.marche] || a.marche }),
+          el('td', { class: 'b-message', text: a.mot || '' }), el('td', { class: 'nowrap', text: a.mot ? ETAT_MOT[a.mot_etat] || '' : '' })]));
+      });
+      t.appendChild(b);
+    }).catch(function (e) { erreur($('av-relire'), e); });
   }
 
   // ---------- Le catalogue : les fichiers du site et les demandes GitHub ----------
@@ -253,7 +334,7 @@
   }
 
   // ---------- Navigation ----------
-  var RUBRIQUES = { apercu: rendreApercu, envies: rendreEnvies, comptes: rendreComptes, catalogue: rendreCatalogue, formules: rendreFormules };
+  var RUBRIQUES = { apercu: rendreApercu, envies: rendreEnvies, comptes: rendreComptes, avis: rendreAvis, catalogue: rendreCatalogue, formules: rendreFormules };
   function route() {
     var r = location.hash.replace('#', '');
     if (!RUBRIQUES[r]) r = 'apercu';

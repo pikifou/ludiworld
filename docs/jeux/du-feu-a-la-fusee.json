@@ -2,6 +2,7 @@
   "ludi": 1,
   "id": "du-feu-a-la-fusee",
   "status": "draft",
+  "added": "2026-10-28",
   "title": { "fr": "Du Feu à la Fusée", "en": "From Fire to Rocket" },
   "pitch": {
     "fr": "Un petit village qui traverse l'histoire. On construit, on découvre le feu, les outils, l'agriculture, et le village grandit tout seul sous ses yeux. La démo va jusqu'au néolithique.",
@@ -9,6 +10,12 @@
   },
   "url": "https://pikifou.github.io/du-feu-a-la-fusee/",
   "icon": "https://pikifou.github.io/du-feu-a-la-fusee/icone-512.png",
+  "screenshots": [
+    { "src": "img/du-feu-a-la-fusee-1.webp", "alt": { "fr": "Un village de l'âge de pierre", "en": "A Stone Age village" } },
+    { "src": "img/du-feu-a-la-fusee-2.webp", "alt": { "fr": "Découverte : la chasse et la pêche", "en": "Discovery: hunting and fishing" } },
+    { "src": "img/du-feu-a-la-fusee-3.webp", "alt": { "fr": "Le soir, autour du feu", "en": "Evening around the fire" } }
+  ],
+  "screens": "landscape",
   "color": "#e9dcc4",
   "author": { "name": "Julien", "url": "https://github.com/pikifou/du-feu-a-la-fusee" },
   "languages": ["fr"],
@@ -31,6 +38,10 @@
     "fr": "Jeu calme, sans ennemis. La chasse aux lapins et aux mammouths est montrée de loin.",
     "en": "Calm game with no enemies. Rabbit and mammoth hunting is shown from afar."
   },
+  "after": {
+    "fr": "Et si tu construisais une fusée avec un rouleau de carton et du papier ?",
+    "en": "How about building a rocket out of a cardboard tube and some paper?"
+  },
   "devices": ["phone", "tablet", "computer"],
   "offline": true,
   "healthy": {
@@ -38,6 +49,6 @@
     "no_daily_pressure": true, "no_notifications": true, "no_strangers": true, "no_tracking": true,
     "natural_stops": true
   },
-  "third_parties": ["fonts.googleapis.com"],
+  "third_parties": ["fonts.googleapis.com", "fonts.gstatic.com"],
   "kit": true
 }

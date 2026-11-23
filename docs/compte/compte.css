@@ -104,6 +104,9 @@ button.btn { border: 0; cursor: pointer; }
 .alerte::before { content: "! "; font-weight: 700; }
 .bien { background: #e0f0e4; color: #1f5a35; border-left: 5px solid var(--feuille); }
 .bien::before { content: "✓ "; font-weight: 700; }
+/* Un état sans réussite à fêter (copie en ligne désactivée) : sobre, sans coche ni vert. */
+.bien.neutre { background: #eef0f6; color: var(--encre, #1d2b4f); border-left-color: #8c95b3; }
+.bien.neutre::before { content: none; }
 
 /* ---------- Mon espace : la page d'un carnet, dense et à plat ---------- */
 .espace { padding-block: clamp(24px, 5vw, 56px) clamp(40px, 7vw, 80px); padding-inline: var(--gutter); background: var(--papier); min-height: calc(100vh - 64px); }

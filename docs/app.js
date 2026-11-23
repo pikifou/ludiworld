@@ -1,4 +1,4 @@
-/* Ludiworld : l'appli (côté enfant, carnet parent, jeux en plein cadre). Tout reste sur l'appareil, sauf si le parent active la synchro. */
+/* Ludiworld : l'appli (préparation, côté enfant, côté parent, jeux en plein cadre). Tout reste sur l'appareil, sauf si le parent active la synchro. */
 (function () {
   'use strict';
 
@@ -55,11 +55,24 @@
     play: '<path d="M7 4.5v15l12.5-7.5z" fill="currentColor"/>',
     check: '<path d="M4.5 12.5l5 5 10-11" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>',
     cross: '<path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/>',
-    search: '<circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M15.5 15.5l5 5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>',
     warn: '<path d="M12 3l10 18H2z" fill="currentColor"/><path d="M12 10v5M12 18v.5" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>',
     book: '<path d="M4 4.5h6a2 2 0 0 1 2 2V20a2 2 0 0 0-2-2H4zM20 4.5h-6a2 2 0 0 0-2 2V20a2 2 0 0 1 2-2h6z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>',
     minus: '<path d="M5 12h14" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/>',
-    plus: '<path d="M5 12h14M12 5v14" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/>'
+    grid: '<rect x="3.5" y="3.5" width="7" height="7" rx="2" fill="currentColor"/><rect x="13.5" y="3.5" width="7" height="7" rx="2.6" fill="currentColor"/><rect x="3.5" y="13.5" width="7" height="7" rx="2.6" fill="currentColor"/><rect x="13.5" y="13.5" width="7" height="7" rx="2" fill="currentColor"/>',
+    gear: '<circle cx="12" cy="12" r="3.6" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M12 2.8v3M12 18.2v3M2.8 12h3M18.2 12h3M5.5 5.5l2.1 2.1M16.4 16.4l2.1 2.1M5.5 18.5l2.1-2.1M16.4 7.6l2.1-2.1" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/>',
+    plus: '<path d="M5 12h14M12 5v14" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/>',
+    home: '<path d="M12 4.6l-7 6.1V20h4.8v-5.4h4.4V20H19v-9.3z" fill="currentColor"/><path d="M2.8 11.4L12 3.3l9.2 8.1" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>',
+    calendar: '<rect x="3.5" y="5" width="17" height="15.5" rx="2.5" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M3.5 10h17M8 3v4M16 3v4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><rect x="7" y="13" width="4" height="4" rx="1" fill="currentColor"/>',
+    chevron: '<path d="M6 9.5l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>',
+    // Une vitrine : un auvent festonné au-dessus d'une devanture (l'onglet « Tous les jeux », et le bouton de l'enfant).
+    vitrine: '<path d="M3.6 3.5h16.8L22 9.2a2.5 2.5 0 0 1-5 0 2.5 2.5 0 0 1-5 0 2.5 2.5 0 0 1-5 0 2.5 2.5 0 0 1-5 0z" fill="currentColor"/><path d="M4 12.5v8h16v-8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><rect x="7.2" y="14.6" width="9.6" height="3.6" rx="1" fill="currentColor"/>',
+    // Une main levée : « Je voudrais ce jeu », et les demandes côté parent.
+    main: '<path d="M8.2 12.6V5.4a1.55 1.55 0 0 1 3.1 0v5.4M11.3 10.4V3.9a1.55 1.55 0 0 1 3.1 0v6.6M14.4 10.6V5.4a1.55 1.55 0 0 1 3.1 0v6.4M17.5 11.8V9.3a1.55 1.55 0 0 1 3.1 0v5.2a7.5 7.5 0 0 1-7.5 7.5h-.8a6.2 6.2 0 0 1-5.2-2.8l-3-4.6a1.6 1.6 0 0 1 2.6-1.8l1.5 1.9" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/>',
+    // Une boîte : ranger un jeu.
+    boite: '<path d="M3 4.5h18v4H3zM4.5 8.5h15V20h-15z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><path d="M9.5 12.5h5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>',
+    retour: '<path d="M14.5 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>',
+    // Une étoile : la note de « Votre avis » (pleine ou vide, le CSS choisit).
+    etoile: '<path d="M12 2.8l2.85 5.95 6.55.85-4.8 4.55 1.2 6.5L12 17.5l-5.8 3.15 1.2-6.5-4.8-4.55 6.55-.85z" stroke-linejoin="round"/>'
   };
   function icon(name, cls) {
     var s = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -90,11 +103,14 @@
   function saveStore() { try { localStorage.setItem(STORE, JSON.stringify(store)); } catch (e) { /* rien */ } }
   // Le foyer : le code parent et les enfants. Chaque enfant a son pseudo, ses jeux, ses règles et ses statistiques.
   function foyer() { return store.famille && store.famille.enfants ? store.famille : null; }
-  // L'enfant actif (celui qui joue, ou celui que le parent règle dans le carnet).
+  // L'enfant dont on parle : côté parent, celui que le parent regarde ; ailleurs, celui qui joue (h.actif).
+  // Regarder un enfant côté parent ne lui donne pas l'appareil.
+  var regarde = null;
   function fam() {
     var h = foyer();
     if (!h || !h.enfants.length) return null;
-    return h.enfants.filter(function (e) { return e.id === h.actif; })[0] || h.enfants[0];
+    var id = vue === 'parent' && regarde ? regarde : h.actif;
+    return h.enfants.filter(function (e) { return e.id === id; })[0] || h.enfants[0];
   }
   function S() { var e = fam(); return e ? (e.games || (e.games = {})) : store.games; }
   // Ancien format (un seul enfant) : on le range dans le foyer, sans rien perdre.
@@ -174,26 +190,28 @@
     var ref = tot !== null ? tot * MIN : 60 * MIN;
     return ref > 0 ? clamp(rt / ref, 0, 1) : 0;
   }
-  function heure(hhmm) { return lang === 'fr' ? hhmm.replace(':', '\u00a0h\u00a0') : hhmm; }
+  // \u00ab 17 h \u00bb, \u00ab 17 h 30 \u00bb ; en anglais \u00ab 17:30 \u00bb.
+  function heure(hhmm) { return lang === 'fr' ? hhmm.replace(/^0(\d)/, '$1').replace(':00', '\u00a0h').replace(':', '\u00a0h\u00a0') : hhmm; }
+  // \u00ab de L\u00e9na \u00bb, \u00ab d\u2019In\u00e8s \u00bb (en anglais, les textes disent \u00ab In\u00e8s\u2019s \u00bb).
+  function nomDe(n) { return /^[aeiouyh\u00e0\u00e2\u00e4\u00e9\u00e8\u00ea\u00eb\u00ee\u00ef\u00f4\u00f6\u00f9\u00fb\u00fc\u0153\u00e6]/i.test(n) ? 'd\u2019' + n : 'de ' + n; }
+  // Le mot qui va pour l'appareil qu'on tient : t\u00e9l\u00e9phone, tablette ou ordinateur.
+  function genreAppareil() {
+    var tactile = (window.matchMedia && matchMedia('(pointer: coarse)').matches) || navigator.maxTouchPoints > 0;
+    if (!tactile) return 'ordi';
+    return Math.min(screen.width, screen.height) < 600 ? 'telephone' : 'tablette';
+  }
 
   // ---------- Catalogue ----------
   var games = [];
   var byId = {};
   var catalogueOk = null;
+  // Les fiches sont lues par le module du catalogue (site/catalogue.js), le même que la page « Les jeux ».
   function loadCatalogue() {
-    return fetch('jeux/index.json', { cache: 'no-cache' })
-      .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
-      .then(function (index) {
-        return Promise.all(index.games.map(function (file) {
-          return fetch('jeux/' + file, { cache: 'no-cache' }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; });
-        }));
-      })
-      .then(function (list) {
-        games = list.filter(function (g) { return g && g.id && g.url; });
-        byId = {}; games.forEach(function (g) { byId[g.id] = g; });
-        catalogueOk = true;
-      })
-      .catch(function () { catalogueOk = false; });
+    return LudiCatalogue.charger().then(function (list) {
+      games = list.filter(function (g) { return g.url && g.age && g.learning; });
+      byId = {}; games.forEach(function (g) { byId[g.id] = g; });
+      catalogueOk = true;
+    }).catch(function () { catalogueOk = false; });
   }
   // Icône d'un jeu ; si elle ne charge pas (hors ligne), l'initiale du jeu sur sa couleur.
   function gameIcon(g, attrs) {
@@ -206,10 +224,32 @@
     });
     return img;
   }
-  // Une couleur vive par jeu pour les jauges du carnet (les couleurs des fiches sont souvent très sombres).
-  var PAL = ['#f26b4f', '#3f8f5a', '#e0a400', '#4f8fd1', '#c98b4f', '#16204a'];
-  function couleur(g) { return PAL[Math.max(0, games.indexOf(g)) % PAL.length]; }
+  var PAL = ['#f26b4f', '#3f8f5a', '#e0a400', '#4f8fd1', '#c98b4f', '#16204a']; // la couleur de chaque enfant
   function choisis() { return games.filter(function (g) { return !!choix(g.id); }); }
+  // Un jeu rangé (par le parent) : toujours installé, il sort de « Les jeux de … » ; côté enfant, il va dans « Finis ».
+  function range(id) { var c = choix(id); return !!(c && c.range); }
+  function mesJeux() { return choisis().filter(function (g) { return !range(g.id); }); }
+  function ranges() { return choisis().filter(function (g) { return range(g.id); }); }
+  // Les demandes de l'enfant ({ id: date }) encore en attente : un jeu du catalogue, pas encore installé. La plus ancienne d'abord.
+  function demandes(e) {
+    var d = (e && e.demandes) || {};
+    return Object.keys(d).filter(function (id) { return byId[id] && !(e.jeux && e.jeux[id]); }).sort(function (a, b) { return d[a] - d[b]; }).map(function (id) { return byId[id]; });
+  }
+  function demande(e, id) { return !!(e && e.demandes && e.demandes[id] && !(e.jeux && e.jeux[id])); }
+  // Une demande traitée (installée ou « Pas maintenant ») : notée dans demandesVues, pour qu'un autre appareil ne la ramène pas.
+  function traiterDemande(k, id) {
+    if (!k.demandes || !k.demandes[id]) return;
+    (k.demandesVues || (k.demandesVues = {}))[id] = k.demandes[id];
+    delete k.demandes[id];
+    if (!Object.keys(k.demandes).length) delete k.demandes;
+  }
+  // Le bouton de l'enfant pour regarder tous les jeux : là par défaut, le parent peut le couper (Réglages).
+  function peutRegarder(e) { return !!e && e.regarderTout !== false; }
+  // Les jeux que l'enfant n'a pas : ceux de son âge d'abord.
+  function jeuxPasInstalles(e) {
+    var l = games.filter(function (g) { return !(e.jeux && e.jeux[g.id]); });
+    return l.filter(function (g) { return pourAge(g, e.enfant.age); }).concat(l.filter(function (g) { return !pourAge(g, e.enfant.age); }));
+  }
   function pourAge(g, age) { return age >= g.age.min && age <= g.age.max; }
 
   // ---------- Vues ----------
@@ -217,6 +257,7 @@
   var vue = null;
   function show(v) {
     if (v !== vue) document.getElementById('e-jeux').classList.remove('calme');
+    if (v !== 'enfant' && vitrine && !vitrine.hidden) fermerVitrine();
     vue = v;
     Object.keys(vues).forEach(function (k) { vues[k].hidden = k !== v; });
     document.body.setAttribute('data-vue', v);
@@ -225,16 +266,19 @@
   }
   function render() {
     document.documentElement.lang = lang;
-    document.getElementById('player-back').textContent = t('back');
+    var retour = document.getElementById('player-back');
+    retour.textContent = ''; retour.appendChild(icon('home'));
+    retour.setAttribute('aria-label', t('back')); retour.title = t('back');
     if (vue === 'accueil') renderAccueil();
     else if (vue === 'enfant') renderEnfant();
     else if (vue === 'parent') renderParent();
   }
 
   // =====================================================================
-  // Accueil : première ouverture, le parent prépare Ludiworld (5 étapes)
+  // Accueil : première ouverture, le parent prépare Ludiworld (4 étapes)
   // =====================================================================
-  var acc = { step: 0, nom: '', age: 7, jeux: null, ecole: 30, libre: 60, fin: 'douce', pin1: null };
+  function accVide() { return { step: 0, nom: '', age: 7, jeux: {}, ecole: 30, libre: 60, libres: lang === 'fr' ? [0, 3, 6] : [0, 6], fin: 'douce', pin1: null }; }
+  var acc = accVide();
 
   function langSwitch() {
     return el('div', { class: 'langs', role: 'group', 'aria-label': 'Langue / Language' }, ['fr', 'en'].map(function (l) {
@@ -250,19 +294,44 @@
       }, [on ? icon('check') : null, label(v)]);
     }));
   }
+  // Les jours de la semaine : un jour choisi a une coche, pas seulement une couleur. Lundi d'abord.
+  function joursBoutons(choisisJ, onToggle) {
+    return el('div', { class: 'jours', role: 'group' }, [1, 2, 3, 4, 5, 6, 0].map(function (d) {
+      var on = choisisJ.indexOf(d) !== -1;
+      return el('button', { type: 'button', 'aria-pressed': String(on), class: on ? 'on' : '', 'aria-label': t('daysLong')[d], onclick: function () { onToggle(d, on); } }, [on ? icon('check') : null, t('days')[d]]);
+    }));
+  }
+  // « le mercredi, le samedi et le dimanche » / « Wednesday, Saturday and Sunday » : les jours eux-mêmes, lundi d'abord.
+  function joursPhrase(choisisJ) {
+    var l = [1, 2, 3, 4, 5, 6, 0].filter(function (d) { return (choisisJ || []).indexOf(d) !== -1; })
+      .map(function (d) { return (lang === 'fr' ? 'le ' : '') + t('daysLong')[d]; });
+    if (l.length < 2) return l.join('');
+    return l.slice(0, -1).join(', ') + (lang === 'fr' ? ' et ' : ' and ') + l[l.length - 1];
+  }
+  function majuscule(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : s; }
+  // Le titre du temps des jours choisis : ces jours, nommés.
+  function titreJoursChoisis(choisisJ) {
+    var j = joursPhrase(choisisJ);
+    return j ? majuscule(t('parent.free', { j: j })) : t('parent.freeNoDay');
+  }
+  function joursEnMots(choisisJ) {
+    var l = [1, 2, 3, 4, 5, 6, 0].filter(function (d) { return choisisJ.indexOf(d) !== -1; }).map(function (d) { return t('daysLong')[d]; });
+    return l.length ? t('parent.freeDaysList', { l: l.join(', ') }) : t('parent.freeDaysNone');
+  }
 
   function renderAccueil() {
     var root = vues.accueil;
     root.textContent = '';
-    var N = 5;
+    window.scrollTo(0, 0);
+    var N = 4;
     function nav(canNext, onNext) {
       return el('div', { class: 'a-nav' }, [
         el('button', { type: 'button', class: 'btn-ghost', text: t('hello.prev'), onclick: function () { acc.step--; renderAccueil(); } }),
         el('button', { type: 'button', class: 'btn-sun', disabled: !canNext, onclick: onNext || function () { acc.step++; renderAccueil(); } }, [t('hello.next')])
       ]);
     }
-    function frame(img, kids) {
-      return el('div', { class: 'a-cadre' }, [
+    function frame(img, kids, cls) {
+      return el('div', { class: 'a-cadre ' + (cls || '') }, [
         el('div', { class: 'a-illu', 'aria-hidden': 'true' }, [el('img', { src: img, alt: '' })]),
         el('div', { class: 'a-contenu' }, [el('p', { class: 'a-etape', text: t('hello.step', { i: acc.step, n: N }) })].concat(kids))
       ]);
@@ -289,7 +358,9 @@
             el('b', { text: location.href.split('#')[0] }),
             navigator.share ? el('button', { type: 'button', class: 'lien', text: t('hello.share'), onclick: function () { navigator.share({ title: 'Ludiworld', url: location.href.split('#')[0] }).catch(function () {}); } }) : null
           ])]) : null,
-          el('p', null, [el('a', { href: 'decouvrir/', class: 'lien', text: t('hello.discover') })])
+          // Après « Vider cet appareil », la copie en ligne attend : on peut se reconnecter d'ici.
+          Nuage && Nuage.actif() && !Nuage.connecte() ? el('p', { class: 'a-deja' }, [el('a', { href: 'compte/#connexion', class: 'lien', text: t('hello.haveAccount') })]) : null,
+          el('p', null, [el('a', { href: './', class: 'lien', text: t('hello.discover') })]) // la racine du site (adresses relatives à <base>)
         ])
       ]));
       return;
@@ -306,37 +377,60 @@
         el('label', { for: 'a-nom', class: 'champ-label', text: t('hello.kidName') }),
         input,
         el('p', { class: 'champ-label', text: t('hello.kidAge') }),
-        chips(AGES, acc.age, function (a) { return String(a); }, function (a) { acc.age = a; acc.jeux = null; renderAccueil(); }, 'ages'),
+        chips(AGES, acc.age, function (a) { return String(a); }, function (a) { acc.age = a; renderAccueil(); }, 'ages'),
         next
       ]));
-      setTimeout(function () { try { input.focus(); } catch (e) { /* rien */ } }, 50);
+      setTimeout(function () { try { input.focus({ preventScroll: true }); } catch (e) { /* rien */ } }, 50);
       return;
     }
 
     if (acc.step === 2) {
-      if (!acc.jeux) { acc.jeux = {}; games.forEach(function (g) { if (pourAge(g, acc.age)) acc.jeux[g.id] = true; }); }
-      var list = el('div', { class: 'a-jeux' }, games.map(function (g) {
+      // Aucun jeu coché d'office : le parent touche ceux qu'il veut, en voyant leurs images. Ceux de son âge d'abord.
+      // Toucher la mini-fiche choisit le jeu ; « Voir la fiche » l'ouvre, et la fiche se referme après « Choisir ».
+      var nbChoisis = function () { return Object.keys(acc.jeux).filter(function (k) { return acc.jeux[k]; }).length; };
+      var compte = el('p', { class: 'a-compte', 'aria-live': 'polite' });
+      var suite = nav(false);
+      function maj() {
+        compte.textContent = t(nbChoisis() === 1 ? 'hello.gamesCountOne' : 'hello.gamesCount', { k: nbChoisis() });
+        suite.lastChild.disabled = !nbChoisis();
+      }
+      function bouton(g, apres) {
         var on = !!acc.jeux[g.id];
-        return el('button', {
-          type: 'button', role: 'checkbox', 'aria-checked': String(on), class: 'a-jeu' + (on ? ' on' : ''),
-          style: '--game:' + (g.color || ''),
-          onclick: function () { acc.jeux[g.id] = !acc.jeux[g.id]; renderAccueil(); }
-        }, [
-          gameIcon(g),
-          el('span', { class: 'a-jeu-txt' }, [
-            el('b', { text: pick(g.title) }),
-            el('span', { text: t('ages', { a: g.age.min, b: g.age.max }) + ' · ' + t('levelShort.' + g.learning.level) }),
-            el('span', { class: 'a-jeu-pitch', text: pick(g.pitch) })
-          ]),
-          el('span', { class: 'coche' }, [icon(on ? 'check' : 'cross')])
-        ]);
+        return el('button', { type: 'button', class: 'a-choisir' + (on ? ' on' : ''), 'aria-pressed': String(on), 'data-choisir': g.id, onclick: function () { basculer(g); if (apres) apres(); } },
+          [icon(on ? 'check' : 'plus'), on ? t('hello.gameOn') : t('hello.gameAdd')]);
+      }
+      function voir(g) {
+        return el('button', { type: 'button', class: 'lien a-voir', text: t('hello.seeCard'), onclick: function () {
+          LudiCatalogue.ouvrir(g, { lang: lang, actions: [bouton(g, LudiCatalogue.fermer)] });
+        } });
+      }
+      function basculer(g) {
+        acc.jeux[g.id] = !acc.jeux[g.id];
+        var carte = root.querySelector('.cat-mini[data-jeu="' + g.id + '"]');
+        if (carte) {
+          carte.classList.toggle('a-pris', !!acc.jeux[g.id]);
+          var b = carte.querySelector('.a-choisir');
+          b.parentNode.replaceChild(bouton(g), b);
+          var nomB = carte.querySelector('.cat-mini-ouvrir');
+          if (nomB) nomB.setAttribute('aria-pressed', String(!!acc.jeux[g.id]));
+        }
+        maj();
+      }
+      var ordre = games.filter(function (g) { return pourAge(g, acc.age); }).concat(games.filter(function (g) { return !pourAge(g, acc.age); }));
+      var grille = el('div', { class: 'a-catalogue' }, ordre.map(function (g) {
+        var m = LudiCatalogue.miniFiche(g, { lang: lang, actions: [bouton(g), voir(g)], onOuvrir: basculer });
+        if (acc.jeux[g.id]) m.classList.add('a-pris');
+        var nomB = m.querySelector('.cat-mini-ouvrir');
+        if (nomB) nomB.setAttribute('aria-pressed', String(!!acc.jeux[g.id]));
+        return m;
       }));
+      maj();
       root.appendChild(frame('img/marmotte-salut.webp', [
         el('h2', { text: t('hello.gamesTitle') }),
-        el('p', { class: 'a-lead', text: t('hello.gamesText', { n: acc.age }) }),
-        catalogueOk === false ? el('p', { class: 'erreur', text: t('loadError') }) : list,
-        nav(Object.keys(acc.jeux).some(function (k) { return acc.jeux[k]; }))
-      ]));
+        el('p', { class: 'a-lead', text: t('hello.gamesText', { n: acc.nom.trim() }) }),
+        catalogueOk === false ? el('p', { class: 'erreur', text: t('loadError') }) : grille,
+        el('div', { class: 'a-pied' }, [compte, suite])
+      ], 'a-large'));
       return;
     }
 
@@ -344,11 +438,13 @@
       var mins = function (m) { return t('min', { n: m }); };
       root.appendChild(frame('img/marmotte-baille.webp', [
         el('h2', { text: t('hello.timeTitle') }),
-        el('p', { class: 'a-lead', text: t('hello.timeText') }),
+        el('p', { class: 'champ-label', text: titreJoursChoisis(acc.libres) }),
+        chips([30, 45, 60, 90, 120], acc.libre, mins, function (v) { acc.libre = v; renderAccueil(); }),
         el('p', { class: 'champ-label', text: t('parent.school') }),
         chips([15, 20, 30, 45, 60], acc.ecole, mins, function (v) { acc.ecole = v; renderAccueil(); }),
-        el('p', { class: 'champ-label', text: t('parent.free') }),
-        chips([30, 45, 60, 90, 120], acc.libre, mins, function (v) { acc.libre = v; renderAccueil(); }),
+        el('p', { class: 'champ-label', text: t('hello.freeDaysText', { n: acc.nom.trim() }) }),
+        joursBoutons(acc.libres, function (d, on) { acc.libres = on ? acc.libres.filter(function (x) { return x !== d; }) : acc.libres.concat([d]); renderAccueil(); }),
+        el('p', { class: 'a-jours-mots', text: joursEnMots(acc.libres) }),
         el('p', { class: 'champ-label', text: t('parent.endTitle') }),
         finCards(acc.fin, Temps.REGLES_DEFAUT.grace, function (v) { acc.fin = v; renderAccueil(); }),
         nav(true)
@@ -365,10 +461,10 @@
           if (!acc.pin1) { acc.pin1 = code; msg.textContent = t('hello.pinAgain'); reset(); return; }
           if (code !== acc.pin1) { acc.pin1 = null; msg.textContent = t('hello.pinMismatch'); reset(true); return; }
           var jeux = {};
-          Object.keys(acc.jeux || {}).forEach(function (id) { if (acc.jeux[id]) jeux[id] = { max: null }; });
+          Object.keys(acc.jeux).forEach(function (id) { if (acc.jeux[id]) jeux[id] = { max: null }; });
           store.famille = { v: 2, cree: Date.now(), maj: Date.now(), pin: hash(code), protege: true, enfants: [], actif: null };
           var e = nouvelEnfant(acc.nom.trim().slice(0, 24), acc.age, jeux,
-            Temps.regles({ ecole: acc.ecole, libre: acc.libre, fin: acc.fin, joursLibres: lang === 'fr' ? [0, 3, 6] : [0, 6] }));
+            Temps.regles({ ecole: acc.ecole, libre: acc.libre, fin: acc.fin, joursLibres: acc.libres }));
           e.games = store.games; store.games = {};
           store.famille.actif = e.id;
           e.maj = Date.now();
@@ -382,18 +478,20 @@
     }
 
     var nom = fam() ? fam().enfant.nom : acc.nom;
+    var compteEnLigne = Nuage && Nuage.actif() && !Nuage.connecte();
     root.appendChild(el('div', { class: 'a-cadre a-fin' }, [
       el('div', { class: 'a-illu', 'aria-hidden': 'true' }, [el('img', { src: 'img/marmotte-salut.webp', alt: '' })]),
       el('div', { class: 'a-contenu' }, [
         el('h2', { text: t('hello.doneTitle') }),
         el('p', { class: 'a-lead', text: t('hello.doneText', { n: nom }) }),
         el('p', { class: 'note' }, [icon('lock'), t('hello.doneLock', { n: nom })]),
-        el('button', { type: 'button', class: 'btn-sun big', onclick: function () { show('enfant'); } }, [t('hello.doneGo')])
+        el('button', { type: 'button', class: 'btn-sun big', onclick: function () { show('enfant'); } }, [t('hello.doneGo')]),
+        compteEnLigne ? el('p', { class: 'a-compte-ligne' }, [t('hello.doneAccount') + ' ', el('a', { class: 'lien', href: 'compte/#creer', text: t('hello.doneAccountGo') })]) : null
       ])
     ]));
   }
 
-  // Les deux façons de s'arrêter, illustrées (accueil et carnet).
+  // Les deux façons de s'arrêter, illustrées (préparation et onglet Temps).
   function finCards(current, grace, onPick) {
     return el('div', { class: 'fins', role: 'radiogroup' }, [
       ['douce', 'img/marmotte-baille.webp', t('parent.soft'), t('parent.softText', { g: grace })],
@@ -427,7 +525,7 @@
     var keys = el('div', { class: 'pin-keys' });
     ['1', '2', '3', '4', '5', '6', '7', '8', '9', '', '0', 'del'].forEach(function (k) {
       if (!k) { keys.appendChild(el('span')); return; }
-      keys.appendChild(el('button', { type: 'button', class: k === 'del' ? 'del' : '', 'aria-label': k === 'del' ? t('gate.erase') : k, text: k === 'del' ? '⌫' : k, onclick: function () { press(k); } }));
+      keys.appendChild(el('button', { type: 'button', class: k === 'del' ? 'del' : '', 'aria-label': k === 'del' ? t('gate.erase') : k, text: k === 'del' ? t('gate.erase') : k, onclick: function () { press(k); } }));
     });
     pad.appendChild(keys);
     pad.addEventListener('keydown', function (e) {
@@ -475,12 +573,11 @@
     return { nuit: nuit, part: part };
   }
 
-  // La marque du jeu : « Fini » (coche) et, pour les jeux qui ont des options, le pourcentage de ce qui est fait.
+  // La marque du jeu : « Fini » (coche). Pas de pourcentage côté enfant (il reste côté parent, si le jeu l'envoie).
   function tuileJeu(g, i) {
     var c = choix(g.id), et = (S()[g.id] || {}).etat || {};
     var marques = [];
     if (et.fini) marques.push(el('span', { class: 'marque marque-fini' }, [icon('check'), t('kid.finiBadge')]));
-    if (et.fini && et.complet !== undefined) marques.push(el('span', { class: 'marque marque-complet' }, [t('kid.completBadge', { p: Math.round(et.complet * 100) })]));
     return el('button', {
       type: 'button', class: 'tuile', style: '--game:' + (g.color || '#1d2b4f') + ';--i:' + i,
       'aria-label': pick(g.title) + (et.fini ? ', ' + t('kid.finiBadge') : ''), onclick: function () { play(g); }
@@ -506,10 +603,12 @@
     document.querySelector('.e-parents-hint').textContent = '· ' + t('kid.holdHint');
     pillEnfant();
     document.getElementById('e-marmotte').src = nuit ? 'img/marmotte-dodo.webp' : part < 0.22 ? 'img/marmotte-baille.webp' : 'img/marmotte-salut.webp';
+    majBoutonVitrine(f, nuit);
 
     var list = document.getElementById('e-jeux');
     if (list.childNodes.length) list.classList.add('calme'); // les tuiles ne retombent qu'à l'arrivée
     list.textContent = '';
+    vues.enfant.classList.remove('beaucoup');
     var dodo = document.getElementById('e-dodo');
     dodo.hidden = !nuit;
     list.hidden = nuit;
@@ -534,38 +633,54 @@
     jouables.forEach(function (g) {
       var st = S()[g.id] || {}, et = st.etat || {};
       var commence = (st.ms || 0) > 0 || !!st.save || Object.keys(st.progress || {}).length > 0;
-      rangees[et.fini ? 'finis' : commence ? 'cours' : 'neuf'].push(g);
+      // Un jeu rangé par le parent va dans « Finis », même s'il n'était pas fini : il reste jouable.
+      rangees[et.fini || range(g.id) ? 'finis' : commence ? 'cours' : 'neuf'].push(g);
     });
     var nbRangees = ['cours', 'neuf', 'finis'].filter(function (k) { return rangees[k].length; }).length;
+    // Plus de quatre tuiles : sur une tablette en largeur, elles prennent aussi la moitié gauche (l'île se fait petite).
+    vues.enfant.classList.toggle('beaucoup', jouables.length > 4);
     var n = 0;
     [['cours', 'kid.rowOn'], ['neuf', 'kid.rowNew'], ['finis', 'kid.rowDone']].forEach(function (x) {
       if (!rangees[x[0]].length) return;
-      if (nbRangees > 1) list.appendChild(el('h2', { class: 'e-rangee e-rangee-' + x[0] }, [icon(x[0] === 'finis' ? 'check' : x[0] === 'neuf' ? 'sun' : 'hourglass'), t(x[1])]));
-      rangees[x[0]].forEach(function (g) { list.appendChild(tuileJeu(g, n++)); });
+      // Chaque rangée dans son groupe : invisible d'habitude (display: contents), côte à côte quand il y a beaucoup de tuiles.
+      list.appendChild(el('div', { class: 'e-rangee-groupe' }, [
+        nbRangees > 1 ? el('h2', { class: 'e-rangee e-rangee-' + x[0] }, [icon(x[0] === 'finis' ? 'check' : x[0] === 'neuf' ? 'sun' : 'hourglass'), t(x[1])]) : null,
+        el('div', { class: 'e-rangee-tuiles' }, rangees[x[0]].map(function (g) { return tuileJeu(g, n++); }))
+      ]));
     });
     mine.forEach(function (g) {
       if (jouables.indexOf(g) !== -1) return;
       var c = choix(g.id);
       repos[c && c.libres && !Temps.jourLibre(regles()) ? 'libres' : 'fini'].push(g);
     });
-    [['libres', 'kid.freeDaysOnly'], ['fini', 'kid.gameDone']].forEach(function (x) {
-      if (!repos[x[0]].length) return;
-      list.appendChild(el('div', { class: 'e-repos', role: 'group', 'aria-label': t(x[1]) }, [
-        el('p', { class: 'e-repos-titre' }, [icon('moon'), t(x[1])]),
+    // « Pas aujourd'hui », puis pourquoi, en une ligne courte avec une icône : les jours réglés, ou « Encore demain ».
+    // Ces jeux restent impossibles à toucher.
+    if (!repos.libres.length && !repos.fini.length) return;
+    var jours = joursPhrase(regles().joursLibres);
+    var groupes = [
+      ['libres', 'calendar', jours ? majuscule(t('kid.daysOnly', { j: jours })) : ''],
+      ['fini', 'hourglass', t('kid.tomorrow')]
+    ].filter(function (x) { return repos[x[0]].length; }).map(function (x) {
+      return el('div', { class: 'e-repos-groupe e-repos-' + x[0] }, [
+        x[2] ? el('p', { class: 'e-repos-pourquoi' }, [icon(x[1]), x[2]]) : null,
         el('div', { class: 'e-repos-jeux' }, repos[x[0]].map(function (g) {
           return el('span', { class: 'e-repos-jeu', style: '--game:' + (g.color || '#1d2b4f') }, [
             el('span', { class: 'tuile-img' }, [gameIcon(g)]),
             el('span', { class: 'e-repos-nom', text: pick(g.title) })
           ]);
         }))
-      ]));
+      ]);
     });
+    list.appendChild(el('div', { class: 'e-repos', role: 'group', 'aria-label': t('kid.freeDaysOnly') },
+      [el('p', { class: 'e-repos-titre' }, [icon('moon'), t('kid.freeDaysOnly')])].concat(groupes)));
   }
 
   // La pastille « Encore 25 min » : mise à jour chaque seconde sans tout redessiner.
   var lastPill = '';
   function pillEnfant() {
     var r = regles(), rt = resteDuJour().total, hors = Temps.horsPlage(r), nuit = rt <= 0;
+    // Arrêté pour aujourd'hui par un parent : c'est fini, même avant l'heure d'ouverture.
+    if (r.fini === Temps.cleJour()) hors = null;
     var txt = hors === 'avant' ? t('kid.opensAt', { h: heure(r.heures.debut) }) : nuit ? t('kid.gameDone') : rt === Infinity ? t('kid.leftNoLimit') : t('kid.left', { t: minutesLeft(rt) });
     if (txt === lastPill) return;
     lastPill = txt;
@@ -583,7 +698,7 @@
       var sd = (S()[g.id] && S()[g.id].skillDays || {})[key];
       var line = pick(g.title) + ' · ' + duration(dayMs(g.id));
       return el('li', null, [gameIcon(g), el('span', { text: line }),
-        sd && sd.ok ? el('span', { class: 'dodo-ok' }, [icon('check'), t('kid.sleepLearned', { k: sd.ok, d: (t('domains')[g.learning.domains[0]] || '').toLowerCase() })]) : null]);
+        sd && sd.ok ? el('span', { class: 'dodo-ok' }, [icon('check'), t('kid.sleepLearned', { k: sd.ok, d: LudiCatalogue.notion(g.learning.domains[0], lang).toLowerCase() })]) : null]);
     });
     var r = regles();
     if (codeEnAttente()) {
@@ -591,7 +706,7 @@
       box.appendChild(el('p', { text: t('kid.waitText') }));
       return;
     }
-    if (Temps.horsPlage(r) === 'avant') {
+    if (Temps.horsPlage(r) === 'avant' && r.fini !== Temps.cleJour()) {
       box.appendChild(el('h2', { text: t('kid.wakeTitle') }));
       box.appendChild(el('p', { text: t('kid.wakeText', { h: heure(r.heures.debut) }) }));
       return;
@@ -621,37 +736,152 @@
     // Au clavier (pas d'appui long possible) : on ouvre directement le code.
     btn.addEventListener('click', function (e) { if (e.detail === 0) openGate(ouvrirCarnet); });
   })();
-  // Le carnet est un onglet du site : le code donné, le parent peut lire les autres pages sans le redonner.
-  function ouvrirCarnet() {
+  // =====================================================================
+  // Côté enfant : regarder tous les jeux (la vitrine) et en demander un. Rien ne s'installe ; le temps ne compte pas
+  // (il ne compte que dans un jeu). Le bouton est une image, sans mot à lire ; le parent peut le couper dans Réglages.
+  // Pas de vitrine la nuit (le jour est fini) ni pendant l'attente d'un nouveau code.
+  // =====================================================================
+  var vitrine = document.getElementById('vitrine');
+  var boutonVitrine = document.getElementById('e-vitrine');
+  var vitrineJeu = null; // l'id du jeu montré en grand, ou null pour la liste
+  function majBoutonVitrine(f, nuit) {
+    var ok = !nuit && !codeEnAttente() && catalogueOk !== false && peutRegarder(f) && jeuxPasInstalles(f).length > 0;
+    boutonVitrine.hidden = !ok;
+    boutonVitrine.setAttribute('aria-label', t('kid.lookAll'));
+    boutonVitrine.title = t('kid.lookAll');
+    if (!ok && !vitrine.hidden) fermerVitrine();
+  }
+  boutonVitrine.addEventListener('click', function () { ouvrirVitrine(); });
+  function ouvrirVitrine() {
+    if (!vitrine.hidden || !fam()) return;
+    vitrineJeu = null;
+    try { history.pushState({ ludiVitrine: 'liste' }, ''); } catch (e) { /* rien */ }
+    vitrine.hidden = false;
+    document.body.style.overflow = 'hidden';
+    dessinerVitrine();
+  }
+  function fermerVitrine() {
+    vitrine.hidden = true; vitrineJeu = null;
+    vitrine.textContent = '';
+    document.body.style.overflow = '';
+    if (vue === 'enfant') { try { boutonVitrine.focus({ preventScroll: true }); } catch (e) { /* rien */ } }
+  }
+  // Revenir : un pas d'historique (le retour du téléphone fait pareil).
+  function retourVitrine() { if (history.state && history.state.ludiVitrine) history.back(); else if (vitrineJeu) { vitrineJeu = null; dessinerVitrine(); } else fermerVitrine(); }
+  function voirJeuVitrine(g) {
+    vitrineJeu = g.id;
+    try { history.pushState({ ludiVitrine: 'jeu' }, ''); } catch (e) { /* rien */ }
+    dessinerVitrine();
+  }
+  function demanderJeu(g) {
+    var f = fam();
+    (f.demandes || (f.demandes = {}))[g.id] = Date.now();
+    saveStore();
+    planifierSynchro();
+    dessinerVitrine();
+    var m = vitrine.querySelector('.v-demande');
+    if (m) m.focus({ preventScroll: true });
+  }
+  function dessinerVitrine() {
+    var f = fam();
+    if (!f) { fermerVitrine(); return; }
+    var g = vitrineJeu && byId[vitrineJeu];
+    if (vitrineJeu && (!g || (f.jeux && f.jeux[g.id]))) { vitrineJeu = null; g = null; }
+    vitrine.textContent = '';
+    vitrine.setAttribute('data-vue', g ? 'jeu' : 'liste');
+    vitrine.appendChild(el('header', { class: 'v-tete' }, [
+      el('button', { type: 'button', class: 'v-retour', 'aria-label': t('kid.lookBack'), title: t('kid.lookBack'), onclick: retourVitrine }, [icon(g ? 'retour' : 'home')]),
+      el('h1', { class: 'v-titre' }, [icon('vitrine'), el('span', { text: t('kid.lookTitle') })])
+    ]));
+    if (g) {
+      var ims = LudiCatalogue.images(g, lang), dem = demande(f, g.id);
+      vitrine.appendChild(el('section', { class: 'v-jeu', style: '--game:' + (g.color || '#1d2b4f'), 'data-jeu': g.id }, [
+        el('div', { class: 'v-jeu-tete' }, [LudiCatalogue.icone(g, 84), el('h2', { text: pick(g.title) })]),
+        ims.length ? el('div', { class: 'v-images' + (g.screens === 'portrait' ? ' v-portrait' : '') }, ims.slice(0, 3).map(function (im) {
+          var img = el('img', { src: im.src, alt: im.alt, decoding: 'async', draggable: 'false' });
+          img.addEventListener('error', function () { img.remove(); });
+          return img;
+        })) : null,
+        dem ? el('p', { class: 'v-demande', role: 'status', tabindex: '-1' }, [icon('main'), t('kid.asked')])
+          : el('button', { type: 'button', class: 'btn-sun big v-vouloir', onclick: function () { demanderJeu(g); } }, [icon('main'), t('kid.want')])
+      ]));
+    } else {
+      vitrine.appendChild(el('div', { class: 'v-grille' }, jeuxPasInstalles(f).map(function (j, i) {
+        var im = LudiCatalogue.images(j, lang)[0], dem = demande(f, j.id);
+        return el('button', { type: 'button', class: 'v-tuile', 'data-jeu': j.id, style: '--game:' + (j.color || '#1d2b4f') + ';--i:' + i,
+          'aria-label': pick(j.title) + (dem ? ', ' + t('kid.askedBadge') : ''), onclick: function () { voirJeuVitrine(j); } }, [
+          el('span', { class: 'v-tuile-img' + (j.screens === 'portrait' ? ' v-portrait' : '') }, [im ? el('img', { src: im.src, alt: '', loading: 'lazy', decoding: 'async', draggable: 'false' }) : gameIcon(j)]),
+          el('span', { class: 'v-tuile-bas' }, [LudiCatalogue.icone(j, 48), el('b', { text: pick(j.title) })]),
+          dem ? el('span', { class: 'v-marque' }, [icon('main'), t('kid.askedBadge')]) : null
+        ]);
+      })));
+    }
+    vitrine.scrollTop = 0;
+    var b = vitrine.querySelector('.v-retour');
+    if (b && !vitrine.querySelector('.v-demande:focus')) b.focus({ preventScroll: true });
+  }
+
+  // Le côté parent : le code donné, le parent peut aussi lire les pages du site sans le redonner (quelques minutes).
+  // On arrive toujours sur l'onglet Jeux (sauf retour du compte : Réglages), sur l'enfant qui jouait.
+  function ouvrirCarnet(versOnglet) {
     LudiBarre.ouvrirParent();
-    // Le code demandé depuis la page des jeux (pour installer un jeu) : on y retourne.
+    // Le code demandé depuis une page du site (pour installer un jeu) : on y retourne.
     var retour = null;
     try { retour = sessionStorage.getItem('ludiworld.retour'); sessionStorage.removeItem('ludiworld.retour'); } catch (e) { /* rien */ }
-    if (retour && /^(les-jeux|explorer)\//.test(retour)) { location.href = retour; return; }
+    if (retour && /^(les-jeux|explorer)\//.test(retour)) { location.href = new URL(retour, document.baseURI).href; return; }
+    regarde = foyer().actif;
+    tab = typeof versOnglet === 'string' ? versOnglet : 'jeux';
+    regle = null; pileOnglets = [];
+    // Chaque onglet laisse une trace dans l'historique : le retour du téléphone revient à l'onglet d'avant.
+    try { history.replaceState({ ludiOnglet: tab }, ''); } catch (e) { /* rien */ }
     show('parent');
     synchroniser();
+    var msg = null;
+    try { msg = sessionStorage.getItem('ludiworld.toast'); sessionStorage.removeItem('ludiworld.toast'); } catch (e) { /* rien */ }
+    if (msg === 'signedOut') noter(t('parent.signedOut'));
   }
-  function fermerCarnet() { LudiBarre.fermerParent(); show('enfant'); }
+  function fermerCarnet() {
+    LudiBarre.fermerParent();
+    LudiCatalogue.fermer();
+    fermerQui();
+    // L'appareil est rendu : plus rien à annuler d'ici (l'enfant ne doit pas défaire un réglage).
+    journal = []; majJournal();
+    regarde = null;
+    show('enfant');
+  }
 
   // « Qui joue ? » : les enfants du foyer, chacun avec son initiale sur sa couleur.
+  // o : { titre, note, choisir(e) }. Sert à l'enfant (« Pas toi ? ») et au parent qui rend l'appareil.
   var quiDlg = document.getElementById('qui');
-  function ouvrirQui() {
+  function fermerQui() { if (quiDlg.open) { if (quiDlg.close) quiDlg.close(); else quiDlg.removeAttribute('open'); } }
+  function ouvrirQui(o) {
     var h = foyer();
     quiDlg.textContent = '';
     quiDlg.appendChild(el('div', { class: 'qui-inner' }, [
-      el('h2', { text: t('kid.whoPlays') }),
+      el('button', { type: 'button', class: 'gate-close', onclick: fermerQui }, [icon('cross'), el('span', { text: t('gate.cancel') })]),
+      el('h2', { text: o.titre }),
       el('div', { class: 'qui-liste' }, h.enfants.map(function (e, i) {
-        return el('button', { type: 'button', class: 'qui-enfant' + (e.id === h.actif ? ' on' : ''), onclick: function () {
-          h.actif = e.id; saveStore(); if (quiDlg.close) quiDlg.close(); else quiDlg.removeAttribute('open');
-          document.getElementById('e-jeux').classList.remove('calme'); renderEnfant();
-        } }, [el('span', { class: 'avatar', style: '--c:' + PAL[i % PAL.length], text: e.enfant.nom.charAt(0).toUpperCase() }), el('b', { text: e.enfant.nom })]);
-      }))
+        return el('button', { type: 'button', class: 'qui-enfant' + (e.id === h.actif ? ' on' : ''), onclick: function () { o.choisir(e); } },
+          [el('span', { class: 'avatar', style: '--c:' + PAL[i % PAL.length], text: e.enfant.nom.charAt(0).toUpperCase() }), el('b', { text: e.enfant.nom })]);
+      })),
+      o.note ? el('p', { class: 'qui-note' }, [icon('lock'), o.note]) : null
     ]));
     if (!quiDlg.open) { if (quiDlg.showModal) quiDlg.showModal(); else quiDlg.setAttribute('open', ''); }
   }
-  quiDlg.addEventListener('click', function (e) { if (e.target === quiDlg && quiDlg.close) quiDlg.close(); });
+  quiDlg.addEventListener('click', function (e) { if (e.target === quiDlg) fermerQui(); });
+  // « Pas toi ? » : d'abord les prénoms ; si changer d'enfant demande le code, on le dit avant de le demander.
   document.getElementById('e-qui').addEventListener('click', function () {
-    if (foyer().protege !== false) openGate(ouvrirQui); else ouvrirQui();
+    var h = foyer(), protege = h.protege !== false;
+    function passer(e) {
+      h.actif = e.id; saveStore();
+      document.getElementById('e-jeux').classList.remove('calme'); renderEnfant();
+    }
+    ouvrirQui({ titre: t('kid.whoPlays'), note: protege ? t('kid.switchNeedsCode') : null, choisir: function (e) {
+      fermerQui();
+      if (e.id === h.actif) return;
+      if (protege) openGate(function () { passer(e); }, null, t('gate.forKid', { n: e.enfant.nom }));
+      else passer(e);
+    } });
   });
 
   // =====================================================================
@@ -659,13 +889,121 @@
   // =====================================================================
   var gate = document.getElementById('gate');
   var gateFails = 0, gateLock = 0;
+  // L'appareil est connecté à un compte : « Code oublié ? » peut demander son mot de passe (plan 3).
+  function compteRelie() { return !!(Nuage && Nuage.actif() && Nuage.connecte() && Nuage.email() && Nuage.verifierMotDePasse); }
   function closeGate() { if (gate.open) { if (gate.close) gate.close(); else gate.removeAttribute('open'); } }
-  function openGate(onOk, mode) {
+  // note : une phrase sous le titre (« Pour passer à Sacha. »).
+  // Sur le serveur de dev de Julien (localhost:7357), le code parent n'est pas demandé (Julien, 2026-11-18).
+  // Le banc d'essai remet le code avec window.LUDI_CODE_TOUJOURS.
+  var DEV_SANS_CODE = /^(localhost|127\.0\.0\.1)$/.test(location.hostname) && location.port === '7357' && !window.LUDI_CODE_TOUJOURS;
+  function openGate(onOk, mode, note) {
+    if (DEV_SANS_CODE && !mode) { onOk(); return; }
     gate.textContent = '';
     var inner = el('div', { class: 'gate-inner' });
     var msg = el('p', { class: 'gate-msg', role: 'status' });
-    inner.appendChild(el('button', { type: 'button', class: 'gate-close', 'aria-label': t('gate.cancel'), onclick: closeGate }, [icon('cross')]));
-    if (mode === 'forgot') {
+    inner.appendChild(el('button', { type: 'button', class: 'gate-close', onclick: closeGate }, [icon('cross'), el('span', { text: t('gate.cancel') })]));
+    if (mode === 'forgot' && compteRelie()) {
+      // Appareil relié à un compte (plan 3) : le mot de passe du compte, vérifié par Supabase comme à la connexion.
+      // Il ne vit que le temps de l'appel : le champ est vidé aussitôt, rien n'est écrit sur l'appareil.
+      // Juste : on choisit un nouveau code tout de suite. Faux : un message, rien d'autre ne change.
+      // Pas de réseau, ou vérification impossible : l'attente habituelle de 30 minutes est proposée.
+      inner.appendChild(el('h2', { text: t('gate.forgotTitle') }));
+      inner.appendChild(el('p', { text: t('gate.pwText', { e: Nuage.email() }) }));
+      var champ = el('input', { type: 'password', id: 'gate-mdp', class: 'gate-champ', autocomplete: 'current-password', 'aria-describedby': 'gate-mdp-msg' });
+      var verifier = el('button', { type: 'submit', class: 'btn-sun', text: t('gate.pwGo') });
+      var attendre = el('button', { type: 'button', class: 'lien gate-attendre', text: t('gate.pwWait'), hidden: true, onclick: function () { openGate(onOk, 'forgotWait'); } });
+      msg.id = 'gate-mdp-msg';
+      if (navigator.onLine === false) { msg.textContent = t('gate.pwOffline'); attendre.hidden = false; }
+      inner.appendChild(el('form', { class: 'gate-mdp', onsubmit: function (e) {
+        e.preventDefault();
+        var mdp = champ.value;
+        champ.value = '';
+        if (!mdp) { champ.focus(); return; }
+        verifier.disabled = true;
+        msg.textContent = t('gate.pwChecking');
+        Nuage.verifierMotDePasse(mdp).then(function () {
+          if (gate.open) openGate(onOk, 'setPw');
+        }, function (err) {
+          verifier.disabled = false;
+          var c = err && err.code;
+          if (c === 'identifiants') { msg.textContent = t('gate.pwWrong'); champ.focus(); return; }
+          msg.textContent = t(c === 'reseau' ? 'gate.pwOffline' : c === 'trop_de_demandes' ? 'gate.pwBusy' : 'gate.pwError');
+          attendre.hidden = false;
+        });
+        mdp = null;
+      } }, [
+        el('input', { type: 'text', autocomplete: 'username', value: Nuage.email(), readonly: true, hidden: true, tabindex: '-1', 'aria-hidden': 'true' }),
+        el('label', { for: 'gate-mdp', class: 'gate-label', text: t('gate.pwLabel') }),
+        champ, msg, verifier
+      ]));
+      if (Nuage.envoyerCodeEmail) inner.appendChild(el('button', { type: 'button', class: 'lien gate-email', text: t('gate.mailLink'), onclick: function () { openGate(onOk, 'forgotMail'); } }));
+      inner.appendChild(attendre);
+      inner.appendChild(el('button', { type: 'button', class: 'lien', text: t('gate.cancel'), onclick: closeGate }));
+    } else if (mode === 'forgotMail' && compteRelie()) {
+      // Sans le mot de passe : un code à 6 chiffres envoyé à l'adresse du compte (montrée masquée), tapé ici.
+      // Bon code : un nouveau code parent tout de suite. Rien n'est gardé sur l'appareil.
+      inner.appendChild(el('h2', { text: t('gate.forgotTitle') }));
+      var envoi = el('p', { class: 'gate-envoi', role: 'status', text: t('gate.mailSending') });
+      inner.appendChild(envoi);
+      var champCode = el('input', { type: 'text', id: 'gate-otp', class: 'gate-champ gate-otp', inputmode: 'numeric', autocomplete: 'one-time-code',
+        maxlength: '6', pattern: '[0-9]{6}', spellcheck: 'false', 'aria-describedby': 'gate-otp-msg' });
+      var verifCode = el('button', { type: 'submit', class: 'btn-sun', text: t('gate.pwGo') });
+      var renvoyer = el('button', { type: 'button', class: 'lien gate-renvoyer', text: t('gate.mailResend'), disabled: true });
+      var attendreMail = el('button', { type: 'button', class: 'lien gate-attendre', text: t('gate.pwWait'), hidden: true, onclick: function () { openGate(onOk, 'forgotWait'); } });
+      msg.id = 'gate-otp-msg';
+      var finAttente = 0, minuteur = null;
+      function majRenvoyer() {
+        var s = Math.ceil((finAttente - Date.now()) / 1000);
+        if (s > 0 && gate.open) { renvoyer.disabled = true; renvoyer.textContent = t('gate.mailResendIn', { s: s }); return; }
+        clearInterval(minuteur); minuteur = null;
+        renvoyer.disabled = false; renvoyer.textContent = t('gate.mailResend');
+      }
+      var dejaEnvoye = false;
+      function erreurMail(err) {
+        var c = err && err.code;
+        if (c === 'code') { msg.textContent = t('gate.mailWrong'); champCode.focus(); return; }
+        msg.textContent = t(c === 'reseau' ? 'gate.mailOffline' : c === 'trop_de_demandes' ? 'gate.mailBusy' : 'gate.mailError');
+        attendreMail.hidden = false;
+      }
+      function envoyer() {
+        renvoyer.disabled = true;
+        msg.textContent = '';
+        envoi.textContent = t('gate.mailSending');
+        Nuage.envoyerCodeEmail().then(function () {
+          dejaEnvoye = true;
+          envoi.textContent = t('gate.mailSent', { e: Nuage.emailMasque() });
+          finAttente = Date.now() + 60000;
+          if (!minuteur) minuteur = setInterval(majRenvoyer, 500);
+          majRenvoyer();
+          champCode.focus();
+        }, function (err) {
+          envoi.textContent = dejaEnvoye ? t('gate.mailSent', { e: Nuage.emailMasque() }) : '';
+          erreurMail(err);
+          renvoyer.disabled = false;
+        });
+      }
+      renvoyer.onclick = envoyer;
+      inner.appendChild(el('form', { class: 'gate-mdp', onsubmit: function (e) {
+        e.preventDefault();
+        var saisi = champCode.value.replace(/\s/g, '');
+        champCode.value = '';
+        if (!/^\d{6}$/.test(saisi)) { msg.textContent = saisi ? t('gate.mailWrong') : ''; champCode.focus(); return; }
+        verifCode.disabled = true;
+        msg.textContent = t('gate.pwChecking');
+        Nuage.verifierCodeEmail(saisi).then(function () {
+          if (minuteur) clearInterval(minuteur);
+          if (gate.open) openGate(onOk, 'setPw');
+        }, function (err) { verifCode.disabled = false; erreurMail(err); });
+        saisi = null;
+      } }, [
+        el('label', { for: 'gate-otp', class: 'gate-label', text: t('gate.mailLabel') }),
+        champCode, msg, verifCode
+      ]));
+      inner.appendChild(renvoyer);
+      inner.appendChild(attendreMail);
+      inner.appendChild(el('button', { type: 'button', class: 'lien', text: t('gate.cancel'), onclick: closeGate }));
+      envoyer();
+    } else if (mode === 'forgot' || mode === 'forgotWait' || mode === 'forgotMail') {
       inner.appendChild(el('h2', { text: t('gate.forgotTitle') }));
       inner.appendChild(el('p', { text: t('gate.forgotText') }));
       inner.appendChild(el('button', { type: 'button', class: 'btn-sun', text: t('gate.forgotGo'), onclick: function () {
@@ -682,7 +1020,8 @@
         if (hash(code) === foyer().pin) { foyer().reset = null; foyer().maj = Date.now(); saveStore(); planifierSynchro(); closeGate(); onOk(); return; }
         msg.textContent = t('gate.wrong'); reset(true);
       }));
-    } else if (mode === 'set') {
+      if (compteRelie()) inner.appendChild(el('button', { type: 'button', class: 'lien', text: t('gate.pwInstead'), onclick: function () { openGate(onOk, 'forgot'); } }));
+    } else if (mode === 'set' || mode === 'setPw') {
       var first = null;
       inner.appendChild(el('h2', { text: t('gate.forgotTitle') }));
       msg.textContent = t('hello.pinText');
@@ -691,7 +1030,7 @@
         if (!first) { first = code; msg.textContent = t('hello.pinAgain'); reset(); return; }
         if (code !== first) { first = null; msg.textContent = t('hello.pinMismatch'); reset(true); return; }
         var f = foyer();
-        if (f.reset) { f.reset = null; f.codeChange = Date.now(); }
+        if (f.reset || mode === 'setPw') { f.reset = null; f.codeChange = Date.now(); }
         f.pin = hash(code); f.maj = Date.now(); saveStore(); planifierSynchro(); closeGate(); onOk();
       }));
     } else {
@@ -699,6 +1038,7 @@
       if (codeEnAttente()) { openGate(onOk, 'wait'); return; }
       inner.appendChild(el('img', { class: 'gate-img', src: 'img/marmotte-carnet.webp', alt: '' }));
       inner.appendChild(el('h2', { text: t('gate.title') }));
+      if (note) inner.appendChild(el('p', { class: 'gate-note', text: note }));
       inner.appendChild(msg);
       var padEl = pinPad(function (code, reset) {
         if (Date.now() < gateLock) { reset(true); return; }
@@ -722,42 +1062,179 @@
     if (!gate.open) { if (gate.showModal) gate.showModal(); else gate.setAttribute('open', ''); }
     var pad = gate.querySelector('.pin');
     if (pad) { pad.setAttribute('tabindex', '-1'); setTimeout(function () { pad.focus(); }, 30); }
+    var champMdp = gate.querySelector('#gate-mdp') || gate.querySelector('#gate-otp');
+    if (champMdp) setTimeout(function () { champMdp.focus(); }, 30);
   }
   gate.addEventListener('cancel', function (e) { e.preventDefault(); closeGate(); });
   gate.addEventListener('click', function (e) { if (e.target === gate) closeGate(); });
 
   // =====================================================================
-  // Le carnet parent
+  // Côté parent : une barre (enfants, Jeux / Temps / Réglages, rendre l'appareil) et la page de l'onglet
   // =====================================================================
-  var tab = 'today';
-  var filtres = { q: '', age: true, core: false, noRead: false, chosen: false, domains: [] };
-  var toastTimer = null;
-  function toast(msg) {
-    var n = document.getElementById('toast');
-    n.textContent = msg; n.hidden = false;
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(function () { n.hidden = true; }, 1800);
+  var tab = 'jeux';
+  var ajout = null; // le petit formulaire « Ajouter un enfant » : { nom, age }, ou null s'il est fermé
+  var regle = null; // le jeu dont la ligne montre ses réglages (« Régler »), un seul à la fois
+  var pileOnglets = []; // les onglets d'avant, pour le retour du téléphone (la fiche ou un jeu ajoutent aussi des pas d'historique)
+
+  // ---------- « Changé : … Annuler » ----------
+  // Les trois derniers changements de la visite, chacun avec son « Annuler », 15 secondes chacun.
+  // La ligne vit dans la barre (en bas sur téléphone, sous les onglets ailleurs) et dans la fiche d'un jeu ouverte :
+  // elle ne se pose jamais sur un bouton. Chaque ligne ne défait que son propre changement.
+  var JOURNAL_MAX = 3, JOURNAL_DUREE = 15000, INFO_DUREE = 4000;
+  var journal = [];  // { texte, quoi, ops (null : simple message), vu, fin }
+  var journalTimer = null;
+  function copie(v) { return v === undefined ? undefined : JSON.parse(JSON.stringify(v)); }
+  function estObjet(v) { return v !== null && typeof v === 'object' && !Array.isArray(v); }
+  function cleChemin(c) { return c.map(function (s) { return typeof s === 'object' ? '#' + s.id : s; }).join('/'); }
+  // Ce qu'un changement a touché : la liste des chemins, avec la valeur d'avant et d'après (les enfants repérés par leur id).
+  function ecarts(a, b, chemin, out) {
+    if (JSON.stringify(a) === JSON.stringify(b)) return out;
+    if (chemin[chemin.length - 1] === 'enfants' && Array.isArray(a) && Array.isArray(b)) {
+      var ids = [];
+      a.concat(b).forEach(function (e) { if (ids.indexOf(e.id) === -1) ids.push(e.id); });
+      ids.forEach(function (id) {
+        var ea = a.filter(function (e) { return e.id === id; })[0], eb = b.filter(function (e) { return e.id === id; })[0];
+        ecarts(ea, eb, chemin.concat([{ id: id, rang: ea ? a.indexOf(ea) : b.indexOf(eb) }]), out);
+      });
+      return out;
+    }
+    if (estObjet(a) && estObjet(b)) {
+      var cles = Object.keys(a);
+      Object.keys(b).forEach(function (k) { if (cles.indexOf(k) === -1) cles.push(k); });
+      cles.forEach(function (k) { if (k !== 'maj') ecarts(a[k], b[k], chemin.concat([k]), out); });
+      return out;
+    }
+    out.push({ chemin: chemin, avant: copie(a), apres: copie(b) });
+    return out;
   }
-  function saveFam(msg) { marquer(); saveStore(); planifierSynchro(); if (msg !== false) toast(msg || t('parent.saved')); }
+  function poserChemin(o, chemin, v) {
+    for (var i = 0; i < chemin.length - 1; i++) {
+      var s = chemin[i];
+      if (typeof s === 'object') { o = o.filter(function (e) { return e.id === s.id; })[0]; if (!o) return; continue; }
+      if (o[s] === undefined || o[s] === null) { if (v === undefined) return; o[s] = typeof chemin[i + 1] === 'object' ? [] : {}; }
+      o = o[s];
+    }
+    var d = chemin[chemin.length - 1];
+    if (typeof d === 'object') { // un enfant entier, ajouté ou retiré
+      var j = -1;
+      o.forEach(function (e, k) { if (e.id === d.id) j = k; });
+      if (v === undefined) { if (j !== -1) o.splice(j, 1); } else if (j === -1) o.splice(Math.min(d.rang, o.length), 0, copie(v)); else o[j] = copie(v);
+      return;
+    }
+    if (v === undefined) delete o[d]; else o[d] = copie(v);
+  }
+  // Un nouveau message. ops : ce que le changement a touché (null pour un simple message, sans « Annuler »).
+  function noter(texte, ops, o) {
+    o = o || {};
+    if (ops) {
+      // Un réglage déjà changé dans une ligne d'avant : la nouvelle ligne remet l'état d'avant la première, l'ancienne s'efface.
+      journal.forEach(function (e) {
+        if (!e.ops) return;
+        e.ops = e.ops.filter(function (vieux) {
+          var meme = ops.filter(function (n) { return cleChemin(n.chemin) === cleChemin(vieux.chemin); })[0];
+          if (meme) meme.avant = vieux.avant;
+          return !meme;
+        });
+      });
+      journal = journal.filter(function (e) { return !e.ops || e.ops.length; });
+      ops = ops.filter(function (n) { return JSON.stringify(n.avant) !== JSON.stringify(n.apres); });
+      if (!ops.length) { texte = t('parent.nothingChanged', { c: o.quoi }); ops = null; }
+    }
+    journal.unshift({ texte: texte, quoi: o.quoi, ops: ops, vu: o.vu, fin: Date.now() + (ops ? JOURNAL_DUREE : INFO_DUREE) });
+    journal = journal.slice(0, JOURNAL_MAX);
+    majJournal(true);
+  }
+  function annulerLigne(e) {
+    journal = journal.filter(function (x) { return x !== e; });
+    var h = store.famille;
+    e.ops.slice().reverse().forEach(function (op) { poserChemin(h, op.chemin, op.avant); });
+    if (h.enfants.some(function (x) { return x.id === e.vu; })) regarde = e.vu;
+    if (!h.enfants.some(function (x) { return x.id === h.actif; })) h.actif = h.enfants[0].id;
+    enregistrer();
+    noter(t('parent.undone', { c: e.quoi }));
+    redessiner();
+  }
+  function remplirJournal(n) {
+    n.textContent = '';
+    var lignes = n.hasAttribute('data-une') ? journal.slice(0, 1) : journal; // dans la fiche : la dernière ligne seulement
+    lignes.forEach(function (e) {
+      n.appendChild(el('p', { class: 'pa-journal-ligne' + (e.ops ? '' : ' info') }, [
+        el('span', { text: e.texte }),
+        e.ops ? el('button', { type: 'button', class: 'pa-journal-annuler', onclick: function () { annulerLigne(e); } }, [t('parent.undo')]) : null
+      ]));
+    });
+    n.hidden = !journal.length;
+    return n;
+  }
+  // La ligne dans la fiche d'un jeu (la barre est derrière la fiche, on ne pourrait pas la toucher) : la dernière seulement.
+  function hoteJournal() { return remplirJournal(el('div', { class: 'pa-journal pa-journal-fiche', role: 'status', 'data-une': true })); }
+  var dernierToucher = null;
+  document.addEventListener('pointerdown', function (ev) { dernierToucher = ev.clientY; }, true);
+  function majJournal(nouveau) {
+    var maintenant = Date.now();
+    journal = journal.filter(function (e) { return e.fin > maintenant; });
+    var bas = document.querySelector('.pa-bas'), avant = bas ? bas.getBoundingClientRect() : null;
+    Array.prototype.forEach.call(document.querySelectorAll('.pa-journal'), remplirJournal);
+    clearTimeout(journalTimer);
+    if (journal.length) journalTimer = setTimeout(majJournal, Math.min.apply(null, journal.map(function (e) { return e.fin; })) - maintenant + 30);
+    // Sur téléphone, la barre du bas grandit : ce qu'on vient de toucher ne doit pas passer dessous.
+    if (nouveau && bas && vue === 'parent' && dernierToucher !== null && getComputedStyle(bas).position === 'fixed') {
+      var haut = bas.getBoundingClientRect().top;
+      if (haut < avant.top && dernierToucher > haut - 12) window.scrollBy(0, dernierToucher - haut + 24);
+    }
+  }
   // Le dernier réglage fait foi d'un appareil à l'autre : on note quand il a changé.
   function marquer() { var h = foyer(), f = fam(); if (h) h.maj = Date.now(); if (f) f.maj = Date.now(); }
+  function enregistrer() { marquer(); saveStore(); planifierSynchro(); }
+  // Un réglage change : on l'enregistre tout de suite, on redessine, et « Changé : … Annuler » reste 15 secondes.
+  // o.nom : l'enfant concerné s'il n'est pas celui qu'on regarde ; o.maison : un réglage de la maison (on ne nomme personne).
+  function changer(quoi, fn, o) {
+    o = o || {};
+    var avant = copie(store.famille), vu = regarde;
+    var nom = o.nom || (fam() && fam().enfant.nom);
+    fn();
+    var ops = ecarts(avant, store.famille, [], []);
+    enregistrer();
+    var plusieurs = foyer().enfants.length > 1 || avant.enfants.length > 1;
+    noter(!o.maison && plusieurs ? t('parent.changedFor', { n: nom, c: quoi }) : t('parent.changed', { c: quoi }), ops, { quoi: quoi, vu: vu });
+    redessiner();
+  }
+  function enfantParId(id) { return foyer().enfants.filter(function (e) { return e.id === id; })[0] || null; }
+  function redessiner() {
+    if (vue !== 'parent') return;
+    var y = window.scrollY;
+    renderParent();
+    window.scrollTo(0, y);
+    var g = LudiCatalogue.ouverte();
+    if (g && byId[g.id]) openFiche(byId[g.id]);
+  }
+  // La place que prend la barre du bas (téléphone), pour que la fin de la page passe au-dessus.
+  if (window.ResizeObserver) new ResizeObserver(function (l) {
+    document.documentElement.style.setProperty('--pa-bas', Math.round(l[0].target.offsetHeight) + 'px');
+  }).observe(document.querySelector('.pa-bas'));
 
-  // ---------- Synchro (seulement si le parent l'a activée dans son compte) ----------
+  // ---------- Copie en ligne (seulement si le parent l'a activée dans son compte) ----------
   // Pas d'envoi pendant une partie active. L'écran de fin peut synchroniser sans attendre un bouton.
   var Nuage = window.LudiNuage;
   var minuteurSynchro = null;
   function synchroVoulue() { return !!(Nuage && Nuage.actif() && Nuage.connecte() && (Nuage.appareilAutorise() || (Nuage.liaisonDemandee() && LudiBarre.parentOuvert()))); }
+  // Ce qu'on dit au parent : la copie est active seulement si le compte l'a choisie et que cet appareil y est relié.
+  function copieActive() { return !!(Nuage && Nuage.actif() && Nuage.connecte() && Nuage.synchroLocale()); }
   var synchroEnCours = null;
   var synchroARelancer = false;
+  function saisieEnCours() {
+    var a = document.activeElement;
+    return !!(a && /^(INPUT|SELECT|TEXTAREA)$/.test(a.tagName) && a.closest('#pa-page'));
+  }
   function synchroniser() {
     if (!synchroVoulue() || (playing && playing.phase !== 'arrete') || !foyer()) return;
     if (synchroEnCours) { synchroARelancer = true; return synchroEnCours; }
     synchroEnCours = Nuage.lierAppareil(foyer()).then(function (m) {
-      if (!m || (playing && playing.phase !== 'arrete') || (vue === 'parent' && tab !== 'today')) return;
+      if (!m || (playing && playing.phase !== 'arrete')) return;
       store.famille = LudiSynchro.fusionner(store.famille, m);
       saveStore();
       if (vue === 'enfant') render();
-      else if (vue === 'parent' && tab === 'today') renderParent();
+      else if (vue === 'parent' && !saisieEnCours()) redessiner();
     }).catch(function () { /* hors ligne : on réessaiera, l'appareil garde tout */ }).then(function () {
       synchroEnCours = null;
       if (synchroARelancer) { synchroARelancer = false; planifierSynchro(); }
@@ -770,443 +1247,743 @@
     minuteurSynchro = setTimeout(synchroniser, 1500);
   }
 
+  // ---------- La barre ----------
+  // Quatre onglets à plat (Julien, 2026-11-18) : Mes jeux · Tous les jeux · Temps · Réglages.
+  var ONGLETS = [['jeux', 'grid'], ['catalogue', 'vitrine'], ['temps', 'hourglass'], ['reglages', 'gear']];
   function renderParent() {
-    var f = fam();
-    if (!f) { show('accueil'); return; }
-    document.getElementById('c-titre').textContent = t('parent.title');
-    document.getElementById('c-de').textContent = t('parent.of', { n: f.enfant.nom });
-    document.getElementById('c-exit').lastChild.textContent = t('parent.exit');
-    LudiBarre.rendre(document.getElementById('c-barre'), { base: '', actif: 'moi', lang: lang, onLang: setLang, action: false });
-    var nav = document.getElementById('c-nav');
-    nav.textContent = '';
-    ['today', 'games', 'time', 'settings'].forEach(function (k) {
-      nav.appendChild(el('button', { type: 'button', role: 'tab', 'aria-selected': String(tab === k), class: tab === k ? 'on' : '', text: t('parent.tabs.' + k), onclick: function () { tab = k; renderParent(); document.getElementById('c-page').scrollTop = 0; if (tab === 'today') synchroniser(); } }));
-    });
-    var page = document.getElementById('c-page');
-    page.textContent = '';
     var h = foyer();
-    if (h.enfants.length > 1) {
-      page.appendChild(el('div', { class: 'c-enfants', role: 'group', 'aria-label': t('parent.kids') }, h.enfants.map(function (e, i) {
-        var on = e.id === f.id;
-        return el('button', { type: 'button', 'aria-pressed': String(on), class: on ? 'on' : '', onclick: function () { h.actif = e.id; saveStore(); renderParent(); } }, [
-          el('span', { class: 'avatar', style: '--c:' + PAL[i % PAL.length], text: e.enfant.nom.charAt(0).toUpperCase() }), e.enfant.nom
-        ]);
-      })));
-    }
-    if (tab === 'today') page.appendChild(pageToday(f));
-    else if (tab === 'games') page.appendChild(pageGames(f));
-    else if (tab === 'time') page.appendChild(pageTime(f));
-    else page.appendChild(pageSettings(f));
+    if (!h || !h.enfants.length) { show('accueil'); return; }
+    if (!h.enfants.some(function (e) { return e.id === regarde; })) regarde = h.actif;
+    var f = fam();
+    enteteParent();
+    var kids = document.getElementById('pa-enfants');
+    kids.textContent = '';
+    kids.setAttribute('aria-label', t('parent.kidsLabel'));
+    kids.hidden = h.enfants.length < 2;
+    h.enfants.forEach(function (e, i) {
+      var on = e.id === f.id;
+      kids.appendChild(el('button', { type: 'button', 'aria-pressed': String(on), class: on ? 'on' : '', onclick: function () { regarde = e.id; ajout = null; regle = null; renderParent(); window.scrollTo(0, 0); } }, [
+        el('span', { class: 'avatar', style: '--c:' + PAL[i % PAL.length], text: e.enfant.nom.charAt(0).toUpperCase() }), el('span', { class: 'pa-enfant-nom', text: e.enfant.nom })
+      ]));
+    });
+    var nav = document.getElementById('pa-onglets');
+    nav.textContent = '';
+    ONGLETS.forEach(function (o) {
+      nav.appendChild(el('button', { type: 'button', role: 'tab', 'aria-selected': String(tab === o[0]), class: tab === o[0] ? 'on' : '', 'data-onglet': o[0], onclick: function () {
+        allerOnglet(o[0]);
+      } }, [icon(o[1]), el('span', { text: t('parent.tabs.' + o[0]) })]));
+    });
+    document.querySelector('#pa-rendre span').textContent = t('parent.giveBack.' + genreAppareil());
+    var page = document.getElementById('pa-page');
+    page.textContent = '';
+    if (tab === 'temps') page.appendChild(pageTemps(f));
+    else if (tab === 'reglages') page.appendChild(pageReglages(f));
+    else if (tab === 'catalogue') page.appendChild(pageTous(f));
+    else page.appendChild(pageJeux(f));
+    ajusterBandeau();
   }
-  document.getElementById('c-exit').addEventListener('click', fermerCarnet);
+  // Une seule ligne si tout y tient ; sinon les onglets passent dessous, dans le même bandeau (pas sur téléphone : ils sont en bas).
+  function ajusterBandeau() {
+    var barre = document.querySelector('.pa-barre');
+    if (!barre || vue !== 'parent') return;
+    barre.classList.remove('pa-deux-lignes');
+    if (window.innerWidth <= 700) return;
+    var tabs = document.querySelectorAll('#pa-onglets button');
+    if (!tabs.length) return;
+    var fin = tabs[tabs.length - 1].getBoundingClientRect().right;
+    var kids = document.getElementById('pa-enfants');
+    var qui = document.getElementById('pa-qui');
+    var suite = !kids.hidden && kids.children.length ? kids.children[0].getBoundingClientRect().left : qui.children.length ? qui.getBoundingClientRect().left : document.getElementById('pa-rendre').getBoundingClientRect().left;
+    var debut = tabs[0].getBoundingClientRect().left, logo = document.getElementById('pa-logo').getBoundingClientRect().right;
+    if (fin > suite - 8 || debut < logo || tabs[0].getBoundingClientRect().height > 60) barre.classList.add('pa-deux-lignes');
+  }
+  window.addEventListener('resize', function () { if (vue === 'parent') ajusterBandeau(); });
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(ajusterBandeau);
+  // Un seul bandeau (Julien, 2026-11-18) : le logo Ludiworld (bouton vers l'accueil du site), à la place de « Parents »
+  // la pastille « Connecté » du compte (sans compte : « Parents » et « Se connecter »), puis les onglets, sur une ligne.
+  // Pas de FR / EN ici (Julien, 2026-11-18) : la langue se change dans Réglages.
+  function enteteParent() {
+    var p = LudiBarre.appli({ base: '', lang: lang, onLang: setLang });
+    function poser(id, kids) { var n = document.getElementById(id); n.textContent = ''; kids.forEach(function (k) { if (k) n.appendChild(k); }); }
+    poser('pa-logo', [p.marque]);
+    // À droite, à côté de « Côté enfant », le même bouton que sur le site : la pastille entière, ou « Se connecter » (Julien, 2026-11-18).
+    poser('pa-qui', [p.qui || p.connexion]);
+  }
+  // Changer d'onglet laisse une trace dans l'historique (le retour du téléphone y revient). ancre : un bloc où aller.
+  function allerOnglet(o, ancre) {
+    if (o !== tab) { pileOnglets.push(tab); try { history.pushState({ ludiOnglet: o }, ''); } catch (e) { /* rien */ } }
+    tab = o; ajout = null; regle = null;
+    renderParent();
+    var cible = ancre && document.getElementById(ancre);
+    if (cible) cible.scrollIntoView({ block: 'start' }); else window.scrollTo(0, 0);
+    synchroniser();
+  }
+  // Rendre l'appareil : avec plusieurs enfants, on choisit à qui (regarder un enfant ne le fait pas jouer).
+  document.getElementById('pa-rendre').addEventListener('click', function () {
+    var h = foyer();
+    if (h.enfants.length < 2) { fermerCarnet(); return; }
+    ouvrirQui({ titre: t('parent.giveWho'), choisir: function (e) { h.actif = e.id; saveStore(); fermerCarnet(); } });
+  });
 
-  function section(title, kids, cls) { return el('section', { class: 'c-sec ' + (cls || '') }, [title ? el('h3', { text: title }) : null].concat(kids)); }
+  function bloc(titre, kids, cls) { return el('section', { class: 'pa-bloc ' + (cls || '') }, [titre ? el('h2', { class: 'pa-bloc-titre', text: titre }) : null].concat(kids)); }
+  function bouton(cls, texte, ico, onclick, attrs) {
+    var a = { type: 'button', class: cls, onclick: onclick };
+    Object.keys(attrs || {}).forEach(function (k) { a[k] = attrs[k]; });
+    return el('button', a, [ico ? icon(ico) : null, texte]);
+  }
 
-  function pageToday(f) {
-    var r = regles();
-    var tot = Temps.minutesDuJour(r);
-    var today = dayMs();
-    var libre = Temps.jourLibre(r);
-    var out = el('div', { class: 'c-today' });
+  // =====================================================================
+  // Onglet Mes jeux : ses demandes, aujourd'hui, ses jeux, puis (replié) ses jeux rangés
+  // =====================================================================
+  function pageJeux(f) {
+    var out = el('div', { class: 'pa-jeux' });
     var h = foyer();
     if (h.codeChange && Date.now() - h.codeChange < 7 * 24 * 3600 * 1000) {
       out.appendChild(el('p', { class: 'alerte' }, [icon('warn'), t('parent.codeChanged', { d: new Date(h.codeChange).toLocaleString(lang, { weekday: 'long', hour: '2-digit', minute: '2-digit' }) })]));
     }
-    out.appendChild(el('h2', { class: 'c-h', text: today >= 30000 ? t('parent.todayTitle', { n: f.enfant.nom, t: duration(today) }) : t('parent.todayNone', { n: f.enfant.nom }) }));
+    // En haut, s'il y en a : « Malo voudrait : Pluie de Cochons », Installer ou Pas maintenant. Une ligne par demande.
+    var dem = demandes(f);
+    if (dem.length) {
+      out.appendChild(el('ul', { class: 'pa-demandes' }, dem.map(function (g) {
+        return el('li', { class: 'pa-demande', 'data-demande': g.id }, [
+          el('button', { type: 'button', class: 'pa-demande-jeu', onclick: function () { openFiche(g); } }, [
+            LudiCatalogue.icone(g, 40),
+            el('span', { class: 'pa-demande-txt' }, [icon('main'), t('parent.wants', { n: f.enfant.nom, g: pick(g.title) })])
+          ]),
+          el('span', { class: 'pa-demande-actions' }, [
+            bouton('btn-sun pa-installer', t('parent.wantsInstall'), 'plus', function () { installer(f.id, g); }, { 'data-installer': g.id, 'data-enfant': f.id }),
+            bouton('btn-ghost pa-pas-maintenant', t('parent.notNow'), null, function () { pasMaintenant(f.id, g); }, { 'data-pas-maintenant': g.id })
+          ])
+        ]);
+      })));
+    }
+    out.appendChild(carteDuJour(f));
 
-    // La jauge du jour : une bande de papier découpée par jeu.
-    var jauge = el('div', { class: 'jauge', role: 'img' });
-    var totalMs = tot === null ? Math.max(today, 1) : Math.max(tot * MIN, today, 1);
-    games.forEach(function (g) {
-      var ms = dayMs(g.id);
-      if (ms < 1000) return;
-      jauge.appendChild(el('span', { class: 'jauge-part', style: 'width:' + (ms / totalMs * 100).toFixed(2) + '%;--c:' + couleur(g), title: pick(g.title) + ' · ' + duration(ms) }));
-    });
-    var label = tot === null ? t('parent.todayNoLimit') : today >= tot * MIN ? t('parent.todayOver') : t('parent.todayLeft', { t: duration(tot * MIN - today) });
-    jauge.setAttribute('aria-label', label);
-    var bonus = r.bonus && r.bonus.jour === Temps.cleJour() ? r.bonus.min : 0;
-    var finiAuj = r.fini === Temps.cleJour();
-    out.appendChild(el('div', { class: 'c-jour' }, [
-      el('p', { class: 'c-jour-meta' }, [
-        el('span', { class: 'pastille ' + (libre ? 'libre' : 'ecole'), text: libre ? t('parent.freeDay') : t('parent.schoolDay') }),
-        tot !== null ? el('span', { text: t('parent.todayOf', { t: duration(today), m: duration(tot * MIN) }) }) : null
-      ]),
-      jauge,
-      el('p', { class: 'c-jour-reste' }, [icon(tot !== null && today >= tot * MIN ? 'moon' : 'sun'), label]),
-      bonus || finiAuj ? el('p', { class: 'c-note', text: finiAuj ? t('parent.todayOver') : t('parent.bonusOn', { s: (bonus > 0 ? '+' : '') + bonus }) }) : null,
-      r.heures ? el('p', { class: 'c-note' }, [icon('moon'), t('parent.todayHours', { a: heure(r.heures.debut), b: heure(r.heures.fin) })]) : null,
-      el('div', { class: 'c-actions' }, [
-        el('button', { type: 'button', class: 'btn-ink', onclick: function () {
-          var k = Temps.cleJour(); var rr = f.regles;
-          if (rr.fini === k) rr.fini = null;
-          Object.keys(f.jeux).forEach(function (id) { if (f.jeux[id].fini === k) f.jeux[id].fini = null; });
-          rr.bonus = { jour: k, min: (rr.bonus && rr.bonus.jour === k ? rr.bonus.min : 0) + 10 };
-          saveFam(); renderParent();
-        } }, [icon('plus'), t('parent.plus10')]),
-        el('button', { type: 'button', class: 'btn-ghost', onclick: function () { f.regles.fini = Temps.cleJour(); saveFam(); renderParent(); } }, [icon('moon'), t('parent.stopToday')]),
-        bonus || finiAuj ? el('button', { type: 'button', class: 'lien', text: t('parent.resetToday'), onclick: function () { f.regles.bonus = null; f.regles.fini = null; saveFam(); renderParent(); } }) : null
-      ])
-    ]));
-
-    // Par jeu
-    var rows = choisis().map(function (g) {
-      var c = choix(g.id);
-      return el('li', { style: '--c:' + couleur(g) }, [
-        gameIcon(g),
-        el('span', { class: 'pj-nom', text: pick(g.title) }),
-        el('span', { class: 'pj-val' + (dayMs(g.id) < 30000 ? ' rien' : ''), text: (dayMs(g.id) < 30000 ? t('parent.notPlayed') : duration(dayMs(g.id))) + (c.max ? ' / ' + t('min', { n: c.max }) : '') }),
-        el('span', { class: 'pj-sem', text: weekMs(g.id) >= 30000 ? t('parent.weekTotal', { t: duration(weekMs(g.id)) }) : '' })
+    // Ses jeux : le plus joué sur 7 jours d'abord. Les jeux rangés n'y sont pas (ils sont tout en bas, repliés).
+    var mine = mesJeux().sort(function (a, b) { return weekMs(b.id) - weekMs(a.id) || pick(a.title).localeCompare(pick(b.title)); });
+    var titre = t('parent.gamesOf', { de: nomDe(f.enfant.nom), n: f.enfant.nom, k: mine.length });
+    var kids = [mine.length ? el('ul', { class: 'pa-lignes' }, mine.map(function (g) { return ligneJeu(f, g); })) : el('div', { class: 'pa-vide' }, [
+      el('p', { text: t('parent.noGames') }),
+      bouton('btn-ink pa-btn pa-voir-tout', t('parent.seeAll'), 'vitrine', function () { allerOnglet('catalogue'); })
+    ])];
+    var retires = games.filter(function (g) { return !choix(g.id) && weekMs(g.id) >= 30000; });
+    if (retires.length) kids.push(el('p', { class: 'pa-note', text: t('parent.removedPlayed', { l: retires.map(function (g) { return pick(g.title) + ' (' + duration(weekMs(g.id)) + ')'; }).join(', ') }) }));
+    // Tout en bas, replié : « Rangés (2) », avec « Ressortir » sur chacun. Rien n'a été effacé.
+    var rg = ranges();
+    if (rg.length) {
+      var plie = el('details', { class: 'pa-plie pa-ranges' }, [
+        el('summary', { text: t('parent.stored', { k: rg.length }) }),
+        el('ul', { class: 'pa-lignes' }, rg.map(function (g) {
+          var et = (S()[g.id] || {}).etat || {};
+          return el('li', { class: 'pa-ligne pa-ligne-rangee', 'data-jeu': g.id }, [
+            el('button', { type: 'button', class: 'pa-ligne-jeu', onclick: function () { openFiche(g); } }, [
+              LudiCatalogue.icone(g, 40),
+              el('span', { class: 'pa-ligne-nom' }, [el('b', { text: pick(g.title) }), et.fini ? marqueFini() : null])
+            ]),
+            bouton('btn-ghost pa-ressortir', t('parent.takeOut'), null, function () { ressortir(f.id, g); }, { 'data-ressortir': g.id })
+          ]);
+        }))
       ]);
-    });
-    out.appendChild(section(t('parent.perGame'), [el('ul', { class: 'par-jeu' }, rows)]));
+      plie.open = rangesOuverts;
+      plie.addEventListener('toggle', function () { rangesOuverts = plie.open; });
+      kids.push(plie);
+    }
+    out.appendChild(bloc(titre, kids, 'pa-ses-jeux'));
+    if (catalogueOk === false) out.appendChild(el('p', { class: 'erreur', text: t('loadError') }));
+    return out;
+  }
+  var rangesOuverts = false; // « Rangés » reste ouvert tant qu'on ne le referme pas (un réglage redessine la page)
 
-    // Les 7 derniers jours
+  // =====================================================================
+  // Onglet Tous les jeux : tout le catalogue, toujours, même quand tout est installé.
+  // Les nouveaux d'abord (le plus récent en tête), puis ceux de l'âge de l'enfant, puis les autres.
+  // =====================================================================
+  function pageTous(f) {
+    var out = el('div', { class: 'pa-tous' });
+    var neufs = games.filter(function (g) { return LudiCatalogue.nouveau(g); }).sort(function (a, b) { return a.added < b.added ? 1 : a.added > b.added ? -1 : 0; });
+    var reste = games.filter(function (g) { return neufs.indexOf(g) === -1; });
+    var ordre = neufs.concat(reste.filter(function (g) { return pourAge(g, f.enfant.age); }), reste.filter(function (g) { return !pourAge(g, f.enfant.age); }));
+    out.appendChild(el('h1', { class: 'pa-titre', text: t('parent.allTitle', { k: games.length }) }));
+    out.appendChild(el('p', { class: 'pa-note pa-tous-note', text: t('parent.allNote', { n: f.enfant.nom }) }));
+    if (catalogueOk === false) { out.appendChild(el('p', { class: 'erreur', text: t('loadError') })); return out; }
+    out.appendChild(el('div', { class: 'pa-decouvrir pa-tous-grille' }, ordre.map(function (g) {
+      return LudiCatalogue.miniFiche(g, { lang: lang, nouveau: neufs.indexOf(g) !== -1, actions: etatPour(f, g), onOuvrir: openFiche });
+    })));
+    return out;
+  }
+  // L'état d'un jeu pour l'enfant regardé, sur sa mini-fiche : « ✓ Installé pour Malo », « Rangé », « Malo le voudrait », ou « Installer pour Malo ».
+  function etatPour(f, g) {
+    var c = f.jeux && f.jeux[g.id];
+    if (c && !c.range) return [el('span', { class: 'pa-etat pa-etat-installe' }, [icon('check'), t('parent.ficheInstalled', { n: f.enfant.nom })])];
+    if (c) return [el('span', { class: 'pa-etat pa-etat-range' }, [icon('boite'), t('parent.stStored')]),
+      bouton('btn-ghost pa-ressortir', t('parent.takeOut'), null, function () { ressortir(f.id, g); }, { 'data-ressortir': g.id })];
+    return [demande(f, g.id) ? el('span', { class: 'pa-etat pa-etat-demande' }, [icon('main'), t('parent.stWants', { n: f.enfant.nom })]) : null, boutonInstaller(f, g)].filter(Boolean);
+  }
+
+  // La carte du jour : l'état vrai du moment, calculé comme côté enfant. Un bouton sans effet n'est pas montré.
+  function carteDuJour(f) {
+    var r = regles(), k = Temps.cleJour(), nom = f.enfant.nom;
+    var joue = dayMs();
+    var habituel = Temps.minutesDuJour(Temps.regles(Object.assign({}, r, { bonus: null, fini: null })));
+    var tot = Temps.minutesDuJour(r);
+    var bonus = r.bonus && r.bonus.jour === k ? r.bonus.min : 0;
+    var arrete = r.fini === k, hors = arrete ? null : Temps.horsPlage(r), attente = codeEnAttente();
+    var rd = resteDuJour();
+    var enVac = r.vacances && r.vacances >= Temps.iso(new Date());
+    var meta = [t('parent.today'), enVac ? t('parent.holidayDay') : t('daysLong')[new Date().getDay()],
+      habituel === null ? t('parent.noLimitDay') : bonus ? t('parent.plannedBonus', { m: duration(habituel * MIN), b: bonus }) : t('parent.planned', { m: duration(habituel * MIN) })].join(' · ');
+    var etat, ico = 'sun', notes = [];
+    if (attente) { etat = t('parent.waitCode'); ico = 'lock'; }
+    else if (arrete) { etat = t('parent.stopped'); ico = 'moon'; }
+    else if (hors === 'apres') { etat = t('parent.closedSince', { h: heure(Temps.finPlage(r)) }); ico = 'moon'; }
+    else if (hors === 'avant') {
+      // Avant l'ouverture, on dit aussi ce qu'il restera : pas de calcul à faire de tête.
+      var restera = tot === null ? null : tot * MIN - joue;
+      etat = t(restera === null ? 'parent.opensAt' : restera > 0 ? 'parent.opensAtLeft' : 'parent.opensAtNone', { h: heure(r.heures.debut), t: restera > 0 ? minutesLeft(restera) : '' });
+      ico = 'moon';
+    }
+    else if (tot === null) etat = t('parent.leftNoLimit');
+    else if (rd.total <= 0) { etat = t('parent.usedUp'); ico = 'moon'; }
+    else etat = t('parent.left', { t: minutesLeft(rd.total) });
+    var ouvert = !attente && !arrete && hors !== 'apres';
+    var lienHeures = null;
+    if (r.heures && !attente && !arrete) {
+      var finCeSoir = Temps.finPlage(r);
+      notes.push(t(finCeSoir !== r.heures.fin ? 'parent.hoursTonight' : 'parent.hoursLine', { a: heure(r.heures.debut), b: heure(r.heures.fin), c: heure(finCeSoir) }));
+      if (hors) lienHeures = el('button', { type: 'button', class: 'lien pa-vers-heures', text: t('parent.toHours'), onclick: function () { allerOnglet('temps', 'pa-heures'); } });
+    }
+    if (ouvert && rd.total > 0 && choisis().length && !choisis().some(function (g) { return resteJeu(g.id).jeu > 0; })) notes.push(t('parent.noGameOpen'));
+
+    var actions = [];
+    if (arrete && !attente) actions.push(bouton('btn-ink', t('parent.reopen'), 'sun', function () { f.regles.fini = null; jour(); }));
+    // « +10 min » donne vraiment 10 minutes, même après l'heure de fin (pour aujourd'hui seulement : les heures réglées ne changent pas).
+    if (!attente && !arrete && (tot !== null || (r.heures && hors !== 'avant'))) actions.push(bouton('btn-ink', t('parent.plus10'), 'plus', function () {
+      Object.keys(f.jeux).forEach(function (id) { if (f.jeux[id].fini === k) f.jeux[id].fini = null; });
+      f.regles.bonus = Temps.rallonge(f.regles, { joueTotal: dayMs(), minutes: 10 });
+      jour();
+    }, { 'data-action': 'plus10' }));
+    if (ouvert && (tot === null || rd.total > 0 || hors === 'avant')) actions.push(bouton('btn-ghost', t('parent.stopToday'), 'moon', function () { f.regles.fini = k; jour(); }, { 'data-action': 'stop' }));
+    if (bonus > 0 && !arrete) actions.push(el('button', { type: 'button', class: 'lien pa-annuler-bonus', text: t('parent.undoBonus', { b: bonus }), onclick: function () { f.regles.bonus = null; jour(); } }));
+    // Le changement se lit en gros dans la carte : pas de message en plus.
+    function jour() { enregistrer(); redessiner(); }
+
+    var jauge = null;
+    if (habituel !== null) {
+      var prevu = (habituel + bonus) * MIN, plein = Math.max(prevu, joue, 1);
+      jauge = el('div', { class: 'pa-jauge', role: 'img', 'aria-label': duration(joue) + ' / ' + duration(prevu) }, [
+        el('span', { class: 'pa-jauge-joue', style: 'width:' + (joue / plein * 100).toFixed(1) + '%' })
+      ]);
+    }
+    return el('section', { class: 'pa-jour' + (ico === 'moon' || ico === 'lock' ? ' ferme' : ''), 'aria-label': t('parent.today') }, [
+      el('p', { class: 'pa-jour-meta', text: meta }),
+      el('p', { class: 'pa-jour-joue', text: joue >= 30000 ? t('parent.played', { n: nom, t: duration(joue) }) : t('parent.notPlayed', { n: nom }) }),
+      el('p', { class: 'pa-jour-etat', role: 'status' }, [icon(ico), etat]),
+      jauge
+    ].concat(notes.map(function (n, i) { return el('p', { class: 'pa-note' }, [n, i === 0 && lienHeures ? ' ' : null, i === 0 ? lienHeures : null]); }))
+      .concat([actions.length ? el('div', { class: 'pa-actions pa-jour-actions' }, actions) : null]));
+  }
+
+  // La limite par jour et « certains jours seulement » d'un jeu : sous sa ligne (« Régler ») et dans sa fiche.
+  function reglagesJeu(f, g) {
+    var c = choix(g.id), nomJeu = pick(g.title), id = 'lim-' + g.id + '-' + Math.random().toString(36).slice(2, 7);
+    var sel = el('select', { id: id }, LIMITES_JEU.map(function (m) {
+      return el('option', { value: m === null ? '' : String(m), selected: c.max === m, text: m === null ? t('parent.noLimitGame') : t('min', { n: m }) });
+    }));
+    sel.addEventListener('change', function () {
+      var v = sel.value ? Number(sel.value) : null;
+      changer(v === null ? t('parent.limitOff', { g: nomJeu }) : t('parent.limitSet', { g: nomJeu, l: t('min', { n: v }) }), function () { choix(g.id).max = v; });
+    });
+    var cb = el('input', { type: 'checkbox', checked: !!c.libres });
+    cb.addEventListener('change', function () {
+      var v = cb.checked;
+      changer(t(v ? 'parent.freeOnlySet' : 'parent.freeOnlyOff', { g: nomJeu }), function () { choix(g.id).libres = v; });
+    });
+    return el('div', { class: 'pa-regl' }, [
+      el('label', { class: 'pa-limite', for: id }, [t('parent.gameLimit')]), sel,
+      el('label', { class: 'pa-case' }, [cb, el('span', { text: certainsJours() })])
+    ]);
+  }
+  // « Certains jours seulement : le mercredi, le samedi et le dimanche » (les jours choisis de l'enfant regardé).
+  function certainsJours() {
+    var j = joursPhrase(regles().joursLibres);
+    return j ? t('parent.freeOnlyDays', { j: j }) : t('parent.freeOnly');
+  }
+  function marqueFini() { return el('span', { class: 'pa-fini' }, [icon('check'), t('parent.finished')]); }
+  // Ce qu'on y apprend, en quelques mots (le module du catalogue le dit ; sinon les deux premières notions de la fiche).
+  function sujets(g) {
+    if (typeof LudiCatalogue.sujets === 'function') {
+      try { var s = LudiCatalogue.sujets(g, lang); if (s) return s; } catch (e) { /* le module dira mieux plus tard */ }
+    }
+    return ((g.learning && g.learning.domains) || []).slice(0, 2).map(function (d) { return LudiCatalogue.notion(d, lang); }).filter(Boolean).join(', ');
+  }
+  // Une ligne serrée par jeu : icône, nom, « Fini », ce qu'on y apprend, le temps, et seulement les réglages qui sortent de l'ordinaire.
+  // « Régler » déplie la limite et la case sur place (un jeu à la fois).
+  function ligneJeu(f, g) {
+    var c = choix(g.id), et = (S()[g.id] || {}).etat || {};
+    var auj = dayMs(g.id), sem = weekMs(g.id);
+    var temps = [auj >= 30000 ? t('parent.todayShort', { t: duration(auj) }) : null, sem >= 30000 ? t('parent.weekShort', { t: duration(sem) }) : t('parent.notPlayed7')].filter(Boolean).join(' · ');
+    var ferme = null, fermeLibres = c.libres && !Temps.jourLibre(regles());
+    if (fermeLibres) ferme = joursPhrase(regles().joursLibres) ? t('parent.closedFree', { j: joursPhrase(regles().joursLibres) }) : t('parent.freeOnly');
+    else if (c.fini === Temps.cleJour() || (c.max && resteJeu(g.id).jeu <= 0)) ferme = t('parent.closedLimit');
+    var reglages = [];
+    if (c.max) reglages.push(t('parent.perDayWords', { m: t('min', { n: c.max }) }));
+    if (c.libres && !fermeLibres) reglages.push(certainsJours());
+    var ouverte = regle === g.id, su = sujets(g);
+    return el('li', { class: 'pa-ligne' + (ouverte ? ' ouverte' : ''), 'data-jeu': g.id }, [
+      el('button', { type: 'button', class: 'pa-ligne-jeu', onclick: function () { openFiche(g); } }, [
+        LudiCatalogue.icone(g, 44),
+        el('span', { class: 'pa-ligne-txt' }, [
+          el('span', { class: 'pa-ligne-haut' }, [
+            el('span', { class: 'pa-ligne-nom' }, [el('b', { text: pick(g.title) }), et.fini ? marqueFini() : null]),
+            su ? el('span', { class: 'pa-ligne-sujets' }, [icon('book'), su]) : null
+          ]),
+          el('span', { class: 'pa-ligne-temps' }, [temps, reglages.length ? ' · ' : null, reglages.length ? el('b', { class: 'pa-ligne-regle', text: reglages.join(' · ') }) : null]),
+          ferme ? el('span', { class: 'pa-ligne-ferme' }, [icon('moon'), ferme]) : null
+        ])
+      ]),
+      el('button', { type: 'button', class: 'pa-regler', 'aria-expanded': String(ouverte), 'aria-controls': 'regl-' + g.id, onclick: function () {
+        regle = ouverte ? null : g.id;
+        redessiner();
+        var b = document.querySelector('.pa-ligne[data-jeu="' + g.id + '"] .pa-regler');
+        if (b) b.focus({ preventScroll: true });
+      } }, [t('parent.adjust'), icon('chevron')]),
+      ouverte ? el('div', { class: 'pa-ligne-regl', id: 'regl-' + g.id }, [
+        reglagesJeu(f, g),
+        bouton('btn-ghost pa-ranger', t('parent.putAway'), 'boite', function () { ranger(f.id, g); }, { 'data-ranger': g.id })
+      ]) : null
+    ]);
+  }
+  // Installer ou retirer, pour un enfant (pas forcément celui qu'on regarde). Un jeu retiré garde ses réglages
+  // avec l'enfant (jeuxRetires, qui suit la copie en ligne) : le réinstaller les retrouve.
+  function installer(id, g) {
+    var e = enfantParId(id);
+    changer(t('parent.installed', { g: pick(g.title), n: e.enfant.nom }), function () {
+      var k = enfantParId(id), garde = k.jeuxRetires && k.jeuxRetires[g.id];
+      k.jeux[g.id] = garde || { max: null };
+      if (garde) { delete k.jeuxRetires[g.id]; delete k.jeux[g.id].range; }
+      traiterDemande(k, g.id); // l'enfant l'avait demandé : c'est fait
+    }, { nom: e.enfant.nom });
+  }
+  // « Pas maintenant » : la demande s'en va ; l'enfant pourra la refaire.
+  function pasMaintenant(id, g) {
+    var e = enfantParId(id);
+    changer(t('parent.cNotNow', { g: pick(g.title) }), function () { traiterDemande(enfantParId(id), g.id); }, { nom: e.enfant.nom });
+  }
+  // Ranger : le jeu sort de « Les jeux de … » sans rien effacer ; côté enfant, il va dans « Finis » et reste jouable.
+  function ranger(id, g) {
+    var e = enfantParId(id);
+    regle = null;
+    changer(t('parent.cPutAway', { g: pick(g.title) }), function () { var c = enfantParId(id).jeux[g.id]; if (c) c.range = Date.now(); }, { nom: e.enfant.nom });
+  }
+  function ressortir(id, g) {
+    var e = enfantParId(id);
+    changer(t('parent.cTakeOut', { g: pick(g.title) }), function () { var c = enfantParId(id).jeux[g.id]; if (c) delete c.range; }, { nom: e.enfant.nom });
+  }
+  function retirer(id, g) {
+    var e = enfantParId(id);
+    changer(t('parent.removed', { g: pick(g.title) }), function () {
+      var k = enfantParId(id);
+      (k.jeuxRetires || (k.jeuxRetires = {}))[g.id] = k.jeux[g.id];
+      delete k.jeux[g.id];
+    }, { nom: e.enfant.nom });
+  }
+  function boutonInstaller(e, g) {
+    return bouton('btn-sun pa-installer', t('parent.install', { n: e.enfant.nom }), 'plus', function () { installer(e.id, g); }, { 'data-installer': g.id, 'data-enfant': e.id });
+  }
+
+  // =====================================================================
+  // La fiche d'un jeu (module du catalogue), avec ce qui concerne les enfants, juste après les boutons
+  // =====================================================================
+  function openFiche(g) {
+    var f = fam();
+    var actions = [bouton('btn-ghost', t('parent.tryMe'), 'play', function () { play(g, { essai: true }); })];
+    if (g.embed === false) actions.push(el('p', { class: 'pa-note', text: t('parent.newTab') }));
+    var o = { lang: lang, actions: actions };
+    // o.avant : posé juste après les boutons, avant les images. Un module du catalogue plus ancien ne le connaît pas : sections.
+    if (typeof LudiCatalogue.sujets === 'function') o.avant = [sectionEnfant(f, g)]; else o.sections = [sectionEnfant(f, g)];
+    // « Votre avis » : juste après l'avis des parents, pour tout parent connecté, sur n'importe quel jeu (Julien, 2026-11-18).
+    if (avisPossible()) o.apresAvis = blocAvis(g);
+    LudiCatalogue.ouvrir(g, o);
+  }
+
+  // =====================================================================
+  // Votre avis (plan 5, refait selon Julien le 2026-11-18) : une note de 1 à 5 étoiles et « Le jeu marche bien chez vous ? »,
+  // qui sert à mettre à part une mauvaise note due à un bug. Un mot facultatif, lu par Julien dans le bureau avant d'être montré.
+  // Seule condition : être connecté (plus de temps de jeu minimum, Julien, 2026-11-18).
+  // Le même bloc d'un dessin à l'autre : une synchro ne vide pas ce qu'on écrit.
+  // =====================================================================
+  var MARCHE_AVIS = ['oui', 'pas-toujours', 'non'];
+  var blocsAvis = {};
+  function avisPossible() {
+    return !!(Nuage && Nuage.actif() && Nuage.connecte() && typeof Nuage.donnerAvis === 'function');
+  }
+  function blocAvis(g) {
+    var cle = g.id + '|' + lang + '|' + (Nuage.email() || '');
+    if (blocsAvis[cle]) return blocsAvis[cle];
+    var id = 'avis-' + g.id, rep = { etoiles: null, marche: null }, touche = false;
+    var statut = el('p', { class: 'pa-avis-statut', role: 'status' });
+    var etatMot = el('p', { class: 'pa-avis-etat-mot', hidden: true });
+    var mot = el('textarea', { id: id + '-mot', maxlength: '400', rows: '3' });
+    var envoyer = el('button', { type: 'submit', class: 'btn-sun pa-avis-envoyer', text: t('parent.avis.envoyer') });
+    var retirer = el('button', { type: 'button', class: 'lien pa-avis-retirer', hidden: true, text: t('parent.avis.retirer') });
+    var choix = t('parent.avis.choix');
+    // Les étoiles : cinq boutons radio (flèches du clavier, lecteur d'écran « 3 étoiles »), dessinés en grandes étoiles.
+    // Une étoile choisie et celles d'avant se remplissent ; la note se lit à la forme pleine, pas qu'à la couleur.
+    var etoiles = el('div', { class: 'pa-etoiles' }, [1, 2, 3, 4, 5].map(function (n) {
+      var r = el('input', { type: 'radio', name: id + '-etoiles', value: String(n), 'aria-label': t('parent.avis.etoile')(n) });
+      r.addEventListener('change', function () { rep.etoiles = n; touche = true; statut.textContent = ''; remplirEtoiles(n); });
+      return el('label', { class: 'pa-etoile', title: t('parent.avis.etoile')(n) }, [r, icon('etoile')]);
+    }));
+    function remplirEtoiles(n) {
+      etoiles.querySelectorAll('.pa-etoile').forEach(function (l, i) { l.classList.toggle('plein', i < n); });
+    }
+    var qEtoiles = el('fieldset', { class: 'pa-avis-q', 'data-q': 'etoiles' }, [el('legend', { class: 'sr', text: t('parent.avis.note') }), etoiles]);
+    var qMarche = el('fieldset', { class: 'pa-avis-q', 'data-q': 'marche' }, [
+      el('legend', { text: t('parent.avis.marche') }),
+      el('div', { class: 'pa-avis-choix' }, MARCHE_AVIS.map(function (v) {
+        var r = el('input', { type: 'radio', name: id + '-marche', value: v });
+        r.addEventListener('change', function () { rep.marche = v; touche = true; statut.textContent = ''; });
+        return el('label', { class: 'pa-avis-pastille' }, [r, el('span', { text: choix[v] })]);
+      }))
+    ]);
+    var form = el('form', { class: 'pa-avis', 'data-avis': g.id, novalidate: true }, [
+      el('h3', { text: t('parent.avis.titre') }),
+      qEtoiles, qMarche,
+      el('div', { class: 'pa-avis-champ' }, [el('label', { for: id + '-mot', text: t('parent.avis.mot') }), el('span', { class: 'pa-avis-aide', text: t('parent.avis.motAide') }), mot]),
+      etatMot,
+      el('div', { class: 'pa-avis-bas' }, [envoyer, retirer]),
+      statut
+    ]);
+    form.addEventListener('input', function () { touche = true; });
+    // L'avis déjà donné : les réponses (si l'on n'a encore rien touché), le bouton, et où en est le mot.
+    function montrer(d) {
+      envoyer.textContent = t(d ? 'parent.avis.enregistrer' : 'parent.avis.envoyer');
+      retirer.hidden = !d;
+      etatMot.hidden = !(d && d.mot);
+      if (d && d.mot) etatMot.textContent = t('parent.avis.' + ({ accepte: 'accepte', refuse: 'refuse' }[d.mot_etat] || 'aRelire'));
+      if (touche) return;
+      rep.etoiles = d && Number(d.etoiles) >= 1 ? Number(d.etoiles) : null;
+      rep.marche = d ? d.marche : null;
+      form.querySelectorAll('input[name="' + id + '-etoiles"]').forEach(function (r) { r.checked = Number(r.value) === rep.etoiles; });
+      form.querySelectorAll('input[name="' + id + '-marche"]').forEach(function (r) { r.checked = r.value === rep.marche; });
+      remplirEtoiles(rep.etoiles || 0);
+      mot.value = (d && d.mot) || '';
+    }
+    function relire() { return Nuage.lireAvis(g.id).then(montrer); }
+    relire().catch(function () { /* hors ligne : le formulaire reste vide, on peut quand même répondre */ });
+    form.addEventListener('submit', function (ev) {
+      ev.preventDefault();
+      if (!rep.etoiles || !rep.marche) { statut.textContent = t('parent.avis.manque'); return; }
+      envoyer.disabled = true;
+      Nuage.donnerAvis(g.id, { etoiles: rep.etoiles, marche: rep.marche, mot: mot.value, langue: lang }).then(function () {
+        touche = false;
+        statut.textContent = t('parent.avis.merci');
+        return relire().catch(function () { /* rien */ });
+      }).then(function () { LudiCatalogue.rafraichirAvis(g.id); }, function () {
+        statut.textContent = t('parent.avis.erreur');
+      }).then(function () { envoyer.disabled = false; });
+    });
+    retirer.addEventListener('click', function () {
+      retirer.disabled = true;
+      Nuage.retirerAvis(g.id).then(function () {
+        touche = false;
+        montrer(null);
+        statut.textContent = t('parent.avis.retire');
+        LudiCatalogue.rafraichirAvis(g.id);
+      }, function () { statut.textContent = t('parent.avis.erreur'); }).then(function () { retirer.disabled = false; });
+    });
+    blocsAvis[cle] = form;
+    return form;
+  }
+  // D'abord l'état en mots, une ligne par enfant (l'enfant regardé en premier) ; puis ses réglages ; puis ce que le jeu a enregistré.
+  function sectionEnfant(f, g) {
+    var h = foyer(), plusieurs = h.enfants.length > 1;
+    var enfants = [f].concat(h.enfants.filter(function (e) { return e.id !== f.id; }));
+    return el('section', { class: 'pa-pour' }, [
+      hoteJournal(),
+      el('ul', { class: 'pa-pour-enfants' }, enfants.map(function (e) {
+        var c = e.jeux && e.jeux[g.id];
+        // Installé : Ranger et Retirer (Retirer seulement ici, dans la fiche). Rangé : Ressortir. Pas installé : sa demande, puis Installer.
+        return el('li', { class: c ? 'installe' : '', 'data-enfant': e.id }, c ? [
+          el('span', { class: 'pa-pour-etat' }, c.range ? [icon('boite'), t('parent.ficheStored', { n: e.enfant.nom })] : [icon('check'), t('parent.ficheInstalled', { n: e.enfant.nom })]),
+          el('span', { class: 'pa-pour-boutons' }, [
+            c.range ? bouton('btn-ghost pa-ressortir', t('parent.takeOut'), null, function () { ressortir(e.id, g); }, { 'data-ressortir': g.id })
+              : bouton('btn-ghost pa-ranger', t('parent.putAway'), 'boite', function () { ranger(e.id, g); }, { 'data-ranger': g.id }),
+            bouton('btn-ghost pa-retirer', t('parent.remove'), 'cross', function () { retirer(e.id, g); })
+          ])
+        ] : [demande(e, g.id) ? el('span', { class: 'pa-pour-etat pa-pour-demande' }, [icon('main'), t('parent.stWants', { n: e.enfant.nom })]) : null, boutonInstaller(e, g)]);
+      })),
+      choix(g.id) ? el('div', { class: 'pa-pour-regl' }, [plusieurs ? el('h3', { text: t('parent.ficheSettings', { n: f.enfant.nom }) }) : null, reglagesJeu(f, g)]) : null,
+      enregistre(f, g)
+    ]);
+  }
+  // Ce que le jeu a vraiment envoyé, dit tel quel : temps, parties, fini, progression, records, notions (sans pourcentage).
+  function enregistre(f, g) {
+    var st = S()[g.id] || {}, et = st.etat || {};
+    var lignes = [];
+    function ligne(label, valeur) { lignes.push(el('div', null, [el('dt', { text: label }), el('dd', null, [valeur])])); }
+    if (st.ms >= 30000) ligne(t('parent.recTime'), t('parent.recTimeVal', { w: weekMs(g.id) >= 30000 ? duration(weekMs(g.id)) : '0 min', t: duration(st.ms) }));
+    if (st.sessions) ligne(t('parent.recSessions'), String(st.sessions));
+    if (et.fini) ligne(t('parent.recFini'), t('parent.recFiniVal'));
+    Object.keys(st.progress || {}).forEach(function (k) { ligne(t('parent.recProgress') + ' · ' + k.replace(/[-_]/g, ' '), String(st.progress[k])); });
+    Object.keys(st.scores || {}).forEach(function (k) { ligne(t('parent.recRecords') + ' · ' + k.replace(/[-_]/g, ' '), Number(st.scores[k].value).toLocaleString(lang)); });
+    // Les notions, par domaine : trouvées 3 fois de suite, encore à essayer (la dernière réponse n'était pas juste), déjà vues.
+    var parDomaine = {};
+    Object.keys(st.skills || {}).forEach(function (k) {
+      var dom = k.split('/')[0], item = k.slice(dom.length + 1) || dom;
+      (parDomaine[dom] = parDomaine[dom] || []).push({ item: dom === 'maths.multiplication' ? item.replace('x', '×') : item, s: st.skills[k] });
+    });
+    Object.keys(parDomaine).forEach(function (dom) {
+      var items = parDomaine[dom];
+      var groupes = [
+        [t('parent.skillStreak'), items.filter(function (x) { return x.s.streak >= 3; })],
+        [t('parent.skillRetry'), items.filter(function (x) { return x.s.streak < 0; })],
+        [t('parent.skillSeen'), items.filter(function (x) { return x.s.streak >= 0 && x.s.streak < 3; })]
+      ].filter(function (gr) { return gr[1].length; });
+      ligne(LudiCatalogue.notion(dom, lang), el('span', { class: 'pa-notions' }, groupes.map(function (gr) {
+        return el('span', null, [el('span', { class: 'pa-notions-lib', text: gr[0] + ' : ' }), gr[1].map(function (x) { return x.item; }).join(', ')]);
+      })));
+    });
+    // Replié : un résumé d'une ligne (temps sur 7 jours, parties, « Fini »), le détail d'un toucher.
+    if (!lignes.length) return el('p', { class: 'pa-enregistre pa-note', text: t('parent.recorded', { n: f.enfant.nom }) + ' : ' + t('parent.recNone') });
+    var resume = [weekMs(g.id) >= 30000 ? t('parent.weekShort', { t: duration(weekMs(g.id)) }) : t('parent.notPlayed7'),
+      st.sessions ? t(st.sessions === 1 ? 'parent.recSessionsOne' : 'parent.recSessionsN', { k: st.sessions }) : null,
+      et.fini ? t('parent.finished') : null].filter(Boolean).join(' · ');
+    return el('details', { class: 'pa-enregistre pa-plie' }, [
+      el('summary', null, [el('span', null, [el('b', { text: t('parent.recorded', { n: f.enfant.nom }) }), el('span', { class: 'pa-resume', text: resume })])]),
+      el('dl', null, lignes)
+    ]);
+  }
+
+  // =====================================================================
+  // Onglet Temps
+  // =====================================================================
+  function stepper(value, step, minV, maxV, onChange, label) {
+    var noLimit = value === null;
+    return el('div', { class: 'stepper' + (noLimit ? ' off' : '') }, [
+      el('button', { type: 'button', 'aria-label': '− 5 min · ' + label, disabled: noLimit || value <= minV, onclick: function () { onChange(clamp(value - step, minV, maxV)); } }, [icon('minus')]),
+      el('output', { class: 'step-val', text: noLimit ? '∞' : t('min', { n: value }) }),
+      el('button', { type: 'button', 'aria-label': '+ 5 min · ' + label, disabled: noLimit || value >= maxV, onclick: function () { onChange(clamp(value + step, minV, maxV)); } }, [icon('plus')]),
+      el('label', { class: 'pa-case' }, [
+        el('input', { type: 'checkbox', checked: noLimit, onchange: function (e) { onChange(e.target.checked ? null : 'avant'); } }),
+        el('span', { text: t('noLimit') })
+      ])
+    ]);
+  }
+  function semaine() {
+    var r = regles();
     var days = lastDays(7).reverse();
     var dates = []; var d0 = new Date(); for (var i = 6; i >= 0; i--) { var d = new Date(d0); d.setDate(d0.getDate() - i); dates.push(d); }
     var base = Temps.regles(Object.assign({}, r, { bonus: null, fini: null }));
     var limites = dates.map(function (d) { return Temps.minutesDuJour(base, d); });
     var maxDay = Math.max.apply(null, days.map(function (k) { return dayMs(null, k); }).concat(limites.map(function (m) { return (m || 0) * MIN; }), [MIN]));
     var bars = el('div', { class: 'semaine' }, days.map(function (k, j) {
-      var ms = dayMs(null, k);
-      var lim = limites[j];
-      return el('div', { class: 'jour' + (j === 6 ? ' auj' : '') + (lim !== null && ms > lim * MIN ? ' depasse' : '') }, [
+      var ms = dayMs(null, k), lim = limites[j];
+      return el('div', { class: 'jour' + (j === 6 ? ' auj' : '') }, [
         el('span', { class: 'barre-zone' }, [
-          lim !== null ? el('span', { class: 'limite', style: 'bottom:' + (lim * MIN / (maxDay * 1.2) * 100).toFixed(1) + '%' }) : null,
-          el('span', { class: 'barre', style: 'height:' + (ms / (maxDay * 1.2) * 100).toFixed(1) + '%' })
+          lim !== null ? el('span', { class: 'limite', style: 'bottom:' + (lim * MIN / (maxDay * 1.15) * 100).toFixed(1) + '%' }) : null,
+          el('span', { class: 'barre', style: 'height:' + (ms / (maxDay * 1.15) * 100).toFixed(1) + '%' })
         ]),
-        el('span', { class: 'jour-val', text: ms >= 30000 ? Math.round(ms / MIN) + '' : '·' }),
+        el('span', { class: 'jour-val', text: t('min', { n: ms >= 30000 ? Math.round(ms / MIN) : 0 }) }),
         el('span', { class: 'jour-nom', text: t('days')[dates[j].getDay()] })
       ]);
     }));
-    out.appendChild(section(t('parent.week'), [bars, el('p', { class: 'c-note legende' }, [el('span', { class: 'leg-limite', 'aria-hidden': 'true' }), t('parent.weekLegend'), ' · ', t('parent.weekTotal', { t: duration(weekMs()) })])]));
-
-    // Ce qu'il travaille (notions remontées par le kit)
-    var skillBits = [];
-    games.forEach(function (g) {
-      var st = S()[g.id];
-      if (!st || !st.skills || !Object.keys(st.skills).length) return;
-      var byDomain = {};
-      Object.keys(st.skills).forEach(function (k) {
-        var dom = k.split('/')[0], item = k.slice(dom.length + 1);
-        (byDomain[dom] = byDomain[dom] || []).push({ item: item, s: st.skills[k] });
-      });
-      Object.keys(byDomain).forEach(function (dom) {
-        var items = byDomain[dom];
-        var ok = 0, n = 0;
-        items.forEach(function (x) { ok += x.s.ok; n += x.s.ok + x.s.ko; });
-        var known = items.filter(function (x) { return x.s.streak >= 3; }).map(function (x) { return x.item; });
-        var review = items.filter(function (x) { return x.s.streak < 0; }).map(function (x) { return x.item; });
-        skillBits.push(el('div', { class: 'notion' }, [
-          el('p', { class: 'notion-titre' }, [el('b', { text: t('domains')[dom] || dom }), el('span', { text: ' · ' + pick(g.title) })]),
-          el('p', { class: 'notion-val', text: t('parent.skillLine', { n: n, p: n ? Math.round(ok / n * 100) : 0 }) }),
-          known.length ? el('div', { class: 'notion-items' }, [el('span', { class: 'ni-label' }, [icon('check'), t('parent.known')]), el('ul', { class: 'items ok' }, known.slice(0, 30).map(function (x) { return el('li', { text: x.replace('x', '×') }); }))]) : null,
-          review.length ? el('div', { class: 'notion-items' }, [el('span', { class: 'ni-label' }, [icon('warn'), t('parent.review')]), el('ul', { class: 'items ko' }, review.slice(0, 30).map(function (x) { return el('li', { text: x.replace('x', '×') }); }))]) : null
-        ]));
-      });
-    });
-    out.appendChild(section(t('parent.skills'), (skillBits.length ? skillBits : [el('p', { class: 'c-note', text: t('parent.skillsNone') })]).concat([el('a', { class: 'lien vers-jeux', href: 'les-jeux/', text: t('parent.toGames') })])));
-
-    // Records
-    var recs = [];
-    games.forEach(function (g) {
-      var st = S()[g.id];
-      if (!st || !st.scores) return;
-      Object.keys(st.scores).forEach(function (k) { recs.push(el('li', null, [el('span', { text: pick(g.title) + ' · ' + k.replace(/-/g, ' ') }), el('b', { text: Number(st.scores[k].value).toLocaleString(lang) })])); });
-    });
-    out.appendChild(section(t('parent.records'), [recs.length ? el('ul', { class: 'records' }, recs) : el('p', { class: 'c-note', text: t('parent.noRecords') })]));
-    return out;
-  }
-
-  function pageGames(f) {
-    var out = el('div', { class: 'c-games' });
-    out.appendChild(el('h2', { class: 'c-h', text: t('parent.gamesTitle', { n: f.enfant.nom }) }));
-    out.appendChild(el('p', { class: 'c-lead', text: t('parent.gamesText', { n: f.enfant.nom }) }));
-    var q = el('input', { type: 'search', class: 'recherche', placeholder: t('parent.search'), value: filtres.q, 'aria-label': t('parent.search') });
-    var results = el('div', { class: 'resultats', 'aria-live': 'polite' });
-    function toggle(key, label) {
-      return el('button', { type: 'button', class: 'filtre' + (filtres[key] ? ' on' : ''), 'aria-pressed': String(filtres[key]), onclick: function () { filtres[key] = !filtres[key]; renderParent(); } }, [filtres[key] ? icon('check') : null, label]);
-    }
-    var allDomains = [];
-    games.forEach(function (g) { g.learning.domains.forEach(function (d) { if (allDomains.indexOf(d) === -1) allDomains.push(d); }); });
-    out.appendChild(el('div', { class: 'recherche-zone' }, [icon('search'), q]));
-    out.appendChild(el('div', { class: 'filtres' }, [
-      toggle('age', t('parent.fAge', { n: f.enfant.age })), toggle('core', t('parent.fCore')), toggle('noRead', t('parent.fNoRead')), toggle('chosen', t('parent.fChosen'))
-    ]));
-    out.appendChild(el('div', { class: 'filtres domaines' }, allDomains.map(function (d) {
-      var on = filtres.domains.indexOf(d) !== -1;
-      return el('button', { type: 'button', class: 'filtre dom' + (on ? ' on' : ''), 'aria-pressed': String(on), onclick: function () {
-        if (on) filtres.domains = filtres.domains.filter(function (x) { return x !== d; }); else filtres.domains.push(d);
-        renderParent();
-      } }, [on ? icon('check') : null, t('domains')[d] || d]);
-    })));
-    out.appendChild(results);
-
-    function norm(s) { return String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, ''); }
-    function paint() {
-      var words = norm(filtres.q).split(/\s+/).filter(Boolean);
-      var list = games.filter(function (g) {
-        if (filtres.age && !pourAge(g, f.enfant.age)) return false;
-        if (filtres.core && g.learning.level !== 'core') return false;
-        if (filtres.noRead && g.reading !== 'none') return false;
-        if (filtres.chosen && !choix(g.id)) return false;
-        if (filtres.domains.length && !g.learning.domains.some(function (d) { return filtres.domains.indexOf(d) !== -1; })) return false;
-        if (words.length) {
-          var hay = norm([pick(g.title), pick(g.pitch), pick(g.learning.what), g.author.name].concat(g.learning.domains.map(function (d) { return t('domains')[d] || d; })).join(' '));
-          if (!words.every(function (w) { return hay.indexOf(w) !== -1; })) return false;
-        }
-        return true;
-      });
-      results.textContent = '';
-      results.appendChild(el('p', { class: 'compte', text: t('parent.count', { n: list.length }) }));
-      if (!list.length) { results.appendChild(el('p', { class: 'c-note', text: t('parent.none') })); return; }
-      list.forEach(function (g) { results.appendChild(gameRow(f, g)); });
-    }
-    q.addEventListener('input', function () { filtres.q = q.value; paint(); });
-    paint();
-    return out;
-  }
-
-  function gameRow(f, g) {
-    var c = choix(g.id);
-    var on = !!c;
-    var ageOk = pourAge(g, f.enfant.age);
-    var sw = el('button', { type: 'button', role: 'switch', 'aria-checked': String(on), class: 'interrupteur' + (on ? ' on' : ''), onclick: function () {
-      if (on) delete f.jeux[g.id]; else f.jeux[g.id] = { max: null };
-      saveFam(); renderParent();
-    } }, [el('span', { class: 'int-rail' }, [el('span', { class: 'int-bouton' }, [icon(on ? 'check' : 'cross')])]), el('span', { class: 'int-txt', text: on ? t('parent.chosen') : t('parent.notChosen') })]);
-    var limit = null;
-    if (on) {
-      var sel = el('select', { 'aria-label': t('parent.perDay') + ' · ' + pick(g.title) }, LIMITES_JEU.map(function (m) {
-        return el('option', { value: m === null ? '' : String(m), selected: c.max === m, text: m === null ? t('noLimit') : t('min', { n: m }) });
-      }));
-      sel.addEventListener('change', function () { c.max = sel.value ? Number(sel.value) : null; saveFam(); });
-      limit = el('div', { class: 'limite-jeu' }, [
-        el('label', { class: 'lj-par-jour' }, [icon('hourglass'), el('span', { text: t('parent.perDay') }), sel]),
-        el('label', { class: 'step-libre' }, [
-          el('input', { type: 'checkbox', checked: !!c.libres, onchange: function (e) { c.libres = e.target.checked; saveFam(); } }),
-          el('span', { text: t('parent.freeOnly') })
-        ])
-      ]);
-    }
-    return el('article', { class: 'fiche-jeu' + (on ? ' on' : ''), style: '--game:' + (g.color || '#1d2b4f') }, [
-      gameIcon(g, { class: 'fj-img' }),
-      el('div', { class: 'fj-corps' }, [
-        el('h4', { text: pick(g.title) }),
-        el('p', { class: 'fj-meta', text: t('ages', { a: g.age.min, b: g.age.max }) + ' · ' + t('parent.session', { a: g.session.minutes[0], b: g.session.minutes[1] }) + ' · ' + t('read.' + g.reading) }),
-        !ageOk ? el('p', { class: 'fj-alerte' }, [icon('warn'), t('parent.notForAge', { a: g.age.min, b: g.age.max })]) : null,
-        el('p', { class: 'fj-pitch', text: pick(g.pitch) }),
-        el('ul', { class: 'fj-tags' }, [el('li', { class: 'niveau ' + g.learning.level, text: t('levelShort.' + g.learning.level) })].concat(g.learning.domains.map(function (d) { return el('li', { text: t('domains')[d] || d }); }))),
-        el('button', { type: 'button', class: 'lien', text: t('parent.sheet'), onclick: function () { openSheet(g); } })
-      ]),
-      el('div', { class: 'fj-reglage' }, [sw, limit])
-    ]);
-  }
-
-  function stepper(value, step, minV, maxV, onChange) {
-    var noLimit = value === null;
-    var val = el('output', { class: 'step-val', text: noLimit ? '∞' : t('min', { n: value }) });
-    function set(v) { onChange(v); }
-    return el('div', { class: 'stepper' + (noLimit ? ' off' : '') }, [
-      el('button', { type: 'button', 'aria-label': '−', disabled: noLimit || value <= minV, onclick: function () { set(clamp(value - step, minV, maxV)); } }, [icon('minus')]),
-      val,
-      el('button', { type: 'button', 'aria-label': '+', disabled: noLimit || value >= maxV, onclick: function () { set(clamp(value + step, minV, maxV)); } }, [icon('plus')]),
-      el('label', { class: 'step-libre' }, [
-        el('input', { type: 'checkbox', checked: noLimit, onchange: function (e) { set(e.target.checked ? null : 30); } }),
-        el('span', { text: t('noLimit') })
+    return bloc(null, [
+      el('div', { class: 'pa-semaine-tete' }, [el('h3', { text: t('parent.week') }), el('p', { class: 'pa-total', text: t('parent.weekTotal', { t: weekMs() >= 30000 ? duration(weekMs()) : '0 min' }) })]),
+      bars,
+      el('p', { class: 'pa-note legende' }, [
+        el('span', { class: 'leg-auj', 'aria-hidden': 'true' }), t('parent.legendToday'),
+        el('span', { class: 'leg-limite', 'aria-hidden': 'true' }), t('parent.legendPlanned')
       ])
-    ]);
+    ], 'pa-semaine');
   }
-
-  function pageTime(f) {
+  function pageTemps(f) {
     var r = f.regles;
-    var out = el('div', { class: 'c-time' });
-    out.appendChild(el('h2', { class: 'c-h', text: t('parent.timeTitle') }));
-    out.appendChild(el('p', { class: 'c-lead', text: t('parent.timeText') }));
-    out.appendChild(el('div', { class: 'deux' }, [
-      section(t('parent.school'), [stepper(r.ecole, 5, 5, 180, function (v) { r.ecole = v; saveFam(); renderParent(); })], 'carte-temps ecole'),
-      section(t('parent.free'), [stepper(r.libre, 5, 5, 240, function (v) { r.libre = v; saveFam(); renderParent(); })], 'carte-temps libre')
+    var out = el('div', { class: 'pa-temps' });
+    out.appendChild(el('h1', { class: 'pa-titre', text: t('parent.timeTitle', { de: nomDe(f.enfant.nom), n: f.enfant.nom }) }));
+    out.appendChild(semaine());
+    // « Sans limite » puis décoché : on retrouve la valeur d'avant, pas une valeur par défaut.
+    function minutes(cle, quoi) {
+      return function (v) {
+        if (v === 'avant') v = r[cle + 'Avant'] || 30;
+        changer(t(quoi, { m: v === null ? t('noLimit').toLowerCase() : t('min', { n: v }) }), function () {
+          if (v === null && r[cle] !== null) r[cle + 'Avant'] = r[cle];
+          r[cle] = v;
+        });
+      };
+    }
+    out.appendChild(el('div', { class: 'pa-deux' }, [
+      bloc(null, [el('h3', { text: titreJoursChoisis(r.joursLibres) }), stepper(r.libre, 5, 5, 240, minutes('libre', 'parent.cFree'), titreJoursChoisis(r.joursLibres))], 'pa-carte-temps libre'),
+      bloc(null, [el('h3', { text: t('parent.school') }), stepper(r.ecole, 5, 5, 180, minutes('ecole', 'parent.cSchool'), t('parent.school'))], 'pa-carte-temps')
     ]));
-    var vac = el('input', { type: 'date', value: r.vacances || '', min: Temps.iso(new Date()), 'aria-label': t('parent.holidaysUntil') });
-    vac.addEventListener('change', function () { r.vacances = vac.value || null; saveFam(); renderParent(); });
-    var enVacances = r.vacances && r.vacances >= Temps.iso(new Date());
     var jl = r.joursLibres || [];
-    out.appendChild(section(t('parent.holidays'), [
-      el('div', { class: 'plage' }, [el('span', { class: 'plage-champs' }, [el('span', { text: t('parent.holidaysUntil') }), vac]),
-        r.vacances ? el('button', { type: 'button', class: 'lien', text: t('parent.holidaysEnd'), onclick: function () { r.vacances = null; saveFam(); renderParent(); } }) : null]),
-      el('p', { class: 'c-note' }, [icon('sun'), enVacances ? t('parent.holidaysOn') : t('parent.holidaysText')])
+    var vac = el('input', { type: 'date', value: r.vacances || '', min: Temps.iso(new Date()), 'aria-label': t('parent.holidaysUntil') });
+    vac.addEventListener('change', function () { var v = vac.value || null; changer(t('parent.cHolidays'), function () { r.vacances = v; }); });
+    var enVacances = r.vacances && r.vacances >= Temps.iso(new Date());
+    out.appendChild(bloc(null, [
+      el('h3', { text: t('parent.freeDays') }),
+      joursBoutons(jl, function (d, on) {
+        var jourNom = t('daysLong')[d];
+        changer(t(on ? 'parent.cFreeDayOff' : 'parent.cFreeDayOn', { d: jourNom.charAt(0).toUpperCase() + jourNom.slice(1) }), function () { r.joursLibres = on ? jl.filter(function (x) { return x !== d; }) : jl.concat([d]); });
+      }),
+      el('p', { class: 'pa-note', text: joursEnMots(jl) }),
+      el('div', { class: 'plage' }, [
+        el('span', { class: 'plage-champs' }, [el('span', { text: t('parent.holidays') + ' · ' + t('parent.holidaysUntil') }), vac]),
+        r.vacances ? el('button', { type: 'button', class: 'lien', text: t('parent.holidaysEnd'), onclick: function () { changer(t('parent.cHolidays'), function () { r.vacances = null; }); } }) : null
+      ]),
+      enVacances ? el('p', { class: 'pa-note' }, [icon('sun'), t('parent.holidaysOn')]) : null
     ]));
-    out.appendChild(section(t('parent.freeDays'), [el('div', { class: 'jours' }, [1, 2, 3, 4, 5, 6, 0].map(function (d) {
-      var on = jl.indexOf(d) !== -1;
-      return el('button', { type: 'button', 'aria-pressed': String(on), class: on ? 'on' : '', 'aria-label': t('daysLong')[d], onclick: function () {
-        r.joursLibres = on ? jl.filter(function (x) { return x !== d; }) : jl.concat([d]);
-        saveFam(); renderParent();
-      } }, [t('days')[d]]);
-    }))]));
-    var plage = r.heures;
-    var debut = el('input', { type: 'time', value: plage ? plage.debut : '08:00', 'aria-label': t('parent.hoursFrom'), disabled: !plage });
-    var fin = el('input', { type: 'time', value: plage ? plage.fin : '19:30', 'aria-label': t('parent.hoursTo'), disabled: !plage });
-    function majPlage() { if (debut.value && fin.value && debut.value < fin.value) { r.heures = { debut: debut.value, fin: fin.value }; saveFam(); } }
+    // Heures de jeu. « À toute heure » coché puis décoché : les heures d'avant reviennent.
+    var plage = r.heures, garde = r.heuresAvant || { debut: '17:00', fin: '19:00' };
+    var debut = el('input', { type: 'time', value: plage ? plage.debut : garde.debut, 'aria-label': t('parent.hoursFrom'), disabled: !plage });
+    var fin = el('input', { type: 'time', value: plage ? plage.fin : garde.fin, 'aria-label': t('parent.hoursTo'), disabled: !plage });
+    function majPlage() {
+      if (debut.value && fin.value && debut.value < fin.value) changer(t('parent.cHours'), function () { r.heures = { debut: debut.value, fin: fin.value }; });
+    }
     debut.addEventListener('change', majPlage); fin.addEventListener('change', majPlage);
-    out.appendChild(section(t('parent.hours'), [
+    var blocHeures = out.appendChild(bloc(null, [
+      el('h3', { text: t('parent.hours') }),
       el('div', { class: 'plage' + (plage ? '' : ' off') }, [
-        el('label', { class: 'step-libre' }, [
-          el('input', { type: 'checkbox', checked: !plage, onchange: function (e) { r.heures = e.target.checked ? null : { debut: '08:00', fin: '19:30' }; saveFam(); renderParent(); } }),
+        el('label', { class: 'pa-case' }, [
+          el('input', { type: 'checkbox', checked: !plage, onchange: function (e) {
+            var tout = e.target.checked;
+            changer(t('parent.cHours'), function () {
+              if (tout) { r.heuresAvant = r.heures; r.heures = null; } else r.heures = r.heuresAvant || { debut: debut.value, fin: fin.value };
+            });
+          } }),
           el('span', { text: t('parent.hoursAny') })
         ]),
         el('span', { class: 'plage-champs' }, [el('span', { text: t('parent.hoursFrom') }), debut, el('span', { text: t('parent.hoursTo') }), fin])
-      ]),
-      el('p', { class: 'c-note' }, [icon('moon'), t('parent.hoursText')])
+      ])
     ]));
-    out.appendChild(section(t('parent.endTitle'), [
-      finCards(r.fin, r.grace, function (v) { r.fin = v; saveFam(); renderParent(); }),
-      r.fin === 'douce' ? el('div', { class: 'grace' }, [el('span', { text: t('parent.grace') }), chips([5, 10, 15], r.grace, function (m) { return '+' + t('min', { n: m }); }, function (v) { r.grace = v; saveFam(); renderParent(); })]) : null,
-      el('p', { class: 'c-note' }, [icon('sun'), t('parent.warn')])
+    blocHeures.id = 'pa-heures';
+    out.appendChild(bloc(null, [
+      el('h3', { text: t('parent.endTitle') }),
+      finCards(r.fin, r.grace, function (v) { changer(t('parent.cEnd'), function () { r.fin = v; }); }),
+      r.fin === 'douce' ? el('div', { class: 'grace' }, [el('span', { text: t('parent.grace') }), chips([5, 10, 15], r.grace, function (m) { return '+' + t('min', { n: m }); }, function (v) { changer(t('parent.cEnd'), function () { r.grace = v; }); })]) : null
     ]));
     return out;
   }
 
+  // =====================================================================
+  // Onglet Réglages : l'enfant, puis la maison
+  // =====================================================================
   var installEvt = null;
-  function pageSettings(f) {
-    var out = el('div', { class: 'c-settings' });
-    out.appendChild(el('h2', { class: 'c-h', text: t('parent.settingsTitle') }));
-    var nom = el('input', { type: 'text', maxlength: '24', value: f.enfant.nom, id: 's-nom' });
-    nom.addEventListener('change', function () { var v = nom.value.trim(); if (v) { f.enfant.nom = v.slice(0, 24); saveFam(); renderParent(); } });
-    out.appendChild(section(t('parent.kid'), [
-      el('label', { for: 's-nom', class: 'champ-label', text: t('parent.kidName') }), nom,
-      el('p', { class: 'c-note', text: t('hello.kidText') }),
-      el('p', { class: 'champ-label', text: t('parent.kidAge') }),
-      chips(AGES, f.enfant.age, function (a) { return String(a); }, function (a) { f.enfant.age = a; saveFam(); renderParent(); }, 'ages')
-    ]));
+  var COPIE_VUE = 'ludiworld.copieVue';
+  function rang(label, kids, cls) { return el('div', { class: 'pa-rang ' + (cls || '') }, [el('h3', { text: label }), el('div', { class: 'pa-rang-corps' }, kids)]); }
+  function lienCompte(href, texte) {
+    return el('a', { class: 'btn-ghost pa-btn', href: href, text: texte, onclick: function () {
+      try { sessionStorage.setItem('ludiworld.retourCompte', '../app/#reglages'); } catch (e) { /* rien */ }
+    } });
+  }
+  function pageReglages(f) {
     var h = foyer();
-    out.appendChild(section(t('parent.kids'), [
-      el('p', { class: 'c-note', text: t('parent.kidsText') }),
-      el('div', { class: 'c-actions' }, [
-        el('button', { type: 'button', class: 'btn-ink', onclick: function () {
-          var jeux = {};
-          games.forEach(function (g) { if (pourAge(g, 7)) jeux[g.id] = { max: null }; });
-          var e = nouvelEnfant(t('parent.newKid', { n: h.enfants.length + 1 }), 7, jeux, JSON.parse(JSON.stringify(Temps.regles(Object.assign({}, f.regles, { bonus: null, fini: null })))));
-          h.actif = e.id; saveFam(); tab = 'settings'; renderParent();
-          var inp = document.getElementById('s-nom'); if (inp) { inp.focus(); inp.select(); }
-        } }, [icon('plus'), t('parent.addKid')]),
-        h.enfants.length > 1 ? el('button', { type: 'button', class: 'btn-ghost', onclick: function () {
-          if (!window.confirm(t('parent.removeKidConfirm', { n: f.enfant.nom }))) return;
+    var out = el('div', { class: 'pa-reglages' });
+    out.appendChild(el('h1', { class: 'pa-titre', text: t('parent.settingsTitle') }));
+
+    // L'enfant regardé
+    var nom = el('input', { type: 'text', maxlength: '24', value: f.enfant.nom, id: 's-nom', autocomplete: 'off' });
+    nom.addEventListener('change', function () { var v = nom.value.trim(); if (v) changer(t('parent.cName'), function () { f.enfant.nom = v.slice(0, 24); }); });
+    out.appendChild(bloc(f.enfant.nom, [
+      el('label', { for: 's-nom', class: 'champ-label', text: t('parent.kidName') }), nom,
+      el('p', { class: 'champ-label', text: t('parent.kidAge') }),
+      chips(AGES, f.enfant.age, function (a) { return String(a); }, function (a) { changer(t('parent.cAge', { a: a }), function () { f.enfant.age = a; }); }, 'ages'),
+      // Le bouton de l'enfant pour regarder tous les jeux et en demander un : là par défaut ; décoché, il disparaît.
+      el('label', { class: 'pa-case pa-regarder' }, [
+        el('input', { type: 'checkbox', checked: peutRegarder(f), 'data-reglage': 'regarder', onchange: function (e) {
+          var v = e.target.checked;
+          changer(t(v ? 'parent.cKidLookOn' : 'parent.cKidLookOff', { n: f.enfant.nom }), function () { if (v) delete f.regarderTout; else f.regarderTout = false; });
+        } }),
+        el('span', { text: t('parent.kidLook', { n: f.enfant.nom }) })
+      ]),
+      h.enfants.length > 1 ? bouton('btn-ghost pa-btn', t('parent.removeKid', { n: f.enfant.nom }), 'cross', function () {
+        if (!window.confirm(t('parent.removeKidConfirm', { n: f.enfant.nom }))) return;
+        changer(t('parent.cKidRemoved', { n: f.enfant.nom }), function () {
           (h.retires || (h.retires = {}))[f.id] = Date.now();
           h.enfants = h.enfants.filter(function (e) { return e.id !== f.id; });
-          h.actif = h.enfants[0].id; saveFam(); renderParent();
-        } }, [icon('cross'), t('parent.removeKid', { n: f.enfant.nom })]) : null
-      ]),
-      h.enfants.length > 1 ? el('label', { class: 'step-libre' }, [
-        el('input', { type: 'checkbox', checked: h.protege !== false, onchange: function (e) { h.protege = e.target.checked; saveFam(); } }),
-        el('span', { text: t('parent.protect') })
-      ]) : null
+          if (h.actif === f.id) h.actif = h.enfants[0].id;
+          regarde = h.actif;
+        }, { maison: true });
+      }) : null
+    ], 'pa-bloc-enfant'));
+
+    // La maison
+    var maison = [];
+    var enfants = [el('p', { class: 'pa-enfants-liste', text: h.enfants.map(function (e) { return e.enfant.nom; }).join(', ') })];
+    if (ajout) {
+      var champ = el('input', { type: 'text', maxlength: '24', id: 's-nouveau', autocomplete: 'off', placeholder: t('hello.kidNamePh'), value: ajout.nom });
+      var go = bouton('btn-sun pa-btn', t('parent.addKidGo'), 'plus', function () {
+        var n = ajout.nom.trim().slice(0, 24); if (!n) return;
+        var age = ajout.age, e;
+        changer(t('parent.cKidAdded', { n: n }), function () {
+          // Pas de jeu d'office : on arrive sur « Tous les jeux », pour lui en installer.
+          e = nouvelEnfant(n, age, {}, JSON.parse(JSON.stringify(Temps.regles(Object.assign({}, f.regles, { bonus: null, fini: null })))));
+          regarde = e.id; ajout = null; tab = 'catalogue';
+        }, { maison: true });
+        window.scrollTo(0, 0);
+      }, { disabled: !ajout.nom.trim() });
+      champ.addEventListener('input', function () { ajout.nom = champ.value; go.disabled = !champ.value.trim(); });
+      enfants.push(el('div', { class: 'pa-ajout' }, [
+        el('label', { for: 's-nouveau', class: 'champ-label', text: t('parent.kidName') }), champ,
+        el('p', { class: 'champ-label', text: t('parent.kidAge') }),
+        chips(AGES, ajout.age, function (a) { return String(a); }, function (a) { ajout.age = a; renderParent(); }, 'ages'),
+        el('div', { class: 'pa-actions' }, [go, el('button', { type: 'button', class: 'lien', text: t('parent.addKidCancel'), onclick: function () { ajout = null; renderParent(); } })])
+      ]));
+      setTimeout(function () { var c = document.getElementById('s-nouveau'); if (c && document.activeElement !== c) try { c.focus({ preventScroll: true }); } catch (e) { /* rien */ } }, 30);
+    } else enfants.push(bouton('btn-ghost pa-btn', t('parent.addKid'), 'plus', function () { ajout = { nom: '', age: 7 }; renderParent(); }));
+    if (h.enfants.length > 1) enfants.push(el('label', { class: 'pa-case' }, [
+      el('input', { type: 'checkbox', checked: h.protege !== false, onchange: function (e) { var v = e.target.checked; changer(t('parent.cProtect'), function () { h.protege = v; }, { maison: true }); } }),
+      el('span', { text: t('parent.protect') })
     ]));
-    out.appendChild(section(t('parent.lock'), [
+    maison.push(rang(t('parent.kids'), enfants));
+    maison.push(rang(t('parent.pin'), [bouton('btn-ghost pa-btn', t('parent.pinChange'), 'lock', function () { openGate(function () { noter(t('parent.pinChanged')); }, 'set'); })]));
+    maison.push(rang(t('parent.lang'), [langSwitch()]));
+    maison.push(rang(t('parent.fullscreen'), [el('label', { class: 'pa-case' }, [
+      el('input', { type: 'checkbox', checked: pleinEcranVoulu(), onchange: function (e) {
+        var v = e.target.checked;
+        changer(t('parent.cFullscreen'), function () { foyer().pleinEcran = v; }, { maison: true });
+        if (!v && document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(function () {});
+      } }),
+      el('span', { text: t('parent.fullscreenCase') })
+    ])]));
+    maison.push(el('details', { class: 'pa-plie' }, [
+      el('summary', { text: t('parent.lock') }),
       el('p', { text: t('parent.lockText') }),
       el('ul', { class: 'etapes' }, [el('li', { text: t('parent.lockAndroid') }), el('li', { text: t('parent.lockIos') })]),
-      installEvt ? el('button', { type: 'button', class: 'btn-ink', text: t('parent.install'), onclick: function () {
+      installEvt ? el('button', { type: 'button', class: 'btn-ink', text: t('parent.installApp'), onclick: function () {
         installEvt.prompt(); installEvt.userChoice.finally(function () { installEvt = null; renderParent(); });
       } }) : null
-    ], 'encadre'));
-    out.appendChild(section(t('parent.fullscreen'), [
-      el('label', { class: 'step-libre' }, [
-        el('input', { type: 'checkbox', checked: pleinEcranVoulu(), onchange: function (e) {
-          foyer().pleinEcran = e.target.checked; saveFam();
-          if (!e.target.checked && document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(function () {});
-        } }),
-        el('span', { text: t('parent.fullscreenOn') })
-      ]),
-      el('p', { class: 'c-note', text: t('parent.fullscreenText') })
     ]));
-    out.appendChild(section(t('parent.pin'), [el('button', { type: 'button', class: 'btn-ghost', text: t('parent.pinChange'), onclick: function () {
-      openGate(function () { toast(t('parent.pinChanged')); }, 'set');
-    } })]));
-    out.appendChild(section(t('parent.lang'), [langSwitch()]));
-    if (Nuage && Nuage.actif()) out.appendChild(section(t('parent.account'), [
-      el('p', { text: Nuage.connecte() ? t('parent.accountOn', { e: Nuage.email() || '' }) : t('parent.accountOff') }),
-      el('a', { class: 'lien', href: 'compte/' + (Nuage.connecte() ? '#espace' : '#creer'), text: Nuage.connecte() ? t('parent.accountOpen') : t('parent.accountCreate') })
-    ]));
-    var enLigne = synchroVoulue();
-    if (enLigne) out.appendChild(section(t('parent.onlineCopy'), [el('p', { text: t('parent.onlineCopyText') })]));
-    out.appendChild(section(t('parent.data'), [
+    var enLigne = copieActive();
+    if (Nuage && Nuage.actif()) {
+      var co = Nuage.connecte();
+      // Connecté : on retient si la copie en ligne était active, pour le dire vrai après « Se déconnecter » (elle reste en ligne).
+      try { if (co) localStorage.setItem(COPIE_VUE, enLigne ? '1' : '0'); } catch (e) { /* rien */ }
+      var copieGardee = false;
+      try { copieGardee = !co && localStorage.getItem(COPIE_VUE) === '1'; } catch (e) { /* rien */ }
+      maison.push(rang(t('parent.account'), [
+        el('p', { class: 'pa-etat-compte', text: !co ? t(copieGardee ? 'parent.accNoneCopy' : 'parent.accNone') : t(enLigne ? 'parent.accOn' : 'parent.accOff', { e: Nuage.email() || '' }) }),
+        co ? lienCompte('compte/#espace', t('parent.accOpen')) : lienCompte('compte/#connexion', t('parent.accSignIn')),
+        el('details', { class: 'pa-plie pa-plie-petit' }, [el('summary', { text: t('parent.onlineList') }), el('p', { text: t('parent.onlineListText') })])
+      ]));
+    }
+    maison.push(rang(t('parent.data'), [
       el('p', { text: enLigne ? t('parent.dataTextSync') : t('parent.dataText') }),
-      el('button', { type: 'button', class: 'btn-danger', onclick: function () {
+      bouton('btn-danger pa-btn', t(enLigne ? 'parent.eraseSync' : 'parent.erase'), 'warn', function () {
         if (!window.confirm(t(enLigne ? 'parent.eraseConfirmSync' : 'parent.eraseConfirm'))) return;
-        try { localStorage.removeItem(STORE); localStorage.removeItem('ludiworld.envie'); } catch (e) { /* rien */ }
-        if (Nuage) Nuage.oublier(); // une tablette vidée ne reste liée à personne : elle peut changer de famille
-        store = { games: {} }; acc = { step: 0, nom: '', age: 7, jeux: null, ecole: 30, libre: 60, fin: 'douce', pin1: null };
+        try { localStorage.removeItem(STORE); localStorage.removeItem('ludiworld.envie'); localStorage.removeItem(COPIE_VUE); } catch (e) { /* rien */ }
+        journal = []; majJournal();
+        if (Nuage) Nuage.oublier(); // un appareil vidé ne reste lié à personne : il peut changer de famille
+        store = { games: {} }; acc = accVide(); regarde = null;
+        LudiBarre.fermerParent();
         show('accueil');
-      } }, [icon('warn'), t(enLigne ? 'parent.eraseSync' : 'parent.erase')])
+      }, { 'data-action': 'effacer' })
     ]));
+    // Les pages du site (Les jeux, Ludiworld aime bien) sont dans la barre du site, en haut ; reste ce que Ludiworld fait des données.
+    maison.push(el('p', { class: 'pa-site' }, [el('a', { href: 'confidentialite/', text: t('parent.linkData') })]));
+    out.appendChild(bloc(t('parent.house'), maison, 'pa-maison'));
     return out;
   }
-
-  // =====================================================================
-  // Fiche d'un jeu (côté parent)
-  // =====================================================================
-  var sheet = document.getElementById('sheet');
-  var current = null;
-  function fact(label, value) { return el('div', null, [el('dt', { text: label }), el('dd', { text: value })]); }
-  function openSheet(g, fromHistory) {
-    current = g;
-    var stats = S()[g.id];
-    var learnBits = [el('p', { class: 'level ' + g.learning.level, text: t('level.' + g.learning.level) })];
-    if (g.learning.domains.length) learnBits.push(el('ul', { class: 'chips' }, g.learning.domains.map(function (d) { return el('li', { text: t('domains')[d] || d }); })));
-    if (g.learning.what) learnBits.push(el('p', { text: pick(g.learning.what) }));
-    if (g.learning.how) learnBits.push(el('p', null, [el('strong', { text: t('sheet.learnHow') + ' : ' }), pick(g.learning.how)]));
-    var promises = Object.keys(T[lang].healthy).filter(function (k) { return g.healthy && g.healthy[k] === true; });
-    var ours = [];
-    if (!stats || !stats.ms) ours.push(el('p', { text: t('sheet.oursNone') }));
-    else {
-      ours.push(el('p', { text: t('sheet.oursWeek', { t: duration(weekMs(g.id)) }) }));
-      ours.push(el('p', { text: t('sheet.oursTotal', { t: duration(stats.ms), n: stats.sessions }) }));
-    }
-    var inner = el('div', { class: 'sheet-inner', style: '--game:' + (g.color || '') }, [
-      el('button', { type: 'button', class: 'sheet-close', 'aria-label': t('close'), onclick: function () { closeSheet(); } }, [icon('cross')]),
-      el('div', { class: 'sheet-head' }, [
-        gameIcon(g),
-        el('div', null, [el('h2', { id: 'sheet-title', text: pick(g.title) }), el('p', { text: t('sheet.by', { n: g.author.name }) })])
-      ]),
-      el('p', { class: 'pitch', text: pick(g.pitch) }),
-      el('button', { type: 'button', class: 'btn-sun play', onclick: function () { play(g, { essai: true }); } }, [icon('play'), t('sheet.try')]),
-      g.embed === false ? el('p', { class: 'newtab', text: t('sheet.newTab') }) : null,
-      el('dl', { class: 'facts' }, [
-        fact(t('sheet.age'), t('ages', { a: g.age.min, b: g.age.max })),
-        fact(t('sheet.reading'), t('read.' + g.reading)),
-        fact(t('sheet.session'), t('sheet.sessionVal', { a: g.session.minutes[0], b: g.session.minutes[1] })),
-        fact(t('sheet.languages'), g.languages.map(function (l) { return T[lang].lang[l] || l; }).join(', ')),
-        fact(t('sheet.devices'), g.devices.map(function (d) { return T[lang].dev[d] || d; }).join(', ')),
-        fact(t('sheet.offline'), g.offline ? t('sheet.yes') : t('sheet.no'))
-      ]),
-      el('section', null, [el('h3', { text: t('sheet.learnTitle') })].concat(learnBits)),
-      el('section', null, [el('h3', { text: t('sheet.contentTitle') }), el('p', { text: pick(g.content) })]),
-      el('section', null, [
-        el('h3', { text: t('sheet.promisesTitle') }),
-        el('ul', { class: 'promises' }, promises.map(function (k) { return el('li', null, [icon('check'), T[lang].healthy[k]]); })),
-        el('p', { class: 'third', text: g.third_parties.length ? t('sheet.third', { l: g.third_parties.join(', ') }) : t('sheet.thirdNone') })
-      ]),
-      el('section', { class: 'ours' }, [el('h3', { text: t('sheet.oursTitle') })].concat(ours)),
-      el('div', { class: 'meta' }, [
-        el('p', { text: (stats && stats.kit) || g.kit ? t('sheet.kitOn') : t('sheet.kitOff') }),
-        g.status === 'draft' ? el('p', { text: t('sheet.draft') }) : null,
-        g.source && g.source.imported ? el('p', { text: t('sheet.source', { d: new Date(g.source.imported).toLocaleDateString(lang) }) }) : null,
-        g.author.url ? el('p', null, [el('a', { href: g.author.url, target: '_blank', rel: 'noopener', text: t('sheet.code') })]) : null
-      ])
-    ]);
-    sheet.textContent = '';
-    sheet.appendChild(inner);
-    if (!sheet.open) {
-      if (typeof sheet.showModal === 'function') sheet.showModal(); else sheet.setAttribute('open', '');
-      if (!fromHistory) history.pushState({ ludi: 'sheet', id: g.id }, '');
-    }
-    sheet.scrollTop = 0;
-  }
-  function closeSheet(fromHistory) {
-    if (!sheet.open) return;
-    if (typeof sheet.close === 'function') sheet.close(); else sheet.removeAttribute('open');
-    if (!fromHistory && history.state && history.state.ludi === 'sheet') { ignorePop++; history.back(); }
-  }
-  sheet.addEventListener('click', function (e) { if (e.target === sheet) closeSheet(); });
-  sheet.addEventListener('cancel', function (e) { e.preventDefault(); closeSheet(); });
 
   // =====================================================================
   // Jouer : le jeu en plein cadre, le temps compté, la fin douce ou nette
@@ -1216,8 +1993,9 @@
   var pastille = document.getElementById('p-reste');
   var rideau = document.getElementById('p-rideau');
   var frame = null;
-  var playing = null; // { game, origin, kit, essai, last, phase, avertie, sheet }
+  var playing = null; // { game, origin, kit, essai, last, phase, avertie, fiche }
   var ignorePop = 0;
+  var ficheApresRetour = null; // la fiche à rouvrir une fois le retour d'historique fait
 
   function play(g, o) {
     o = o || {};
@@ -1226,12 +2004,14 @@
     var stats = gameStats(g.id);
     if (!o.essai) { stats.sessions += 1; saveStore(); }
     if (g.embed === false) { window.open(g.url, '_blank', 'noopener'); return; }
-    playing = { game: g, origin: new URL(g.url, location.href).origin, kit: false, essai: !!o.essai, last: Date.now(), phase: 'jouer', avertie: false, sheet: sheet.open };
-    if (sheet.open) { if (typeof sheet.close === 'function') sheet.close(); else sheet.removeAttribute('open'); }
+    // Essayé depuis sa fiche (côté parent) : la fiche se referme pendant le jeu et revient après.
+    var fiche = LudiCatalogue.ouverte();
+    playing = { game: g, origin: new URL(g.url, document.baseURI).origin, kit: false, essai: !!o.essai, last: Date.now(), phase: 'jouer', avertie: false, fiche: fiche };
+    if (fiche) LudiCatalogue.fermer();
     frame = el('iframe', { title: pick(g.title), src: g.url, allow: 'autoplay; screen-wake-lock; gamepad' }); // pas de plein écran pour le jeu : c'est Ludiworld qui décide
     player.insertBefore(frame, player.firstChild);
     player.hidden = false;
-    bandeau.hidden = true; pastille.hidden = true; rideau.hidden = true;
+    bandeau.hidden = true; cacherPastille(); rideau.hidden = true;
     document.body.style.overflow = 'hidden';
     history.pushState({ ludi: 'play', id: g.id }, '');
     try { frame.focus(); } catch (e) { /* rien */ }
@@ -1243,17 +2023,17 @@
     compter();
     flushStore();
     setTimeout(planifierSynchro, 0); // la partie est finie : le temps de jeu peut partir
-    var wasEssai = playing.essai, backToSheet = playing.sheet;
+    var wasEssai = playing.essai, fiche = playing.fiche, retourDemande = false;
     playing = null;
     if (frame) { frame.remove(); frame = null; }
     player.hidden = true;
-    bandeau.hidden = true; pastille.hidden = true; rideau.hidden = true;
+    bandeau.hidden = true; cacherPastille(); rideau.hidden = true;
     clearTimeout(bandeauTimer);
     document.body.style.overflow = '';
-    if (!fromHistory && history.state && history.state.ludi === 'play') { ignorePop++; history.back(); }
+    if (!fromHistory && history.state && history.state.ludi === 'play') { ignorePop++; history.back(); retourDemande = true; }
     if (aRecharger) { location.reload(); return; }
-    if (wasEssai && current && backToSheet) openSheet(current, true);
     render();
+    if (wasEssai && fiche && vue === 'parent') { if (retourDemande) ficheApresRetour = fiche; else openFiche(fiche); }
   }
   document.getElementById('player-back').addEventListener('click', function () { stop(); });
 
@@ -1268,23 +2048,42 @@
   }
 
   var bandeauTimer = null;
-  function montrerBandeau(img, titre, texte, reste) {
+  // petit : une ligne en dessous, en petit (les minutes, quand la phrase dit « à la fin de ta partie »).
+  function montrerBandeau(img, titre, texte, petit) {
     bandeau.textContent = '';
     bandeau.appendChild(el('img', { src: img, alt: '' }));
-    bandeau.appendChild(el('div', null, [el('b', { text: titre }), el('span', { text: texte })]));
+    bandeau.appendChild(el('div', null, [el('b', { text: titre }), el('span', { text: texte }), petit ? el('small', { text: petit }) : null]));
     bandeau.hidden = false;
     bandeau.classList.remove('entre'); void bandeau.offsetWidth; bandeau.classList.add('entre');
     clearTimeout(bandeauTimer);
-    if (!reste) bandeauTimer = setTimeout(function () { bandeau.hidden = true; }, 8000);
+    bandeauTimer = setTimeout(function () { bandeau.hidden = true; }, 8000);
   }
 
-  function pastilleTexte(ico, texte, derniere) {
+  // La pastille du temps, dans le coin sous le bouton de retour : repliée en un petit soleil, pour ne cacher aucun bouton du jeu.
+  // Elle se déplie quelques secondes 5 minutes avant la fin, puis à « Dernière partie », et quand l'enfant la touche.
+  var pastilleMoment = '', pastilleTimer = null;
+  function pastilleTexte(ico, texte, derniere, moment) {
     pastille.hidden = false;
     pastille.classList.toggle('derniere', !!derniere);
     pastille.textContent = '';
     pastille.appendChild(icon(ico));
-    pastille.appendChild(document.createTextNode(texte));
+    pastille.appendChild(el('span', { class: 'p-reste-txt', text: texte }));
+    pastille.setAttribute('aria-label', texte);
+    if (moment !== pastilleMoment) {
+      pastilleMoment = moment;
+      if (moment !== 'calme') deplierPastille(8000);
+    }
   }
+  function deplierPastille(ms) {
+    pastille.classList.add('ouverte');
+    clearTimeout(pastilleTimer);
+    pastilleTimer = setTimeout(function () { pastille.classList.remove('ouverte'); }, ms);
+  }
+  function cacherPastille() {
+    pastille.hidden = true; pastilleMoment = '';
+    clearTimeout(pastilleTimer); pastille.classList.remove('ouverte');
+  }
+  pastille.addEventListener('click', function () { deplierPastille(4000); });
 
   function postToGame(msg) {
     if (!playing || !frame || !playing.kit) return;
@@ -1298,15 +2097,20 @@
     var regle = regles();
     var d = Temps.decision({ reste: r.reste, fin: regle.fin, kit: playing.kit, grace: regle.grace, pointArret: !!pointArret });
     var douce = regle.fin !== 'nette';
-    // La pastille du soleil : visible dans les 5 dernières minutes.
-    if (r.reste <= Temps.AVERTIR && r.reste > 0) pastilleTexte('sun', Math.ceil(r.reste / MIN) + '\u00a0min', false);
-    else if (r.reste > Temps.AVERTIR) pastille.hidden = true;
+    // La pastille du soleil : un petit soleil replié tant qu'il y a une limite ; dépliée quelques secondes 5 minutes avant la fin.
+    var resteTxt = t('kid.timeLeft', { t: Math.ceil(r.reste / MIN) + '\u00a0min' });
+    if (r.reste <= Temps.AVERTIR && r.reste > 0) pastilleTexte('sun', resteTxt, false, 'bientot');
+    else if (r.reste > Temps.AVERTIR && isFinite(r.reste)) pastilleTexte('sun', resteTxt, false, 'calme');
+    else if (r.reste > Temps.AVERTIR) cacherPastille();
 
     if (d === 'jouer') { if (playing.phase !== 'jouer') { playing.phase = 'jouer'; playing.avertie = false; bandeau.hidden = true; } return; }
     if (d === 'bientot') {
       if (!playing.avertie) {
         playing.avertie = true;
-        montrerBandeau('img/marmotte-baille.webp', r.cause === 'jeu' ? t('kid.soonGameTitle') : t('kid.soonTitle'), douce ? t('kid.soonSoft', { t: minutesLeft(r.reste) }) : t('kid.soonText', { t: minutesLeft(r.reste) }));
+        // Fin douce dans un jeu qui a le kit : la phrase d'abord (« à la fin de ta partie »), les minutes en petit dessous.
+        var titreBientot = r.cause === 'jeu' ? t('kid.soonGameTitle') : t('kid.soonTitle');
+        if (douce && playing.kit) montrerBandeau('img/marmotte-baille.webp', titreBientot, t('kid.soonSoftKit'), t('kid.soonLeft', { t: minutesLeft(r.reste) }));
+        else montrerBandeau('img/marmotte-baille.webp', titreBientot, douce ? t('kid.soonSoft', { t: minutesLeft(r.reste) }) : t('kid.soonText', { t: minutesLeft(r.reste) }));
         postToGame({ type: 'ludi:wrapup', minutes: Math.ceil(r.reste / MIN) });
       }
       return;
@@ -1319,7 +2123,7 @@
         montrerBandeau('img/marmotte-baille.webp', t('kid.finishTitle'), playing.kit ? t('kid.finishText') : t('kid.finishNoKit', { t: minutesLeft(grace) }));
       }
       // Ensuite, une simple pastille pour ne pas cacher le jeu.
-      pastilleTexte('hourglass', playing.kit ? t('kid.lastRound') : Math.ceil(grace / MIN) + '\u00a0min', true);
+      pastilleTexte('hourglass', playing.kit ? t('kid.lastRound') : Math.ceil(grace / MIN) + '\u00a0min', true, 'derniere');
       return;
     }
     // Arrêt en douceur à une fin de manche, juste avant la fin : les minutes qui restent ne servent plus aujourd'hui.
@@ -1336,7 +2140,7 @@
     playing.phase = 'arrete';
     flushStore();
     synchroniser();
-    pastille.hidden = true; bandeau.hidden = true;
+    cacherPastille(); bandeau.hidden = true;
     postToGame({ type: 'ludi:pause', reason: 'temps' });
     var f = fam();
     var toutFini = cause !== 'jeu';
@@ -1345,11 +2149,28 @@
       el('img', { src: toutFini ? 'img/marmotte-dodo.webp' : 'img/marmotte-baille.webp', alt: '' }),
       el('h2', { text: toutFini ? t('kid.stopTitle') : t('kid.stopTitleGame') }),
       el('p', { text: !toutFini ? t('kid.stopTextGame') : t(cause === 'heure' ? 'kid.stopTextHour' : 'kid.stopText', { n: f ? f.enfant.nom : '' }) }),
+      toutFini && !playing.essai ? ideeApres(playing.game, f) : null,
       el('button', { type: 'button', class: 'btn-sun big', text: t('kid.stopOk'), onclick: function () { stop(); } })
     ]));
     rideau.setAttribute('data-moment', toutFini ? 'nuit' : 'soir');
     rideau.hidden = false;
     var b = rideau.querySelector('button'); if (b) setTimeout(function () { b.focus(); }, 300);
+  }
+
+  // L'idée hors écran du dernier jeu joué (champ `after` de sa fiche), sous « Bravo » : une fois par jour et par enfant.
+  // Notée dans les données de l'appareil seulement (store.apresVu), hors du foyer : elle ne part pas avec la copie en ligne.
+  function ideeApres(g, f) {
+    var phrase = g && g.after ? pick(g.after) : '';
+    if (!phrase) return null;
+    var qui = f ? f.id : '-', k = Temps.cleJour();
+    if (!store.apresVu || typeof store.apresVu !== 'object') store.apresVu = {};
+    if (store.apresVu[qui] === k) return null;
+    store.apresVu[qui] = k;
+    saveStore();
+    return el('div', { class: 'rideau-apres' }, [
+      LudiCatalogue.icone(g, 52),
+      el('p', { text: phrase.replace(/ ([?!:;»])/g, ' $1') })
+    ]);
   }
 
   function boucle() { compter(); evaluer(false); }
@@ -1362,8 +2183,8 @@
     if (playing) boucle();
     else if (vue === 'enfant') renderEnfantSiChange();
     else if (vue === 'parent' && Date.now() - derniereActivite > CARNET_INACTIF) {
-      // Carnet laissé ouvert : on revient côté enfant (le parent a sans doute rendu la tablette).
-      closeSheet(); closeGate(); fermerCarnet();
+      // Côté parent laissé ouvert : on revient côté enfant (le parent a sans doute rendu l'appareil).
+      closeGate(); fermerCarnet();
     }
   }, 1000);
   window.addEventListener('storage', function (e) {
@@ -1377,7 +2198,7 @@
   var lastEnfantKey = '';
   function renderEnfantSiChange() {
     var r = regles();
-    var k = (fam() ? fam().id : '') + '|' + Temps.cleJour() + '|' + Math.round(dayMs() / MIN) + '|' + JSON.stringify(fam() && fam().regles) + '|' + Temps.horsPlage(r) + '|' + lang;
+    var k = (fam() ? fam().id : '') + '|' + Temps.cleJour() + '|' + Math.round(dayMs() / MIN) + '|' + JSON.stringify(fam() && [fam().regles, fam().jeux, fam().regarderTout]) + '|' + Temps.horsPlage(r) + '|' + lang;
     if (k !== lastEnfantKey) { lastEnfantKey = k; renderEnfant(); }
     else { pillEnfant(); partSoleil(); }
   }
@@ -1427,11 +2248,32 @@
     }
   });
 
-  // Bouton retour (Android) : ferme le jeu, puis la fiche.
+  // Bouton retour (Android) : ferme le jeu ; côté parent, revient à l'onglet d'avant.
+  // La fiche d'un jeu gère elle-même son retour (site/catalogue.js).
   window.addEventListener('popstate', function () {
-    if (ignorePop) { ignorePop--; return; }
+    if (ignorePop) {
+      ignorePop--;
+      if (ficheApresRetour) { var g = ficheApresRetour; ficheApresRetour = null; if (vue === 'parent') openFiche(g); }
+      return;
+    }
     if (playing) { stop(true); return; }
-    if (sheet.open) closeSheet(true);
+    if (!vitrine.hidden) {
+      var pas = history.state && history.state.ludiVitrine;
+      if (pas === 'liste') { vitrineJeu = null; dessinerVitrine(); }
+      else if (!pas) fermerVitrine();
+      return;
+    }
+    if (vue !== 'parent') return;
+    var o = history.state && history.state.ludiOnglet;
+    var haut = pileOnglets[pileOnglets.length - 1];
+    if (!o) o = pileOnglets.pop();          // un pas laissé par la fiche ou un jeu : l'onglet d'avant
+    else if (o === haut) pileOnglets.pop();  // retour
+    else if (o !== tab) pileOnglets.push(tab); // en avant
+    if (o && o !== tab) {
+      tab = o; ajout = null; regle = null;
+      renderParent();
+      window.scrollTo(0, 0);
+    }
   });
 
   // ---------- Plein écran ----------
@@ -1447,7 +2289,7 @@
   }, true);
 
   // ---------- Installation ----------
-  window.addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); installEvt = e; if (vue === 'parent' && tab === 'settings') renderParent(); });
+  window.addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); installEvt = e; if (vue === 'parent' && tab === 'reglages') renderParent(); });
   // Nouvelle version publiée : le nouveau service worker prend la main, on recharge pour l'afficher.
   // Pas au tout premier passage (rien en cache), et jamais en pleine partie : on attend la fin du jeu.
   var aRecharger = false;
@@ -1461,39 +2303,56 @@
   }
 
   // ---------- Démarrage ----------
-  // Rien de préparé sur cet appareil : on arrive sur le site, sauf si l'on vient y préparer la tablette (#demarrer).
-  // Préparé : côté enfant ; #carnet (onglet « Expériences installées » du site) ouvre le carnet, avec le code s'il le faut.
+  // L'appli vit sous app/ ; le site, à la racine (Julien, 2026-11-18). Rien de préparé sur cet appareil : la préparation
+  // (son premier écran propose aussi le compte et le site). Le site y mène par « Essayer » (#demarrer).
+  // Préparé : côté enfant ; #carnet (lien « Côté parent » du site) ouvre le côté parent, avec le code s'il le faut ;
+  // #reglages fait de même sur l'onglet Réglages (retour du compte).
   document.documentElement.lang = lang;
   var arrivee = location.hash;
   var prepare = !!(fam() && foyer().pin);
   var aJouer = /^#jouer=/.test(arrivee) ? arrivee.slice(7) : null; // « Y jouer » depuis la fiche d'un jeu
+  function ongletDe(hash) { return hash === '#carnet' ? 'jeux' : hash === '#reglages' ? 'reglages' : null; }
   if (aJouer) history.replaceState(history.state, '', location.pathname + location.search);
-  if (!prepare && arrivee !== '#demarrer') { location.replace('decouvrir/'); return; }
-  if (arrivee === '#carnet' || arrivee === '#enfant' || (prepare && arrivee === '#demarrer')) history.replaceState(history.state, '', location.pathname + location.search);
+  if (ongletDe(arrivee) || arrivee === '#enfant' || arrivee === '#demarrer') history.replaceState(history.state, '', location.pathname + location.search);
+  function versParent(onglet) {
+    if (LudiBarre.parentOuvert()) ouvrirCarnet(onglet);
+    else openGate(function () { ouvrirCarnet(onglet); });
+  }
   loadCatalogue().then(function () {
     // Un jeu choisi qui a disparu du catalogue n'est plus proposé (on garde son choix au cas où il revient).
     if (!prepare) { show('accueil'); return; }
     synchroniser();
-    if (arrivee === '#carnet' && LudiBarre.parentOuvert()) { show('parent'); return; }
+    if (ongletDe(arrivee) && LudiBarre.parentOuvert()) { ouvrirCarnet(ongletDe(arrivee)); return; }
+    // Retour depuis une page du site ouverte côté parent : le pas d'historique garde l'onglet ; pas de code tant que le parent est là.
+    var ongletRetour = history.state && history.state.ludiOnglet;
+    if (!ongletDe(arrivee) && !aJouer && LudiBarre.parentOuvert() && ONGLETS.some(function (o) { return o[0] === ongletRetour; })) { ouvrirCarnet(ongletRetour); return; }
     LudiBarre.fermerParent();
     show('enfant');
-    if (arrivee === '#carnet') openGate(ouvrirCarnet);
+    if (ongletDe(arrivee)) versParent(ongletDe(arrivee));
     if (aJouer) {
       // Les mêmes règles que sur une tuile : un jeu choisi, et du temps qu'il reste.
       var g = games.filter(function (x) { return x.id === aJouer; })[0];
       if (g && choix(g.id) && resteJeu(g.id).jeu > 0 && document.querySelector('.tuile')) play(g);
     }
   });
+  // La page revient du cache du navigateur (retour depuis une page du site) : côté parent encore ouvert, on le garde ; sinon côté enfant.
+  window.addEventListener('pageshow', function (e) {
+    if (!e.persisted || vue !== 'parent') return;
+    if (LudiBarre.parentOuvert()) { derniereActivite = Date.now(); renderParent(); }
+    else { closeGate(); fermerCarnet(); }
+  });
   // Retour sur l'appli (« +10 min » donné depuis le téléphone, par exemple) : on regarde s'il y a du neuf.
   document.addEventListener('visibilitychange', function () { if (!document.hidden) synchroniser(); });
   window.addEventListener('online', synchroniser);
-  setInterval(function () { if (!document.hidden && vue === 'parent' && tab === 'today') synchroniser(); }, 30000);
-  // « Expériences installées » cliqué sans quitter la page (onglet du carnet, adresse tapée) : même règle.
+  setInterval(function () { if (!document.hidden && vue === 'parent') synchroniser(); }, 30000);
+  // « Côté parent » touché sans quitter la page (adresse tapée) : même règle.
   window.addEventListener('hashchange', function () {
-    if (location.hash !== '#carnet' || !prepare) return;
+    var o = ongletDe(location.hash);
+    if (!o || !prepare) return;
     history.replaceState(history.state, '', location.pathname + location.search);
-    if (vue === 'parent' || playing) return;
-    if (LudiBarre.parentOuvert()) show('parent'); else openGate(ouvrirCarnet);
+    if (playing) return;
+    if (vue === 'parent') { tab = o; renderParent(); return; }
+    versParent(o);
   });
 
   // Pour les tests et la démo : avancer le temps de jeu d'aujourd'hui sans attendre (console).

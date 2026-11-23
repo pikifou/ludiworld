@@ -55,7 +55,7 @@ LudiSite.en({
   q3: 'What if my game teaches little?',
   a3: 'It still belongs here. The card simply says so: "just for fun". What matters is that it is healthy and tells the truth.',
   q4: 'My kids play on my tablet. What about their data?',
-  a4: 'Nothing leaves the device: Ludiworld keeps settings and play time in the browser, and games promise not to send anything. The game only receives the child\'s nickname.',
+  a4: 'Without an account, settings and play time stay in the browser; with an account, an online copy keeps them for your other devices. Games promise not to send anything: the game only receives the child\'s nickname.',
   q5: 'I don\'t have time to make a game, but I want to help.',
   a5: 'Share what works at home: a series, a film or an app that makes your child curious. <a href="../aime-bien/">Ludiworld likes</a> gathers them.'
 });

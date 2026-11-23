@@ -1,11 +1,13 @@
-/* Ludiworld : la barre du site (pages du site et carnet parent). Les polices sont chargées par la page. */
-.lw-barre {
+/* Ludiworld : la barre du site (pages du site et haut du côté parent), puis la ligne des promesses. Les polices sont chargées par la page. */
+.lw-barre, .lw-promesses {
   --lw-nuit: #16204a;
   --lw-papier: #fbf7ee;
   --lw-soleil: #ffc83d;
   --lw-soleil-fonce: #e0a400;
   --lw-encre: #1d2b4f;
   --lw-doux: #c9d2ee;
+}
+.lw-barre {
   position: relative; z-index: 20;
   display: flex; align-items: center; gap: 10px 26px;
   min-height: 64px; padding: 8px clamp(16px, 4.5vw, 64px);
@@ -34,17 +36,6 @@
   content: ""; position: absolute; left: 12px; right: 12px; bottom: 2px; height: 4px;
   background: var(--lw-soleil); border-radius: 3px 5px 2px 4px;
 }
-.lw-moi { color: var(--lw-soleil); font-weight: 700; }
-.lw-chez-soi > .lw-jeux { color: var(--lw-papier); font-weight: 700; }
-.lw-plus { position: relative; }
-.lw-plus summary { list-style: none; cursor: pointer; }
-.lw-plus summary::-webkit-details-marker { display: none; }
-.lw-plus summary::before { content: "+"; font-family: "Baloo 2", "Trebuchet MS", sans-serif; font-weight: 800; color: var(--lw-soleil); }
-.lw-plus-liste {
-  position: absolute; z-index: 40; top: calc(100% + 6px); left: 0; display: flex; flex-direction: column; gap: 2px; min-width: 210px; padding: 6px;
-  background: var(--lw-nuit); border: 2px solid rgba(255, 255, 255, .22); border-radius: 12px 16px 10px 14px; box-shadow: 0 12px 28px rgba(0, 0, 0, .4);
-}
-.lw-plus-liste .lw-onglet { min-height: 44px; }
 .lw-aime { font-style: italic; } /* annexe : ça se voit jusque dans la barre */
 .lw-ico { width: 16px; height: 16px; flex: none; }
 
@@ -66,25 +57,119 @@
 .lw-compte:hover, .lw-compte[aria-current="page"] { border-bottom-color: var(--lw-soleil); }
 .lw-barre a:focus-visible, .lw-barre button:focus-visible { outline: 3px solid var(--lw-soleil); outline-offset: 2px; }
 
-/* Téléphone et tablette en portrait : la marque et les boutons en haut, les onglets dessous, qu'on fait défiler. */
+/* Connecté : la pastille du compte. Un rond avec l'initiale et une coche (la forme, pas seulement la couleur),
+   « Connecté » écrit au-dessus du nom ; au toucher, un petit menu. */
+.lw-qui { position: relative; flex: none; }
+.lw-pastille {
+  display: inline-flex; align-items: center; gap: 9px; padding: 4px 10px 4px 4px; min-height: 44px; cursor: pointer;
+  color: var(--lw-papier); background: rgba(255, 255, 255, .1); border: 0;
+  border-radius: 24px 20px 22px 24px; font-family: "Lexend", "Segoe UI", sans-serif; text-align: left;
+}
+.lw-pastille:hover, .lw-pastille[aria-expanded="true"] { background: rgba(255, 255, 255, .18); }
+.lw-rond {
+  position: relative; flex: none; display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px;
+  border-radius: 50%; background: var(--lw-soleil); color: var(--lw-encre);
+  font: 800 1.12rem/1 "Baloo 2", "Trebuchet MS", sans-serif; padding-top: 2px; box-sizing: border-box;
+}
+.lw-rond > .lw-ico { width: 20px; height: 20px; }
+.lw-coche {
+  position: absolute; right: -3px; bottom: -3px; display: flex; align-items: center; justify-content: center;
+  width: 17px; height: 17px; border-radius: 50%; background: var(--lw-papier); color: var(--lw-nuit); box-shadow: 0 0 0 2px var(--lw-nuit);
+}
+.lw-coche .lw-ico { width: 12px; height: 12px; }
+.lw-qui-txt { display: flex; flex-direction: column; min-width: 0; line-height: 1.1; }
+.lw-qui-etat { font-size: .72rem; font-weight: 500; color: var(--lw-doux); letter-spacing: .02em; }
+.lw-qui-nom { max-width: 11em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .95rem; font-weight: 700; }
+.lw-chevron { display: flex; color: var(--lw-doux); transition: transform .18s ease; }
+.lw-chevron .lw-ico { width: 14px; height: 14px; }
+.lw-pastille[aria-expanded="true"] .lw-chevron { transform: rotate(180deg); }
+
+.lw-qui-menu {
+  position: absolute; right: 0; top: calc(100% + 10px); z-index: 30;
+  width: 270px; max-width: calc(100vw - 32px); box-sizing: border-box; padding: 6px;
+  background: var(--lw-papier); color: var(--lw-encre);
+  border-radius: 10px 18px 16px 18px; box-shadow: 0 14px 32px rgba(10, 16, 40, .32), 0 0 0 1px rgba(22, 32, 74, .12);
+  animation: lw-qui-ouvre .16s ease-out;
+}
+.lw-qui-menu[hidden] { display: none; }
+@keyframes lw-qui-ouvre { from { opacity: 0; transform: translateY(-6px); } }
+@media (prefers-reduced-motion: reduce) { .lw-qui-menu { animation: none; } .lw-chevron { transition: none; } }
+.lw-qui-tete {
+  margin: 0 0 4px; padding: 10px 12px 12px; display: flex; flex-direction: column; gap: 2px;
+  border-bottom: 2px dashed rgba(29, 43, 79, .16); font: 500 .8rem/1.25 "Lexend", "Segoe UI", sans-serif; color: #4a5678;
+}
+.lw-qui-tete strong { color: var(--lw-encre); font-size: .92rem; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lw-qui-menu ul { list-style: none; margin: 0; padding: 0; }
+.lw-qui-item {
+  display: flex; align-items: center; gap: 12px; width: 100%; min-height: 46px; padding: 8px 12px; box-sizing: border-box;
+  font: 600 1rem/1.15 "Lexend", "Segoe UI", sans-serif; color: var(--lw-encre); text-decoration: none; text-align: left;
+  background: none; border: 0; border-radius: 10px 14px 9px 12px; cursor: pointer;
+}
+.lw-qui-item .lw-ico { width: 20px; height: 20px; color: #4a5678; }
+.lw-qui-item:hover { background: #f1e8d3; }
+.lw-qui-item[aria-current="page"] { font-weight: 800; }
+.lw-qui-item[aria-current="page"]::after { content: ""; margin-left: auto; width: 8px; height: 8px; border-radius: 50%; background: var(--lw-soleil-fonce); }
+.lw-qui-menu .lw-sortir { margin-top: 4px; border-top: 1px solid rgba(29, 43, 79, .1); border-radius: 0 0 12px 10px; }
+.lw-qui-menu a:focus-visible, .lw-qui-menu button:focus-visible { outline: 3px solid var(--lw-nuit); outline-offset: -3px; }
+
+/* Le menu des pages du site, côté parent sur téléphone seulement (lw-replie). */
+.lw-menu {
+  display: none; align-items: center; justify-content: center; width: 44px; height: 40px; padding: 0; border: 0; cursor: pointer;
+  color: var(--lw-papier); background: rgba(255, 255, 255, .1); border-radius: 12px 16px 10px 14px;
+}
+.lw-menu .lw-ico { width: 22px; height: 22px; }
+.lw-menu[aria-expanded="true"] { background: var(--lw-papier); color: var(--lw-encre); }
+
+/* Les promesses de Ludiworld : une fine ligne attachée sous la barre, qui mène à la charte. */
+.lw-promesses {
+  position: relative; z-index: 19;
+  display: flex; flex-wrap: wrap; justify-content: center; align-items: baseline; gap: 2px 10px;
+  padding: 5px clamp(16px, 4.5vw, 64px) 6px;
+  background: #0f1738; color: var(--lw-doux); text-decoration: none; text-align: center;
+  font: 500 .84rem/1.3 "Lexend", "Segoe UI", sans-serif; letter-spacing: .01em;
+  border-top: 1px solid rgba(255, 255, 255, .08);
+}
+.lw-promesses .lw-point { color: var(--lw-soleil); font-weight: 800; }
+.lw-promesses:hover span:not(.lw-point) { color: var(--lw-papier); text-decoration: underline; text-decoration-color: var(--lw-soleil); text-underline-offset: 3px; }
+.lw-promesses:focus-visible { outline: 3px solid var(--lw-soleil); outline-offset: -3px; }
+
+/* Téléphone et tablette en portrait : la marque et les boutons en haut, les onglets dessous, sur deux lignes s'il le faut
+   (jamais un onglet coupé au bord de l'écran). */
 @media (max-width: 1080px) {
-  .lw-barre { flex-wrap: wrap; padding-bottom: 0; }
-  .lw-onglets {
-    order: 3; width: calc(100% + 2 * clamp(16px, 4.5vw, 64px)); margin: 0 calc(-1 * clamp(16px, 4.5vw, 64px));
-    padding: 0 clamp(10px, 4.5vw, 58px) 4px; overflow-x: auto; scrollbar-width: none;
-  }
-  .lw-onglets::-webkit-scrollbar { display: none; }
-  .lw-onglets.lw-chez-soi { overflow: visible; }
+  .lw-barre { flex-wrap: wrap; padding-bottom: 4px; }
+  .lw-onglets { order: 3; width: 100%; flex-wrap: wrap; gap: 0 2px; margin: 0 -10px; }
+  .lw-onglet { min-height: 44px; }
 }
 @media (max-width: 480px) {
   .lw-barre { column-gap: 8px; }
+  .lw-onglet { padding: 8px 9px; font-size: .9rem; }
+  .lw-onglet[aria-current="page"]::after { left: 9px; right: 9px; }
   .lw-cote { gap: 8px; }
-  .lw-langs button { min-width: 32px; }
   .lw-action { padding: 8px 11px 7px; font-size: .9rem; }
   .lw-action .lw-ico { display: none; }
   .lw-marque { font-size: 1.35rem; }
   .lw-compte { font-size: .84rem; }
   .lw-langs { padding: 2px; }
   .lw-langs button { min-width: 28px; min-height: 30px; font-size: .78rem; }
-  .lw-barre:has(.lw-compte) .lw-action { padding-inline: 9px; }
+  .lw-barre:has(.lw-compte) .lw-action { padding-inline: 8px; font-size: .84rem; }
+  .lw-barre:has(.lw-compte) .lw-cote { gap: 5px; }
+  .lw-barre:has(.lw-compte) .lw-marque { font-size: 1.15rem; }
+  .lw-barre:has(.lw-compte) .lw-compte { font-size: .78rem; }
+  .lw-barre:has(.lw-compte) .lw-langs button { min-width: 26px; }
+  /* La pastille : l'initiale seule (le nom et « Connecté » sont dans le menu) ; le menu se cale sur le bord droit de l'écran. */
+  .lw-barre:has(.lw-qui) .lw-action { padding-inline: 9px; font-size: .86rem; }
+  .lw-barre:has(.lw-qui) .lw-cote { gap: 6px; }
+  .lw-barre:has(.lw-qui) .lw-marque { font-size: 1.2rem; }
+  .lw-pastille { padding: 4px; min-height: 0; border-radius: 50%; }
+  .lw-qui-txt, .lw-chevron { display: none; }
+  .lw-rond { width: 36px; height: 36px; }
+  .lw-qui { position: static; }
+  .lw-cote { position: relative; }
+  .lw-qui-menu { top: calc(100% + 12px); }
+  .lw-promesses { gap: 0 7px; padding-block: 4px 5px; font-size: .74rem; }
+}
+@media (max-width: 700px) {
+  .lw-replie .lw-menu { display: inline-flex; }
+  .lw-replie:not(.lw-ouvert) .lw-onglets { display: none; }
+  .lw-replie:not(.lw-ouvert) { padding-bottom: 8px; }
 }

@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <!-- L'appli vit sous app/ (le site est à la racine, Julien 2026-11-18) ; ses fichiers restent à la racine du site :
+       toutes les adresses relatives (img/, jeux/, kit/, compte/…) partent de là. Pas de lien en « #… » dans l'appli. -->
+  <base href="../">
+  <title>Ludiworld</title>
+  <meta name="description" content="Des petits jeux faits maison par des parents, qui font apprendre. Le parent choisit les jeux et le temps de jeu, le soleil dit quand on s'arrête.">
+  <meta name="theme-color" content="#7cc6f2">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/marmotte-64.png">
+  <link rel="apple-touch-icon" href="icons/marmotte-180.png">
+  <link rel="preload" href="fonts/baloo2-800.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/lexend.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="site/catalogue.css">
+  <link rel="stylesheet" href="site/barre.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Première ouverture : le parent prépare Ludiworld -->
+  <section id="v-accueil" class="accueil" hidden></section>
+
+  <!-- Côté enfant : l'île et le soleil -->
+  <section id="v-enfant" class="enfant" hidden>
+    <div class="ciel" aria-hidden="true">
+      <img class="astre soleil" src="img/soleil.webp" alt="">
+      <img class="astre lune" src="img/lune.webp" alt="">
+      <span class="etoiles"></span>
+      <img class="nuage n1" src="img/nuage-1.webp" alt="">
+      <img class="nuage n2" src="img/nuage-2.webp" alt="">
+      <img class="nuage n3" src="img/nuage-3.webp" alt="">
+    </div>
+    <header class="e-haut">
+      <h1 class="e-salut" id="e-salut"></h1>
+      <p class="e-temps" id="e-temps" aria-live="polite"></p>
+      <button type="button" class="e-qui" id="e-qui" hidden><svg viewBox="0 0 24 24" aria-hidden="true" class="ico"><circle cx="12" cy="8" r="4.5" fill="currentColor"/><path d="M3.5 21c1.2-4.6 4.6-7 8.5-7s7.3 2.4 8.5 7z" fill="currentColor"/></svg><span></span></button>
+    </header>
+    <div class="e-monde" aria-hidden="true">
+      <div class="ile">
+        <img class="ile-jour" src="img/ile-jour.webp" alt="">
+        <img class="ile-nuit" src="img/ile-nuit.webp" alt="">
+        <img class="marmotte" id="e-marmotte" src="img/marmotte-salut.webp" alt="">
+      </div>
+    </div>
+    <nav class="e-jeux" id="e-jeux" aria-label="Jeux"></nav>
+    <div class="e-dodo" id="e-dodo" hidden></div>
+    <div class="e-pied">
+    <button type="button" class="e-parents" id="e-parents"><svg viewBox="0 0 24 24" aria-hidden="true" class="ico"><rect x="4" y="10.5" width="16" height="11" rx="2.5" fill="currentColor"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5" fill="none" stroke="currentColor" stroke-width="2.4"/></svg><span class="e-parents-txt" data-fr="Parents" data-en="Parents">Parents</span><span class="e-parents-hint"></span></button>
+    <!-- Regarder tous les jeux : une vitrine dessinée, sans mot à lire (le nom est dans aria-label) -->
+    <button type="button" class="e-vitrine" id="e-vitrine" hidden><svg viewBox="0 0 64 56" aria-hidden="true">
+      <path class="v-mur" d="M9 25h46v27H9z"/>
+      <rect class="v-carreau" x="15" y="31" width="34" height="16" rx="3"/>
+      <rect class="v-jeu1" x="19" y="35" width="8" height="8" rx="2.5"/><rect class="v-jeu2" x="28" y="35" width="8" height="8" rx="3"/><rect class="v-jeu3" x="37" y="35" width="8" height="8" rx="2"/>
+      <path class="v-auvent" d="M6 6h52l4 15a5 5 0 0 1-10 0 5 5 0 0 1-10 0 5 5 0 0 1-10 0 5 5 0 0 1-10 0 5 5 0 0 1-10 0 5 5 0 0 1-10 0z"/>
+      <path class="v-raies" d="M10.3 6L7 21M19 6l-2 15M27.7 6L27 21M36.3 6l.7 15M45 6l2 15M53.7 6L57 21"/>
+    </svg></button>
+    </div>
+  </section>
+
+  <!-- Côté enfant : tous les jeux, pour regarder et en demander un -->
+  <section id="vitrine" class="vitrine" hidden></section>
+
+  <!-- Côté parent : un seul bandeau (Julien, 2026-11-18). Le logo (vers le site), « Connecté » et le compte,
+       les onglets, les enfants, « Rendre l'appareil », sur une ligne (onglets et « Rendre » en bas sur téléphone). La langue : dans Réglages. -->
+  <section id="v-parent" class="parents" hidden>
+    <header class="pa-barre">
+      <div class="pa-logo" id="pa-logo"></div>
+      <div class="pa-qui" id="pa-qui"></div>
+      <div class="pa-enfants" id="pa-enfants" role="group"></div>
+      <div class="pa-bas">
+        <!-- « Changé : … Annuler » : dans la barre, jamais posé sur un bouton -->
+        <div class="pa-journal" id="pa-journal" role="status" hidden></div>
+        <nav class="pa-onglets" id="pa-onglets" role="tablist"></nav>
+        <button type="button" class="pa-rendre" id="pa-rendre"><svg viewBox="0 0 24 24" aria-hidden="true" class="ico"><circle cx="12" cy="12" r="5" fill="currentColor"/><g stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 1.5v3M12 19.5v3M1.5 12h3M19.5 12h3M4.6 4.6l2.1 2.1M17.3 17.3l2.1 2.1M4.6 19.4l2.1-2.1M17.3 6.7l2.1-2.1"/></g></svg><span></span></button>
+      </div>
+    </header>
+    <main class="pa-page" id="pa-page"></main>
+  </section>
+
+  <dialog id="gate" class="gate"></dialog>
+  <dialog id="qui" class="gate qui"></dialog>
+
+  <div id="player" class="player" hidden>
+    <button type="button" class="player-back" id="player-back"></button>
+    <button type="button" class="p-reste" id="p-reste" hidden></button>
+    <div class="p-bandeau" id="p-bandeau" role="status" hidden></div>
+    <div class="p-rideau" id="p-rideau" hidden></div>
+  </div>
+
+  <script src="site/barre.js"></script>
+  <script src="textes.js"></script>
+  <script src="temps.js"></script>
+  <script src="synchro.js"></script>
+  <script src="site/nuage.js"></script>
+  <script src="site/catalogue.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

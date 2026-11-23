@@ -2,6 +2,7 @@
   "ludi": 1,
   "id": "tour-aimants",
   "status": "draft",
+  "added": "2026-10-28",
   "title": { "fr": "La Tour aux Aimants", "en": "The Magnet Tower" },
   "pitch": {
     "fr": "Une sorcière a enfermé le chat en haut de sa tour. Avec un aimant, attire les chevaliers dans les trous, ouvre les verrous et lâche les épées pour monter les 100 salles.",
@@ -9,6 +10,12 @@
   },
   "url": "https://pikifou.github.io/tour-aimants/",
   "icon": "https://pikifou.github.io/tour-aimants/icon-512.png",
+  "screenshots": [
+    { "src": "img/tour-aimants-1.webp", "alt": { "fr": "L'aimant ouvre la cage", "en": "The magnet opens the cage" } },
+    { "src": "img/tour-aimants-2.webp", "alt": { "fr": "Les pôles nord et sud", "en": "North and south poles" } },
+    { "src": "img/tour-aimants-3.webp", "alt": { "fr": "La tour, étage par étage", "en": "The tower, floor by floor" } }
+  ],
+  "screens": "landscape",
   "color": "#1b1430",
   "author": { "name": "Julien", "url": "https://github.com/pikifou/tour-aimants" },
   "languages": ["fr"],
@@ -31,6 +38,10 @@
     "fr": "Une sorcière maligne et des chevaliers assommés (yeux en spirale), sans violence réaliste.",
     "en": "A mischievous witch and knocked-out knights (spiral eyes), no realistic violence."
   },
+  "after": {
+    "fr": "Et si tu cherchais dans la maison ce qui colle à un aimant de frigo, et ce qui ne colle pas ?",
+    "en": "How about looking around the house for what sticks to a fridge magnet, and what doesn’t?"
+  },
   "devices": ["phone", "tablet"],
   "offline": true,
   "healthy": {
@@ -38,6 +49,6 @@
     "no_daily_pressure": true, "no_notifications": true, "no_strangers": true, "no_tracking": true,
     "natural_stops": true
   },
-  "third_parties": ["fonts.googleapis.com"],
+  "third_parties": ["fonts.googleapis.com", "fonts.gstatic.com"],
   "kit": true
 }

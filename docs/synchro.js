@@ -62,6 +62,14 @@
     var out = Object.assign({}, recent, { maj: maxNombres(a.maj, b.maj), games: parCle(a.games, b.games, fusionnerJeu) });
     // Ce que dit l'enfant et les envies (Explorer) se fusionnent case par case : ce ne sont pas des réglages.
     ['avis', 'envies'].forEach(function (k) { if (a[k] || b[k]) out[k] = parCle(a[k], b[k], plusRecent); });
+    // Les demandes de l'enfant ({ id: date }) se font côté enfant, sans toucher aux réglages : elles se fusionnent jeu par jeu.
+    // Une demande traitée par un parent (installée ou « Pas maintenant ») est notée dans demandesVues ({ id: date de la demande }) :
+    // elle ne revient pas d'un autre appareil. Une nouvelle demande, plus récente, revient.
+    var vues = parCle(a.demandesVues, b.demandesVues, maxNombres);
+    var demandes = parCle(a.demandes, b.demandes, maxNombres);
+    Object.keys(demandes).forEach(function (id) { if (vues[id] >= demandes[id]) delete demandes[id]; });
+    if (Object.keys(vues).length) out.demandesVues = vues; else delete out.demandesVues;
+    if (Object.keys(demandes).length) out.demandes = demandes; else delete out.demandes;
     return out;
   }
 

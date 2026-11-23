@@ -10,10 +10,12 @@ Un faux jeu /jeu-kit/ utilise ludi.js pour vérifier le dialogue appli <-> kit (
 """
 import base64
 import datetime
+import decimal
 import json
 import mimetypes
 import pathlib
 import sys
+import urllib.parse
 
 from playwright.sync_api import sync_playwright
 
@@ -22,6 +24,7 @@ OUT = pathlib.Path(sys.argv[1] if len(sys.argv) > 1 else "captures")
 GAMES = pathlib.Path(sys.argv[2]) if len(sys.argv) > 2 else None
 OUT.mkdir(parents=True, exist_ok=True)
 BASE = "https://pikifou.github.io"
+APP = BASE + "/ludiworld/app/"   # l'appli ; le site est à la racine (Julien, 2026-11-18)
 PIN = "2580"
 
 FAKE_GAME = """<!doctype html><meta charset=utf-8><title>Jeu kit</title>
@@ -46,7 +49,9 @@ FAKE_CARD = {
     "healthy": {k: True for k in ["no_ads", "no_purchases", "no_subscription", "no_loot_boxes", "no_daily_pressure",
                                   "no_notifications", "no_strangers", "no_tracking", "natural_stops"]},
     "third_parties": [], "kit": True,
+    "after": {"fr": "Et si tu dessinais un cochon dans une grange ?", "en": "How about drawing a pig in a barn?"},
 }
+APRES_FR = "Et si tu dessinais un cochon dans une grange\u00a0?"
 
 
 def serve(route):
@@ -66,7 +71,7 @@ def serve(route):
         base = ROOT / "docs"
     elif GAMES and (GAMES / parts[0] / "docs").is_dir():
         base = GAMES / parts[0] / "docs"
-    elif GAMES and (GAMES / parts[0]).is_dir() and not (GAMES / parts[0] / "index.html").is_file():
+    elif GAMES and (GAMES / parts[0]).is_dir():   # ludigames (plusieurs jeux) ou un jeu publié depuis la racine (Simon)
         base = GAMES / parts[0]
     else:
         return route.fulfill(body=f"<h1 style='font:40px sans-serif'>{parts[0]}</h1>", content_type="text/html")
@@ -78,12 +83,13 @@ def serve(route):
     return route.fulfill(body=f.read_bytes(), content_type=mimetypes.guess_type(str(f))[0] or "application/octet-stream")
 
 
-def famille(fin="douce", max_kit=None):
+def famille(fin="douce", max_kit=None, fini_pluie=False):
     """Une famille déjà préparée (code 2580), pour aller droit au but."""
     h = 2166136261
     for c in "ludiworld:" + PIN:
         h = ((h ^ ord(c)) * 16777619) & 0xFFFFFFFF
-    return {"games": {}, "famille": {
+    games = {"pluie-de-cochons": {"ms": 0, "sessions": 3, "days": {}, "scores": {}, "progress": {}, "etat": {"fini": True}}} if fini_pluie else {}
+    return {"games": games, "famille": {
         "v": 1, "cree": 0, "pin": format(h, "x"), "enfant": {"nom": "Petit Loup", "age": 8},
         "jeux": {"pluie-de-cochons": {"max": None}, "jeu-kit": {"max": max_kit}},
         "regles": {"ecole": 30, "libre": 30, "joursLibres": [0, 3, 6], "fin": fin, "grace": 10, "bonus": None, "fini": None}}}
@@ -100,6 +106,43 @@ class FauxSupabase:
         self.foyer = None
         self.version = 0
         self.appels = []
+        self.avis = {}       # (email, jeu) -> l'avis, comme la table avis (plan 5)
+        self.otp = {}        # email -> le dernier code à 6 chiffres envoyé
+        self.otp_demandes = []
+        self.otp_limite = False
+
+    def semer_avis(self):
+        """D'autres parents ont déjà donné leur avis : 11 sur Jeu kit (un mot accepté, un à relire ; un parent chez qui le jeu
+        ne marche pas, 1 étoile), 3 sur Pluie de Cochons (sous le seuil)."""
+        for i in range(11):
+            self.avis[(f"autre-{i}@exemple.test", "jeu-kit")] = {
+                "compte_id": f"u-autre-{i}", "jeu": "jeu-kit", "etoiles": 1 if i == 3 else (4 if i % 3 == 0 else 5), "marche": "non" if i == 3 else "oui",
+                "langue": "fr", "cree_le": "2026-11-10T10:00:00Z", "maj_le": "2026-11-1%dT10:00:00Z" % (i % 8),
+                "mot": "Mes deux filles y jouent ensemble, sans se disputer." if i == 0 else ("<img src=x onerror=\"window.XSS=1\">Un mot à relire" if i == 1 else None),
+                "mot_etat": "accepte" if i == 0 else ("a-relire" if i == 1 else None)}
+        for i in range(3):
+            self.avis[(f"autre-{i}@exemple.test", "pluie-de-cochons")] = {
+                "compte_id": f"u-autre-{i}", "jeu": "pluie-de-cochons", "etoiles": 5, "marche": "oui",
+                "langue": "fr", "cree_le": "2026-11-10T10:00:00Z", "maj_le": "2026-11-10T10:00:00Z", "mot": "Un mot accepté, mais sous le seuil", "mot_etat": "accepte"}
+
+    def avis_publics(self, jeu, langue):
+        """Comme public.avis_publics : null sous 5 avis ; le total, les étoiles (répartition, moyenne arrondie comme Postgres),
+        « marche », la moyenne chez ceux pour qui le jeu marche bien ; les mots acceptés dans la langue, trois au plus."""
+        l = [a for (e, j), a in self.avis.items() if j == jeu]
+        if len(l) < 5:
+            return None
+        def totaux(q):
+            d = {}
+            for a in l:
+                d[str(a[q])] = d.get(str(a[q]), 0) + 1
+            return d
+        def moyenne(x):
+            if not x:
+                return None
+            return float((decimal.Decimal(sum(a["etoiles"] for a in x)) / len(x)).quantize(decimal.Decimal("0.1"), rounding=decimal.ROUND_HALF_UP))
+        return {"total": len(l), "etoiles": totaux("etoiles"), "moyenne": moyenne(l), "marche": totaux("marche"),
+                "moyenne_marche_bien": moyenne([a for a in l if a["marche"] == "oui"]),
+                "mots": [a["mot"] for a in l if a["mot_etat"] == "accepte" and a["langue"] == langue][:3]}
 
     def jeton(self, email):
         charge = base64.urlsafe_b64encode(json.dumps({"sub": self.comptes[email]["id"], "email": email}).encode()).decode().rstrip("=")
@@ -141,6 +184,22 @@ class FauxSupabase:
             if not c["confirme"]:
                 return self.repond(route, {"error_code": "email_not_confirmed", "msg": "x"}, 400)
             return self.repond(route, self.session(corps["email"]))
+        if chemin.startswith("/auth/v1/otp"):
+            # Le code à 6 chiffres par e-mail (« Code oublié ? » sans le mot de passe) : un nouveau code remplace l'ancien.
+            self.otp_demandes.append(corps)
+            if self.otp_limite:
+                return self.repond(route, {"error_code": "over_email_send_rate_limit", "msg": "x"}, 429)
+            c = self.comptes.get(corps.get("email"))
+            if not c and corps.get("create_user") is False:
+                return self.repond(route, {"error_code": "otp_disabled", "msg": "Signups not allowed for otp"}, 422)
+            self.otp[corps["email"]] = "%06d" % (135790 + 111111 * len(self.otp_demandes) % 1000000)
+            return self.repond(route, {})
+        if chemin.startswith("/auth/v1/verify"):
+            e = corps.get("email")
+            if corps.get("type") != "email" or not e or self.otp.get(e) != corps.get("token"):
+                return self.repond(route, {"error_code": "otp_expired", "msg": "Token has expired or is invalid"}, 403)
+            del self.otp[e]
+            return self.repond(route, self.session(e))
         if chemin.startswith("/auth/v1/logout"):
             return self.repond(route, None, 204)
         if chemin.startswith("/auth/v1/"):
@@ -157,7 +216,20 @@ class FauxSupabase:
             return self.repond(route, [{"etat": self.foyer, "version": self.version}] if self.foyer else [])
         if chemin.startswith("/rest/v1/envies"):
             return self.repond(route, [])
+        if chemin.startswith("/rest/v1/avis"):
+            if not email:
+                return self.repond(route, {"message": "jwt"}, 401)
+            q = urllib.parse.parse_qs(urllib.parse.urlsplit(chemin).query)
+            jeu = q.get("jeu", ["eq."])[0][3:]
+            if req.method == "DELETE":
+                self.avis.pop((email, jeu), None)
+                return self.repond(route, None, 204)
+            if not jeu:  # « Télécharger mes données » : tous mes avis
+                return self.repond(route, [a for (e, j), a in self.avis.items() if e == email])
+            return self.repond(route, [self.avis[(email, jeu)]] if (email, jeu) in self.avis else [])
         fn = chemin.replace("/rest/v1/rpc/", "")
+        if fn == "avis_publics":
+            return self.repond(route, self.avis_publics(corps["p_jeu"], corps.get("p_langue", "fr")))
         if fn == "enregistrer_envie":
             self.envies[corps["p_id"]] = dict(corps, compte=None)
             return self.repond(route, None, 204)
@@ -179,7 +251,21 @@ class FauxSupabase:
                 return self.repond(route, None)
             self.foyer, self.version = corps["p_etat"], self.version + 1
             return self.repond(route, self.version)
+        if fn == "donner_avis":
+            k = (email, corps["p_jeu"])
+            avant = self.avis.get(k, {})
+            mot = (corps.get("p_mot") or "").strip() or None
+            # Comme la base : la nouvelle signature seulement (jeu, étoiles, marche, mot, langue), étoiles de 1 à 5.
+            if set(corps) - {"p_jeu", "p_etoiles", "p_marche", "p_mot", "p_langue"} or corps.get("p_etoiles") not in (1, 2, 3, 4, 5) \
+                    or corps.get("p_marche") not in ("oui", "pas-toujours", "non"):
+                return self.repond(route, {"message": "donner_avis : appel refusé"}, 400)
+            self.avis[k] = {"compte_id": self.comptes[email]["id"], "jeu": corps["p_jeu"], "etoiles": corps["p_etoiles"], "marche": corps["p_marche"], "mot": mot,
+                            "mot_etat": None if not mot else (avant.get("mot_etat") if avant.get("mot") == mot else "a-relire"),
+                            "langue": corps.get("p_langue", "fr"), "cree_le": avant.get("cree_le", "2026-11-18T10:00:00Z"), "maj_le": "2026-11-18T10:00:00Z"}
+            return self.repond(route, None, 204)
         if fn == "effacer_mon_compte":
+            for k in [k for k in self.avis if k[0] == email]:
+                del self.avis[k]
             del self.comptes[email]
             self.foyer, self.version = None, 0
             return self.repond(route, None, 204)
@@ -200,6 +286,14 @@ class FauxSupabase:
                      "message": "<img src=x onerror=\"window.XSS=1\">Un jeu sur les volcans", "termine": True, "email": "a@exemple.test", "nouvelles": True},
                     {"id": "2", "cree_le": "2026-11-02T10:00:00Z", "langue": "en", "envie": ["creer"], "profils": ["createur"], "ages": [], "priorites": [], "experience": "souvent",
                      "message": None, "termine": False, "email": None, "nouvelles": None}])
+            if fn == "bureau_avis":
+                return self.repond(route, sorted(self.avis.values(), key=lambda a: (a["mot_etat"] != "a-relire", a["maj_le"]), reverse=False))
+            if fn == "bureau_relire_mot":
+                for a in self.avis.values():
+                    if a["compte_id"] == corps["p_compte"] and a["jeu"] == corps["p_jeu"] and a["mot"] is not None and a["mot"] == corps["p_mot"]:
+                        a["mot_etat"] = "accepte" if corps["p_accepte"] else "refuse"
+                        return self.repond(route, True)
+                return self.repond(route, False)
             if fn == "bureau_comptes":
                 return self.repond(route, [
                     {"id": "1", "email": "a@exemple.test", "cree_le": "2026-11-03T10:00:00Z", "confirme_le": "2026-11-03T10:05:00Z", "derniere_connexion": "2026-11-04T08:00:00Z",
@@ -209,9 +303,16 @@ class FauxSupabase:
         return self.repond(route, {"message": "inconnu : " + chemin}, 404)
 
 
-def contexte(browser, store=None, nuage=None, **opts):
-    ctx = browser.new_context(service_workers="block", locale="fr-FR", **opts)
+# Les parcours sont muets : la voix du navigateur (synthèse vocale) ne dit rien, dans l'appli comme dans les jeux (cadres compris).
+MUET = """(function () { try { var s = window.speechSynthesis; if (!s) return;
+  ['speak', 'cancel', 'pause', 'resume'].forEach(function (k) { try { s[k] = function () {}; } catch (e) {} });
+} catch (e) {} })();"""
+
+
+def contexte(browser, store=None, nuage=None, sw="block", **opts):
+    ctx = browser.new_context(service_workers=sw, locale="fr-FR", **opts)
     ctx.route(BASE + "/**", serve)
+    ctx.add_init_script(MUET)
     # Sans faux Supabase, pas de compte : ce sont les parcours de toujours, quelle que soit la configuration du site.
     ctx.add_init_script("window.LUDI_NUAGE = %s;" % json.dumps({"url": nuage.URL, "cle": "cle-publique"} if nuage else {"url": "", "cle": ""}))
     if nuage:
@@ -228,10 +329,41 @@ def code(page, pin):
     page.wait_for_timeout(250)
 
 
+def parent(page):
+    """Le côté parent est ouvert (après le code)."""
+    page.wait_for_selector("#v-parent:not([hidden])")
+
+
+def onglet(page, nom):
+    page.locator(f"#pa-onglets [data-onglet={nom}]").click()
+    page.wait_for_timeout(150)
+
+
+def stocke(page):
+    return page.evaluate("JSON.parse(localStorage.getItem('ludiworld.v1')).famille")
+
+
+def a(heures, minutes, jours=0):
+    """Aujourd'hui (plus quelques jours) à heures:minutes, pour poser l'horloge du navigateur."""
+    return datetime.datetime.combine(datetime.date.today() + datetime.timedelta(days=jours), datetime.time(heures, minutes))
+
+
+def croise(b1, b2):
+    """Deux boîtes à l'écran se recouvrent-elles ?"""
+    return not (b1["x"] + b1["width"] <= b2["x"] or b2["x"] + b2["width"] <= b1["x"] or b1["y"] + b1["height"] <= b2["y"] or b2["y"] + b2["height"] <= b1["y"])
+
+
+def regler(page, jeu):
+    """Déplie les réglages d'un jeu sur sa ligne (« Régler »)."""
+    if page.get_attribute(f".pa-ligne[data-jeu={jeu}] .pa-regler", "aria-expanded") != "true":
+        page.click(f".pa-ligne[data-jeu={jeu}] .pa-regler")
+    page.wait_for_selector(f".pa-ligne[data-jeu={jeu}] .pa-ligne-regl select")
+
+
 def run():
     errors = []
     with sync_playwright() as p:
-        browser = p.chromium.launch()
+        browser = p.chromium.launch(headless=True, args=["--mute-audio"])   # muet : aucun son ni voix pendant les parcours
         formats = {
             "telephone": dict(viewport={"width": 390, "height": 844}, device_scale_factor=2, is_mobile=True, has_touch=True),
             "tablette": dict(viewport={"width": 1180, "height": 820}),
@@ -242,20 +374,34 @@ def run():
             ctx = contexte(browser, **opts)
             page = ctx.new_page()
             page.on("pageerror", lambda e: errors.append(str(e)))
-            page.goto(BASE + "/ludiworld/")
-            page.wait_for_url("**/decouvrir/")
-            page.wait_for_selector("#jeux-list .jeu")
+            page.goto(BASE + "/ludiworld/")   # la racine : le site, sans détour
+            page.wait_for_selector("#jeux-list .cat-mini")
             page.wait_for_selector("#aime-apercu dt")
             assert page.get_attribute(".lw-onglet[aria-current=page]", "class").endswith("lw-accueil"), "pas encore préparé : premier onglet « Accueil »"
-            assert page.get_attribute(".lw-action", "href").endswith("#demarrer")
+            assert page.get_attribute(".lw-action", "href").endswith("app/#demarrer")
             page.wait_for_timeout(2500)
             page.screenshot(path=str(OUT / f"{name}-0-site-accueil.png"))
-            for onglet, cle, attendu in [("Les jeux", "jeux", ".vt-tuile"), ("Créer un jeu", "creer", ".etape"), ("Ludiworld aime bien", "aime", "#ab-valides .reco")]:
-                page.locator(".lw-onglet", has_text=onglet).click()
+            for nom_onglet, cle, attendu in [("Les jeux", "jeux", ".cat-mini"), ("Ludiworld aime bien", "aime", "#ab-valides .reco")]:
+                page.locator(".lw-onglet", has_text=nom_onglet).click()
                 page.wait_for_selector(attendu)
                 assert page.get_attribute(".lw-onglet[aria-current=page]", "class").endswith("lw-" + cle)
                 page.wait_for_timeout(1200)
                 page.screenshot(path=str(OUT / f"{name}-0-site-{cle}.png"), full_page=True)
+            page.goto(BASE + "/ludiworld/")
+            page.wait_for_selector("#jeux-list .cat-mini")
+            charte = page.inner_text("#charte")
+            assert "Des jeux pensés pour faire du bien aux enfants" in charte and "jamais vendues" in charte, charte
+            assert "abonnement" not in charte and "Chaque jeu le déclare" not in charte and "ne pas faire" not in charte, charte
+            assert page.locator("#createurs").count() == 0 and page.locator("a[href*='creer/']").count() == 0, "l'accueil n'invite plus à créer un jeu"
+            assert page.locator("body").inner_text().count("vendues") == 1, "une seule mention des données"
+            if name == "telephone":
+                page.locator("#charte").scroll_into_view_if_needed()
+                page.wait_for_timeout(800)
+                page.locator("#charte").screenshot(path=str(OUT / "telephone-0-charte-positive.png"))
+            page.goto(BASE + "/ludiworld/creer/")
+            page.wait_for_selector(".etape")   # la page reste à son adresse
+            page.goto(BASE + "/ludiworld/aime-bien/")
+            page.wait_for_selector("#ab-valides .reco")
             page.locator("[data-filtre=appli]").click()
             assert page.locator("#ab-valides .reco").count() == page.locator("#ab-valides .reco-appli").count() >= 1, "le filtre ne garde que les applis"
             page.locator(".lw-langs button", has_text="EN").click()
@@ -263,14 +409,72 @@ def run():
             page.locator(".lw-langs button", has_text="FR").click()
             page.locator(".lw-action").click()
             page.wait_for_selector(".a-bienvenue")
+            assert page.url.startswith(APP), "« Essayer » mène à la préparation, dans l'appli : " + page.url
             ctx.close()
 
-        # 1. Première ouverture : le parent prépare Ludiworld
+        # 0 bis. Le site et l'appli séparés (Julien, 2026-11-18) : la racine montre le site, même sur un appareil préparé ;
+        #        une ancienne adresse (/#carnet) arrive dans l'appli ; le logo du côté parent ramène au site ;
+        #        une appli installée avant (départ à la racine) retombe dans l'appli ; l'appli marche hors ligne après une visite
+        ctx = contexte(browser, famille(), **formats["telephone"])
+        page = ctx.new_page()
+        page.on("pageerror", lambda e: errors.append(str(e)))
+        page.goto(BASE + "/ludiworld/")
+        page.wait_for_selector("#jeux-list .cat-mini")
+        assert page.url == BASE + "/ludiworld/", "la racine reste le site sur un appareil préparé : " + page.url
+        assert page.inner_text(".lw-action").strip() == "Ouvrir l’appli" and page.get_attribute(".lw-action", "href") == "app/#carnet"
+        assert page.get_attribute(".hero-copy .btn-sun", "href") == "app/", "appareil préparé : « Ouvrir Ludiworld » mène à l'appli"
+        page.wait_for_timeout(2500)
+        page.screenshot(path=str(OUT / "telephone-0-racine-appareil-prepare.png"))
+        page.goto(BASE + "/ludiworld/#carnet")
+        page.wait_for_selector("#gate[open]")
+        assert page.url.startswith(APP), "l'ancienne adresse /#carnet arrive dans l'appli : " + page.url
+        code(page, PIN)
+        parent(page)
+        page.click("#v-parent .lw-marque")
+        page.wait_for_selector("#jeux-list .cat-mini")
+        assert page.url == BASE + "/ludiworld/", "le logo du côté parent ramène au site : " + page.url
+        page.goto(BASE + "/ludiworld/decouvrir/#charte")
+        page.wait_for_url(BASE + "/ludiworld/#charte")
+        ctx.close()
+        ctx = contexte(browser, famille(), **formats["tablette"])
+        ctx.add_init_script("""(function () { var m = window.matchMedia.bind(window);
+  window.matchMedia = function (q) { if (q.indexOf('standalone') !== -1) return { matches: true, media: q, addListener: function () {}, removeListener: function () {}, addEventListener: function () {}, removeEventListener: function () {} }; return m(q); }; })();""")
+        page = ctx.new_page()
+        page.on("pageerror", lambda e: errors.append(str(e)))
+        page.goto(BASE + "/ludiworld/")
+        page.wait_for_selector(".tuile")
+        assert page.url.startswith(APP), "une appli installée avant app/ retombe dans l'appli : " + page.url
+        page.focus("#e-parents")
+        page.keyboard.press("Enter")
+        code(page, PIN)
+        parent(page)
+        page.click("#v-parent .lw-marque")
+        page.wait_for_selector("#jeux-list .cat-mini")
+        assert page.url == BASE + "/ludiworld/", "depuis l'appli installée, le logo montre le site : " + page.url
+        ctx.close()
+        ctx = contexte(browser, famille(), sw="allow", **formats["tablette"])
+        page = ctx.new_page()
+        page.on("pageerror", lambda e: errors.append(str(e)))
+        page.goto(APP)
+        page.wait_for_selector(".tuile")
+        page.wait_for_function("navigator.serviceWorker.controller !== null", timeout=20000)
+        page.reload()
+        page.wait_for_selector(".tuile")
+        page.wait_for_timeout(500)
+        ctx.set_offline(True)
+        page.reload()
+        page.wait_for_selector(".tuile")
+        assert page.locator(".tuile").count() == 2, "hors ligne, l'appli s'ouvre avec les jeux de l'enfant"
+        page.screenshot(path=str(OUT / "tablette-0-appli-hors-ligne.png"))
+        ctx.set_offline(False)
+        ctx.close()
+
+        # 1. Première ouverture : le parent prépare Ludiworld. Aucun jeu coché d'office ; les jours choisis sont montrés.
         for name, opts in formats.items():
             ctx = contexte(browser, **opts)
             page = ctx.new_page()
             page.on("pageerror", lambda e: errors.append(str(e)))
-            page.goto(BASE + "/ludiworld/#demarrer")
+            page.goto(APP + "#demarrer")
             page.wait_for_selector(".a-bienvenue")
             page.wait_for_timeout(2500)
             page.screenshot(path=str(OUT / f"{name}-1-bienvenue.png"))
@@ -278,9 +482,27 @@ def run():
             page.fill("#a-nom", "Petit Loup")
             page.get_by_role("radio", name="8").click()
             page.click(".a-nav .btn-sun")
-            page.wait_for_selector(".a-jeu")
+            page.wait_for_selector(".a-catalogue .cat-mini")
+            assert page.locator(".a-choisir[aria-pressed=true]").count() == 0, "aucun jeu coché d'office"
+            assert page.is_disabled(".a-pied .a-nav .btn-sun"), "il faut choisir au moins un jeu"
+            page.locator(".a-choisir").nth(0).click()
+            premier = page.locator(".a-catalogue .cat-mini").nth(1)
+            premier.locator(".cat-mini-ouvrir").click()   # toucher la mini-fiche (son nom) la choisit, sans ouvrir la fiche
+            assert page.locator("dialog.cat-fiche[open]").count() == 0, "toucher la mini-fiche choisit le jeu"
+            assert page.locator(".a-choisir[aria-pressed=true]").count() == 2
+            premier.locator(".cat-mini-ouvrir").click()   # et le retoucher l'enlève
+            assert page.locator(".a-choisir[aria-pressed=true]").count() == 1
+            premier.locator(".a-voir").click()            # « Voir la fiche » l'ouvre
+            page.wait_for_selector("dialog.cat-fiche[open] .a-choisir")
+            page.click("dialog.cat-fiche .a-choisir")       # « Choisir » dans la fiche : choisi, et la fiche se referme
+            page.wait_for_function("!document.querySelector('dialog.cat-fiche').open")
+            assert page.locator(".a-choisir[aria-pressed=true]").count() == 2
+            page.wait_for_timeout(600)
             page.screenshot(path=str(OUT / f"{name}-2-jeux.png"))
-            page.click(".a-nav .btn-sun")
+            page.click(".a-pied .a-nav .btn-sun")
+            page.wait_for_selector(".jours")
+            assert page.evaluate("scrollY") == 0, "chaque étape commence en haut"
+            assert page.locator(".jours button[aria-pressed=true]").count() == 3 and "mercredi" in page.inner_text(".a-jours-mots"), "les jours choisis sont montrés"
             page.screenshot(path=str(OUT / f"{name}-3-temps.png"))
             page.click(".a-nav .btn-sun")
             for _ in range(2):
@@ -291,112 +513,601 @@ def run():
             page.wait_for_selector(".tuile")
             page.wait_for_timeout(2500)
             page.screenshot(path=str(OUT / f"{name}-4-enfant.png"))
-            fam = page.evaluate("JSON.parse(localStorage.getItem('ludiworld.v1')).famille")
+            fam = stocke(page)
             enfant = fam["enfants"][0]
             assert enfant["enfant"] == {"nom": "Petit Loup", "age": 8}, fam
+            assert len(enfant["jeux"]) == 2 and enfant["regles"]["joursLibres"] == [0, 3, 6], enfant
             assert PIN not in json.dumps(fam), "le code ne doit pas être gardé en clair"
-            assert page.locator(".tuile").count() == len(enfant["jeux"]), "l'enfant ne voit que les jeux choisis"
+            assert page.locator(".tuile").count() == 2, "l'enfant ne voit que les jeux choisis"
             ctx.close()
 
-        # 2. Carnet parent : mauvais code refusé, bon code accepté ; fiche d'un jeu ; retour Android
-        ctx = contexte(browser, famille(), **formats["tablette"])
+        # 2. Côté parent : mauvais code refusé, bon code accepté ; une seule barre ; ses jeux, réglables sur la ligne ;
+        #    « Fini » visible ; installer depuis « À découvrir » ; « Annuler » après un changement ; fiche d'un jeu et retour Android
+        ctx = contexte(browser, famille(fini_pluie=True), **formats["tablette"])
         page = ctx.new_page()
         page.on("pageerror", lambda e: errors.append(str(e)))
-        page.goto(BASE + "/ludiworld/")
+        page.goto(APP)
         page.wait_for_selector(".tuile")
         page.focus("#e-parents")
         page.keyboard.press("Enter")
         page.wait_for_selector("#gate[open]")
         code(page, "1111")
-        assert page.locator("#gate[open]").count() == 1, "un mauvais code ne doit pas ouvrir le carnet"
+        assert page.locator("#gate[open]").count() == 1, "un mauvais code ne doit pas ouvrir le côté parent"
         code(page, PIN)
-        page.wait_for_selector(".carnet:not([hidden])")
-        page.screenshot(path=str(OUT / "tablette-5-carnet.png"))
-        page.get_by_role("tab", name="Jeux").click()
-        page.screenshot(path=str(OUT / "tablette-6-carnet-jeux.png"))
-        page.fill(".recherche", "aimant")
-        assert page.locator(".fiche-jeu").count() == 1, "la recherche filtre les jeux"
-        page.fill(".recherche", "")
-        page.locator(".fiche-jeu", has_text="Pluie de Cochons").locator(".lien").click()
-        page.wait_for_selector("#sheet[open]")
+        parent(page)
+        page.wait_for_timeout(500)
+        page.screenshot(path=str(OUT / "tablette-5-parent-jeux.png"))
+        # Un seul bandeau (Julien, 2026-11-18) : le logo (vers le site), « Parents » sans compte, FR / EN, « Rendre » ; les onglets dedans.
+        # Ni la barre du site ni la ligne des promesses côté parent.
+        assert page.locator("#v-parent .lw-barre").count() == 0 and page.locator("#v-parent .lw-promesses").count() == 0, "un seul bandeau"
+        assert page.locator("#v-parent .pa-barre .lw-marque").is_visible(), "le logo Ludiworld dans le bandeau"
+        if page.locator("#pa-qui .lw-compte").count():  # sans compte (et un nuage) : « Se connecter », comme sur le site, à droite
+            assert page.inner_text("#pa-qui .lw-compte") == "Se connecter"
+            assert page.locator("#pa-qui").bounding_box()["x"] > page.locator("[data-onglet=reglages]").bounding_box()["x"], "le compte à droite, à côté de « Rendre »"
+        assert page.locator("#v-parent .pa-barre .lw-langs").count() == 0, "pas de FR / EN dans le bandeau : la langue est dans Réglages"
+        assert page.locator("#v-parent .pa-barre #pa-rendre").count() == 1, "« Rendre » dans le bandeau"
+        assert page.locator("#v-parent .lw-vers-parent").count() == 0, "pas de « Ouvrir l'appli » quand on y est"
+        assert page.locator("[data-onglet=jeux]").bounding_box()["y"] < page.locator(".pa-barre").bounding_box()["y"] + page.locator(".pa-barre").bounding_box()["height"], "les onglets dans le bandeau"
+        texte = page.inner_text("#v-parent")
+        assert "carnet" not in texte.lower() and "Expériences" not in texte, "ni « carnet » ni « Expériences installées »"
+        assert page.get_attribute("[data-onglet=jeux]", "aria-selected") == "true", "on arrive sur l'onglet Jeux"
+        assert "Petit Loup a joué" in texte or "pas encore joué" in texte, texte[:200]
+        assert page.locator(".pa-ligne").count() == 2, "une ligne par jeu installé"
+        assert page.locator(".pa-ligne[data-jeu=pluie-de-cochons] .pa-fini").is_visible(), "« Fini » se voit sur la ligne du jeu"
+        # Les lignes sont repliées : pas de liste ni de case, pas de « Sans limite » ; ce qu'on y apprend est écrit
+        assert page.locator(".pa-lignes select, .pa-lignes input").count() == 0, "réglages repliés derrière « Régler »"
+        assert "Sans limite" not in page.inner_text(".pa-lignes"), "jamais « Sans limite » seul sur une ligne"
+        assert "multiplication" in page.inner_text(".pa-ligne[data-jeu=pluie-de-cochons]").lower(), "ce qu'on y apprend, sur la ligne"
+        assert all(page.locator(".pa-ligne").nth(i).bounding_box()["height"] <= 90 for i in range(2)), "des lignes serrées"
+        # « Régler » déplie la limite et la case sur place ; un seul jeu à la fois
+        regler(page, "pluie-de-cochons")
+        assert page.get_attribute(".pa-ligne[data-jeu=pluie-de-cochons] .pa-regler", "aria-expanded") == "true"
+        assert "il compte dans le temps du jour" in page.inner_text(".pa-ligne[data-jeu=pluie-de-cochons] select option >> nth=0")
+        # « Annuler » rétablit, et la ligne vit dans la barre, sous les onglets : elle ne couvre ni les onglets ni « Rendre »
+        page.locator(".pa-ligne[data-jeu=pluie-de-cochons] select").select_option("10")
+        page.wait_for_selector("#pa-journal .pa-journal-annuler")
+        assert stocke(page)["enfants"][0]["jeux"]["pluie-de-cochons"]["max"] == 10
+        ligne = page.locator("#pa-journal .pa-journal-ligne").bounding_box()
+        for autre in ["#pa-rendre", "[data-onglet=jeux]", "[data-onglet=catalogue]", "[data-onglet=temps]", "[data-onglet=reglages]"]:
+            assert not croise(ligne, page.locator(autre).bounding_box()), ("« Annuler » ne couvre pas", autre)
+        page.click("#pa-journal .pa-journal-annuler")
+        page.wait_for_timeout(200)
+        assert stocke(page)["enfants"][0]["jeux"]["pluie-de-cochons"]["max"] is None, "Annuler remet la limite d'avant"
+        page.locator(".pa-ligne[data-jeu=pluie-de-cochons] select").select_option("10")
+        regler(page, "jeu-kit")
+        assert page.locator(".pa-ligne-regl").count() == 1, "un seul jeu déplié à la fois"
+        page.locator(".pa-ligne[data-jeu=jeu-kit] input[type=checkbox]").check()
+        page.wait_for_timeout(200)
+        j = stocke(page)["enfants"][0]["jeux"]
+        assert j["pluie-de-cochons"]["max"] == 10 and j["jeu-kit"]["libres"] is True, j
+        assert "10 min par jour" in page.inner_text(".pa-ligne[data-jeu=pluie-de-cochons]"), "un réglage qui sort de l'ordinaire s'écrit sur la ligne"
+        # Les trois derniers changements, chacun avec son « Annuler »
+        assert page.locator("#pa-journal .pa-journal-annuler").count() == 2, page.inner_text("#pa-journal")
+        page.locator("#pa-journal .pa-journal-ligne").nth(1).locator("button").click()   # le plus ancien : la limite de Pluie de Cochons
+        page.wait_for_timeout(200)
+        j = stocke(page)["enfants"][0]["jeux"]
+        assert j["pluie-de-cochons"]["max"] is None and j["jeu-kit"]["libres"] is True, ("chaque ligne ne défait que son changement", j)
+        regler(page, "pluie-de-cochons")
+        page.locator(".pa-ligne[data-jeu=pluie-de-cochons] select").select_option("10")
+        page.wait_for_timeout(200)
+        # Installer depuis « Tous les jeux » : la mini-fiche reste, avec « Installé pour Petit Loup »
+        onglet(page, "catalogue")
+        n = page.locator(".pa-tous-grille .cat-mini").count()
+        page.locator("[data-installer=tour-aimants]").click()
+        page.wait_for_timeout(200)
+        assert "tour-aimants" in stocke(page)["enfants"][0]["jeux"], "installé depuis Tous les jeux"
+        assert page.locator(".pa-tous-grille .cat-mini").count() == n, "tous les jeux restent affichés"
+        assert "Installé pour Petit Loup" in page.inner_text(".cat-mini[data-jeu=tour-aimants] .cat-mini-actions")
+        onglet(page, "jeux")
+        assert page.locator(".pa-ligne[data-jeu=tour-aimants]").count() == 1
+        assert page.locator(".pa-decouvrir, .pa-a-decouvrir").count() == 0, "plus de bloc « À découvrir » dans Mes jeux"
+        page.screenshot(path=str(OUT / "tablette-6-parent-jeux-regles.png"), full_page=True)
+        # La fiche d'un jeu : l'état en mots juste après les boutons, les réglages, ce que le jeu a enregistré
+        page.locator(".pa-ligne[data-jeu=pluie-de-cochons] .pa-ligne-jeu").click()
+        page.wait_for_selector("dialog.cat-fiche[open] .pa-pour")
+        assert "%" not in page.inner_text("dialog.cat-fiche .pa-pour"), "pas de pourcentage"
+        assert "Installé pour Petit Loup" in page.inner_text("dialog.cat-fiche .pa-pour-enfants")
+        assert page.locator("dialog.cat-fiche details.pa-enregistre:not([open])").count() == 1, "ce que le jeu a enregistré est replié"
+        assert page.locator("dialog.cat-fiche .cat-promesses").count() == 0 and "Aucun inconnu · " not in page.inner_text("dialog.cat-fiche"), "les promesses ne sont plus dans la fiche"
+        fiche_txt = page.text_content("dialog.cat-fiche")
+        assert "Aucun inconnu" not in fiche_txt and "abonnement" not in fiche_txt and "envoie rien" not in fiche_txt, "plus de liste d'engagements dans la fiche : la charte la dit une fois"
+        assert "Ne contacte aucun autre site." in fiche_txt or "Contacte aussi" in fiche_txt, "« Toute la fiche » garde les sites contactés"
+        assert "Fini" in page.inner_text("dialog.cat-fiche .pa-enregistre summary"), "son résumé dit « Fini »"
+        assert page.evaluate("""() => { const f = document.querySelector('dialog.cat-fiche'), p = f.querySelector('.pa-pour'), g = f.querySelector('.cat-galerie, .cat-bande');
+            return !!p.closest('.cat-avant') && (!g || (p.compareDocumentPosition(g) & Node.DOCUMENT_POSITION_FOLLOWING) > 0); }"""), "ce qui concerne l'enfant vient avant les images"
+        page.wait_for_timeout(500)
         page.screenshot(path=str(OUT / "tablette-7-fiche.png"))
-        page.click("#sheet .play")
-        page.wait_for_timeout(2000)
+        # Retirer depuis la fiche : « Annuler » se voit et se touche dans la fiche ; réinstaller retrouve la limite et la case
+        page.click("dialog.cat-fiche .pa-retirer")
+        page.wait_for_selector("dialog.cat-fiche .pa-journal-ligne >> nth=0 >> button")
+        assert page.locator("dialog.cat-fiche .pa-journal-annuler").first.is_visible(), "« Annuler » visible dans la fiche ouverte"
+        e = stocke(page)["enfants"][0]
+        assert "pluie-de-cochons" not in e["jeux"] and e["jeuxRetires"]["pluie-de-cochons"]["max"] == 10, e
+        page.wait_for_timeout(300)
+        page.screenshot(path=str(OUT / "tablette-7b-fiche-retire.png"))
+        page.click("dialog.cat-fiche [data-installer=pluie-de-cochons]")
+        page.wait_for_timeout(200)
+        assert stocke(page)["enfants"][0]["jeux"]["pluie-de-cochons"]["max"] == 10, "réinstaller retrouve la limite d'avant"
+        assert "Installé pour Petit Loup" in page.inner_text("dialog.cat-fiche .pa-pour-enfants")
+        page.click("dialog.cat-fiche .pa-retirer")
+        page.wait_for_timeout(200)
+        page.click("dialog.cat-fiche .pa-journal-ligne >> nth=0 >> button")   # « Annuler » touché dans la fiche
+        page.wait_for_timeout(200)
+        assert stocke(page)["enfants"][0]["jeux"]["pluie-de-cochons"]["max"] == 10, "« Annuler » dans la fiche remet le jeu et ses réglages"
+        page.locator("dialog.cat-fiche .cat-f-actions button", has_text="Essayer").click()
+        page.wait_for_selector("#player:not([hidden])")
+        page.wait_for_timeout(1500)
         page.evaluate("history.back()")  # bouton retour : ferme le jeu, rouvre la fiche
-        page.wait_for_timeout(300)
+        page.wait_for_timeout(500)
         assert page.locator("#player").is_hidden(), "le retour doit fermer le jeu"
-        assert page.locator("#sheet[open]").count() == 1, "la fiche reste ouverte"
+        assert page.locator("dialog.cat-fiche[open]").count() == 1, "la fiche revient"
         page.evaluate("history.back()")
-        page.wait_for_timeout(300)
-        assert page.locator("#sheet[open]").count() == 0, "le 2e retour ferme la fiche"
-        page.get_by_role("tab", name="Temps").click()
-        page.screenshot(path=str(OUT / "tablette-8-carnet-temps.png"))
-        # Le carnet est un onglet du site : on va lire une autre page et on revient sans redonner le code
-        assert page.get_attribute(".lw-onglet[aria-current=page]", "class").endswith("lw-moi")
-        page.locator(".lw-plus summary").click()
-        page.locator(".lw-onglet", has_text="Ludiworld aime bien").click()
+        page.wait_for_timeout(500)
+        assert page.locator("dialog.cat-fiche[open]").count() == 0, "le 2e retour ferme la fiche"
+        assert stocke(page)["enfants"][0]["games"].get("pluie-de-cochons", {}).get("ms", 0) == 0, "l'essai du parent ne compte pas"
+        onglet(page, "temps")
+        assert page.inner_text(".pa-titre") == "Le temps de jeu de Petit Loup"
+        page.screenshot(path=str(OUT / "tablette-8-parent-temps.png"))
+        # Le retour du navigateur (geste retour du téléphone) revient à l'onglet d'avant, sans quitter Ludiworld
+        page.evaluate("history.back()")
+        page.wait_for_function("document.querySelector('[data-onglet=jeux]').getAttribute('aria-selected') === 'true'")
+        assert "/ludiworld/app/" in page.url
+        page.evaluate("history.forward()")
+        page.wait_for_function("document.querySelector('[data-onglet=temps]').getAttribute('aria-selected') === 'true'")
+        # Deux changements de suite : deux lignes ; annuler la première ne touche pas à la seconde
+        avant = stocke(page)["enfants"][0]["regles"]
+        page.locator(".jours button[aria-label=lundi]").click()
+        page.locator(".pa-carte-temps:not(.libre)").locator(".stepper > button").first.click()
+        page.wait_for_timeout(200)
+        assert "Lundi devient un jour choisi" in page.inner_text("#pa-journal"), page.inner_text("#pa-journal")
+        page.locator("#pa-journal .pa-journal-ligne").nth(1).locator("button").click()
+        page.wait_for_timeout(200)
+        r = stocke(page)["enfants"][0]["regles"]
+        assert r["joursLibres"] == avant["joursLibres"] and r["ecole"] == avant["ecole"] - 5, r
+        page.locator("#pa-journal .pa-journal-ligne button").first.click()
+        page.wait_for_timeout(200)
+        assert stocke(page)["enfants"][0]["regles"]["ecole"] == avant["ecole"], "tout revient comme en arrivant"
+        # « À toute heure » coché puis décoché : les heures d'avant reviennent (rien ne se perd en silence)
+        toute = lambda: page.locator(".pa-case", has_text="À toute heure").locator("input")
+        toute().uncheck()
+        page.wait_for_timeout(200)
+        page.fill(".plage input[type=time] >> nth=1", "18:30")
+        page.wait_for_timeout(200)
+        toute().check()
+        page.wait_for_timeout(200)
+        assert stocke(page)["enfants"][0]["regles"]["heures"] is None
+        toute().uncheck()
+        page.wait_for_timeout(200)
+        assert stocke(page)["enfants"][0]["regles"]["heures"] == {"debut": "17:00", "fin": "18:30"}, "les heures d'avant reviennent"
+        toute().check()  # à toute heure pour la suite du parcours
+        page.wait_for_timeout(200)
+        onglet(page, "reglages")
+        page.screenshot(path=str(OUT / "tablette-8b-parent-reglages.png"), full_page=True)
+        # Depuis le côté parent, le logo mène au site, puis le retour du navigateur : Réglages, sans redonner le code
+        page.click("#v-parent .lw-marque")
+        page.wait_for_selector("#jeux-list .cat-mini")
+        assert page.locator(".lw-promesses").is_visible() and page.locator(".lw-promesses").get_attribute("href") == "./#charte", "la ligne des promesses sur le site"
+        page.go_back()
+        parent(page)
+        assert page.locator("#gate[open]").count() == 0, "le retour ne redemande pas le code"
+        assert page.get_attribute("[data-onglet=reglages]", "aria-selected") == "true", "le retour revient sur l'onglet quitté"
+        page.go_back()   # puis le pas d'avant : l'onglet Temps
+        page.wait_for_function("document.querySelector('[data-onglet=temps]').getAttribute('aria-selected') === 'true'")
+        onglet(page, "reglages")
+        # Les pages du site gardent leur barre, avec « Ouvrir l'appli » pour revenir sans redonner le code
+        page.goto(BASE + "/ludiworld/aime-bien/")
         page.wait_for_selector("#ab-valides .reco")
-        assert page.locator(".lw-action", has_text="Côté enfant").count() == 1
-        page.locator(".lw-onglet", has_text="Expériences installées").click()
-        page.wait_for_selector(".carnet:not([hidden])")
-        assert page.locator("#gate[open]").count() == 0, "le code n'est pas redemandé tout de suite"
-        # « Côté enfant » depuis le site : retour aux jeux, et le carnet redemande le code
-        page.locator(".lw-onglets > .lw-onglet", has_text="Les jeux").click()
-        page.wait_for_selector(".vt-tuile")
+        assert page.locator(".lw-barre a[href$='#carnet']").count() == 1, "un seul retour vers le côté parent"
+        assert page.inner_text(".lw-action").strip() == "Ouvrir l’appli" and page.locator(".lw-action .lw-ico").count() == 1, "côté parent encore ouvert : la flèche, pas de cadenas"
+        assert page.locator(".lw-barre", has_text="Côté enfant").count() == 0
         page.locator(".lw-action").click()
-        page.wait_for_selector(".tuile")
-        page.goto(BASE + "/ludiworld/#carnet")
-        page.wait_for_selector("#gate[open]")
-        # Les jeux : la vitrine et ses filtres ; la fiche d'un jeu ; installer demande le code puis on y revient
+        parent(page)
+        assert page.locator("#gate[open]").count() == 0, "le code n'est pas redemandé tout de suite"
+        # La page « Les jeux » d'un appareil préparé : la barre normale du site, « Mon Ludiworld » pour revenir
         page.goto(BASE + "/ludiworld/les-jeux/")
-        page.wait_for_selector(".vt-tuile")
+        page.wait_for_selector(".cat-mini")
         assert page.get_attribute(".lw-onglet[aria-current=page]", "class").endswith("lw-jeux")
-        assert [t.strip() for t in page.locator(".lw-onglets > .lw-onglet").all_inner_texts()] == ["Expériences installées", "Les jeux"], "Explorer n'est plus dans la barre"
-        assert page.get_attribute(".lw-marque", "href").endswith("#carnet"), "le logo mène chez soi"
-        tous = page.locator(".vt-tuile").count()
-        page.locator("[data-theme=sciences]").click()
-        assert page.locator(".vt-tuile").count() == 1, "Sciences : la Tour aux Aimants, d'après les fiches"
-        page.locator("[data-theme=sciences]").click()
-        assert page.locator(".vt-tuile").count() == tous, "un 2e toucher enlève le filtre"
-        page.locator("#vt-q").fill("electromagnetisme")
-        assert page.locator(".vt-tuile").count() == 1, "la recherche passe aussi par les sujets"
-        page.locator("#vt-q").fill("")
-        page.locator("[data-jeu=tour-aimants]").click()
-        page.wait_for_selector("#vt-fiche[open]")
-        assert page.url.endswith("#tour-aimants")
-        page.locator("[data-installer=tour-aimants]").first.click()
-        page.wait_for_selector("#gate[open]")
-        code(page, PIN)
-        page.wait_for_url("**/les-jeux/#tour-aimants")
-        page.wait_for_selector("#vt-fiche[open] [data-retirer=tour-aimants]")
-        assert page.locator("#vt-jouer").count() == 1, "le code donné, le jeu est installé sans refaire le geste"
+        assert [t.strip() for t in page.locator(".lw-onglets > .lw-onglet").all_inner_texts()] == ["Accueil", "Les jeux", "Ludiworld aime bien"], "la barre normale du site"
+        assert page.locator("#jx-retour:visible").count() == 0, "pas de second retour vers le côté parent"
+        page.locator(".cat-mini[data-jeu=tour-aimants] .cat-mini-ouvrir").click()
+        page.wait_for_selector("dialog.cat-fiche[open]")
         page.screenshot(path=str(OUT / "tablette-9-jeux.png"))
         page.keyboard.press("Escape")
-        page.wait_for_function("!document.querySelector('#vt-fiche').open && !location.hash", timeout=3000)  # fermer la fiche la retire de l'adresse
+        page.wait_for_function("!document.querySelector('dialog.cat-fiche').open")
+        page.locator(".lw-action").click()
+        parent(page)
+        page.click("#pa-rendre")
+        page.wait_for_selector(".tuile")
+        page.goto(APP + "#carnet")
+        page.wait_for_selector("#gate[open]")
+        assert page.locator(".tuile", has_text="Tour").count() == 1, "le jeu installé est côté enfant"
         ctx.close()
 
-        # 2 bis. Sur un téléphone préparé : le carnet et la barre du site tiennent dans l'écran
+        # 2 bis. Sur un téléphone préparé : la barre ne déborde pas ; onglets et « Rendre le téléphone » en bas, sous le pouce
         ctx = contexte(browser, famille(), **formats["telephone"])
         page = ctx.new_page()
         page.on("pageerror", lambda e: errors.append(str(e)))
-        page.goto(BASE + "/ludiworld/")
+        page.goto(APP)
         page.wait_for_selector(".tuile")
         page.focus("#e-parents")
         page.keyboard.press("Enter")
         code(page, PIN)
-        page.wait_for_selector(".carnet:not([hidden])")
+        parent(page)
         page.wait_for_timeout(400)
-        page.screenshot(path=str(OUT / "telephone-7-carnet.png"))
+        page.screenshot(path=str(OUT / "telephone-7-parent.png"))
         assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1"), "rien ne dépasse en largeur"
-        assert page.evaluate("document.getElementById('c-page').getBoundingClientRect().right <= window.innerWidth + 1"), "la page du carnet tient dans l'écran"
-        assert page.locator(".lw-langs").is_visible() and page.locator(".c-exit").is_visible(), "langue et retour côté enfant visibles"
+        assert page.inner_text("#pa-rendre").strip() == "Rendre le téléphone", page.inner_text("#pa-rendre")
+        # Un seul bandeau en haut : le logo et « Se connecter », sur une ligne
+        barre = page.locator("#v-parent .pa-barre").bounding_box()
+        assert barre["y"] < 10 and page.locator("#v-parent .lw-barre").count() == 0, ("un seul bandeau en haut", barre)
+        logo, qui = page.locator("#v-parent .lw-marque").bounding_box(), page.locator("#pa-qui").bounding_box()
+        assert page.locator("#pa-qui > *").count() == 0 or abs(logo["y"] + logo["height"] / 2 - qui["y"] - qui["height"] / 2) < 12 and qui["x"] + qui["width"] <= 390, ("logo et « Se connecter » sur la même ligne", logo, qui)
+        boite = page.locator("#pa-rendre").bounding_box()
+        assert boite["y"] > 844 - 120 and boite["height"] >= 44, ("le retour est en bas, assez grand", boite)
+        assert page.locator("[data-onglet=temps]").bounding_box()["y"] > 844 - 120, "les onglets sont en bas"
+        # Les trois jeux tiennent sous la carte du jour, sans faire défiler
+        bas = page.locator(".pa-bas").bounding_box()["y"]
+        assert all(page.locator(".pa-ligne").nth(i).bounding_box()["y"] + page.locator(".pa-ligne").nth(i).bounding_box()["height"] <= bas for i in range(page.locator(".pa-ligne").count())), "ses jeux tiennent à l'écran"
+        # SL-19 : un réglage, puis « Rendre le téléphone » touché aussitôt, à l'endroit habituel : le réglage tient
+        rendre_avant = page.locator("#pa-rendre").bounding_box()
+        regler(page, "pluie-de-cochons")
+        page.locator(".pa-ligne[data-jeu=pluie-de-cochons] select").select_option("10")
+        page.wait_for_selector("#pa-journal .pa-journal-annuler")
+        page.wait_for_timeout(300)
+        page.screenshot(path=str(OUT / "telephone-7b-annuler.png"))
+        ligne = page.locator("#pa-journal .pa-journal-ligne").bounding_box()
+        rendre = page.locator("#pa-rendre").bounding_box()
+        assert ligne["y"] + ligne["height"] <= rendre["y"] and not croise(ligne, page.locator("[data-onglet=temps]").bounding_box()), ("la ligne est au-dessus de la barre du bas", ligne, rendre)
+        assert ligne["y"] >= page.locator(".pa-ligne[data-jeu=pluie-de-cochons] select").bounding_box()["y"] + 40, "la ligne ne cache pas le réglage qu'on vient de toucher"
+        assert rendre == rendre_avant, "« Rendre le téléphone » n'a pas bougé"
+        page.mouse.click(rendre["x"] + rendre["width"] / 2, rendre["y"] + rendre["height"] / 2)
+        page.wait_for_selector(".tuile")
+        assert stocke(page)["enfants"][0]["jeux"]["pluie-de-cochons"]["max"] == 10, "rendre le téléphone ne défait pas le réglage"
+        page.focus("#e-parents")
+        page.keyboard.press("Enter")
+        page.wait_for_selector("#gate[open]")
+        code(page, PIN)
+        parent(page)
+        assert page.locator("#pa-journal").is_hidden(), "plus rien à annuler une fois l'appareil rendu"
+        ctx.close()
+
+        # 2 bis b. Sur ordinateur : la barre du site et « Côté enfant » à droite ; une page du site avec sa ligne des promesses
+        ctx = contexte(browser, famille(), viewport={"width": 1440, "height": 900})
+        page = ctx.new_page()
+        page.on("pageerror", lambda e: errors.append(str(e)))
+        page.goto(APP)
+        page.wait_for_selector(".tuile")
+        page.focus("#e-parents")
+        page.keyboard.press("Enter")
+        code(page, PIN)
+        parent(page)
+        page.wait_for_timeout(500)
+        page.screenshot(path=str(OUT / "ordinateur-parent.png"))
+        assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1"), "rien ne dépasse en largeur"
+        assert page.inner_text("#v-parent .pa-barre #pa-rendre").strip() == "Côté enfant"
+        assert page.locator("#v-parent .pa-barre").bounding_box()["height"] <= 70 and "pa-deux-lignes" not in page.get_attribute(".pa-barre", "class"), "le bandeau tient sur une ligne"
+        page.goto(BASE + "/ludiworld/les-jeux/")
+        page.wait_for_selector(".cat-mini")
+        page.wait_for_timeout(800)
+        page.screenshot(path=str(OUT / "ordinateur-site-jeux.png"))
+        assert page.locator(".lw-promesses").is_visible() and page.locator(".lw-vers-parent").count() == 1
+        ctx.close()
+
+        # 2 ter. La carte du jour dit l'état vrai hors des heures de jeu (horloge posée : jeux de 17 h à 19 h).
+        #   À 19 h 05, « +10 min » rouvre vraiment 10 minutes, ce soir seulement, sans changer les heures réglées ;
+        #   la fin nette s'applique à la rallonge ; le lendemain, il n'en reste rien.
+        store = famille("nette")
+        store["famille"]["regles"]["heures"] = {"debut": "17:00", "fin": "19:00"}
+        ctx = contexte(browser, store, **formats["tablette"])
+        page = ctx.new_page()
+        page.on("pageerror", lambda e: errors.append(str(e)))
+        page.clock.install(time=a(19, 5))
+        page.goto(APP + "#carnet")
+        code(page, PIN)
+        parent(page)
+        carte = page.inner_text(".pa-jour").replace(" ", " ")
+        assert "Fermé depuis 19 h" in carte and "Il reste" not in carte, carte
+        page.click(".pa-jour .pa-vers-heures")   # le lien amène sur les heures, pas en haut de l'onglet
+        page.wait_for_timeout(300)
+        assert page.get_attribute("[data-onglet=temps]", "aria-selected") == "true"
+        h = page.locator("#pa-heures").bounding_box()
+        assert 0 <= h["y"] and h["y"] + h["height"] <= 820, ("les heures sont à l'écran", h)
+        onglet(page, "jeux")
+        page.screenshot(path=str(OUT / "tablette-9b-hors-heures.png"))
+        page.click(".pa-jour [data-action=plus10]")
+        page.wait_for_timeout(200)
+        r = stocke(page)["enfants"][0]["regles"]
+        assert r["heures"] == {"debut": "17:00", "fin": "19:00"} and r["bonus"]["fin"] in ("19:15", "19:16"), ("les heures réglées ne changent pas ; 10 minutes, arrondies à la minute au-dessus", r)
+        carte = page.inner_text(".pa-jour").replace(" ", " ")
+        assert ("Il reste 10 min" in carte or "Il reste 11 min" in carte) and "ce soir jusqu’à 19 h 1" in carte, carte
+        page.screenshot(path=str(OUT / "tablette-9c-plus10-apres-19h.png"))
+        page.click("#pa-rendre")
+        page.wait_for_selector(".tuile")   # le côté enfant rouvre
+        page.locator(".tuile", has_text="Jeu kit").click()
+        page.wait_for_selector("#player:not([hidden])")
+        page.clock.run_for(12 * 60 * 1000)
+        page.wait_for_selector("#p-rideau:not([hidden])")   # fin nette : à 19 h 15, on s'arrête
+        page.click("#p-rideau .btn-sun")
+        page.wait_for_selector("#e-dodo:not([hidden])")
+        ctx.close()
+        # Le lendemain à 19 h 05 : fermé depuis 19 h, comme d'habitude
+        store["famille"]["regles"]["bonus"] = {"jour": "%d-%d-%d" % (a(0, 0).year, a(0, 0).month, a(0, 0).day), "min": 10, "fin": "19:15"}
+        ctx = contexte(browser, store, **formats["tablette"])
+        page = ctx.new_page()
+        page.on("pageerror", lambda e: errors.append(str(e)))
+        page.clock.install(time=a(19, 5, jours=1))
+        page.goto(APP + "#carnet")
+        code(page, PIN)
+        parent(page)
+        assert "Fermé depuis 19 h." in page.inner_text(".pa-jour").replace(" ", " "), page.inner_text(".pa-jour")
+        ctx.close()
+        # À 15 h : « Ouvre à 17 h. Il restera 30 min. » ; « Arrêter » avant l'ouverture : fini côté enfant
+        store = famille()
+        store["famille"]["regles"]["heures"] = {"debut": "17:00", "fin": "19:00"}
+        ctx = contexte(browser, store, **formats["tablette"])
+        page = ctx.new_page()
+        page.on("pageerror", lambda e: errors.append(str(e)))
+        page.clock.install(time=a(15, 0))
+        page.goto(APP + "#carnet")
+        code(page, PIN)
+        parent(page)
+        assert "Ouvre à 17 h. Il restera 30 min." in page.inner_text(".pa-jour").replace(" ", " "), page.inner_text(".pa-jour")
+        page.click(".pa-jour [data-action=stop]")
+        assert "Arrêté pour aujourd’hui" in page.inner_text(".pa-jour")
+        page.click("#pa-rendre")
+        page.wait_for_selector("#e-dodo:not([hidden])")
+        assert "Fini pour aujourd’hui" in page.inner_text("#e-temps") and "réveillent" not in page.inner_text("#e-dodo"), "arrêté avant l'ouverture : c'est fini pour aujourd'hui"
+        ctx.close()
+
+        # 2 quater. Plan 1 : Mes jeux, Tous les jeux, ranger, demander.
+        #   Quatre onglets à plat ; l'enfant regarde tous les jeux (temps non compté) et en demande un ; la demande arrive côté parent,
+        #   « Installer » ou « Pas maintenant » ; ranger / ressortir / annuler ; un jeu rangé va dans « Finis » côté enfant ;
+        #   la case de Réglages coupe le bouton de l'enfant ; « Nouveau » pendant 30 jours.
+        for name, opts in dict(formats, ordinateur=dict(viewport={"width": 1440, "height": 900})).items():
+            ctx = contexte(browser, famille(), **opts)
+            page = ctx.new_page()
+            page.on("pageerror", lambda e: errors.append(str(e)))
+            page.goto(APP)
+            page.wait_for_selector(".tuile")
+            page.wait_for_selector("#e-vitrine:not([hidden])")
+            assert page.get_attribute("#e-vitrine", "aria-label") == "Regarder tous les jeux"
+            assert page.inner_text("#e-vitrine").strip() == "", "une image, pas de mot à lire"
+            page.wait_for_timeout(2300)
+            page.screenshot(path=str(OUT / f"{name}-p1-enfant-bouton.png"))
+            avant_ms = page.evaluate("JSON.stringify(ludiDemo.etat().famille.enfants[0].games)")
+            page.click("#e-vitrine")
+            page.wait_for_selector(".v-tuile")
+            assert page.locator(".v-tuile").count() == 7, "les jeux qu'il n'a pas (9 au catalogue d'essai, 2 installés)"
+            assert page.locator(".v-tuile[data-jeu=pluie-de-cochons]").count() == 0
+            page.wait_for_timeout(1500)
+            assert page.evaluate("document.documentElement.scrollWidth <= innerWidth + 1"), ("rien ne dépasse", name)
+            page.screenshot(path=str(OUT / f"{name}-p1-vitrine.png"))
+            page.click(".v-tuile[data-jeu=tour-aimants]")
+            page.wait_for_selector(".v-vouloir")
+            assert page.locator(".v-images img").count() == 3, "les trois images en grand"
+            assert page.inner_text(".v-vouloir").strip() == "Je voudrais ce jeu" and page.locator(".v-vouloir svg").count() == 1, "avec une main levée"
+            page.wait_for_timeout(600)
+            page.screenshot(path=str(OUT / f"{name}-p1-vitrine-jeu.png"))
+            page.click(".v-vouloir")
+            page.wait_for_selector(".v-demande")
+            assert page.inner_text(".v-demande").strip() == "Demandé ! Un parent va regarder.", page.inner_text(".v-demande")
+            e = stocke(page)["enfants"][0]
+            assert list(e.get("demandes", {})) == ["tour-aimants"] and "tour-aimants" not in e["jeux"], ("rien ne s'installe", e)
+            page.wait_for_timeout(700)
+            page.screenshot(path=str(OUT / f"{name}-p1-vitrine-demande.png"))
+            page.evaluate("history.back()")   # le retour du téléphone : la liste
+            page.wait_for_selector(".v-grille")
+            assert "Demandé" in page.inner_text(".v-tuile[data-jeu=tour-aimants] .v-marque")
+            page.click(".v-tuile[data-jeu=simon-des-monstres]")
+            page.click(".v-vouloir")
+            page.wait_for_selector(".v-demande")
+            page.click(".v-retour")
+            page.wait_for_selector(".v-grille")
+            page.wait_for_timeout(1800)
+            page.click(".v-retour")
+            page.wait_for_selector("#vitrine", state="hidden")
+            apres_ms = page.evaluate("JSON.stringify(ludiDemo.etat().famille.enfants[0].games)")
+            assert avant_ms == apres_ms, "regarder les jeux ne compte pas dans le temps de jeu"
+            # Côté parent : quatre onglets à plat ; la demande en haut de « Mes jeux »
+            page.focus("#e-parents")
+            page.keyboard.press("Enter")
+            code(page, PIN)
+            parent(page)
+            onglets = page.locator("#pa-onglets [data-onglet]")
+            assert [onglets.nth(i).get_attribute("data-onglet") for i in range(onglets.count())] == ["jeux", "catalogue", "temps", "reglages"]
+            assert [t.strip().replace("\n", " ") for t in onglets.all_inner_texts()] == ["Mes jeux", "Tous les jeux", "Temps", "Réglages"], onglets.all_inner_texts()
+            if name == "telephone":
+                for i in range(4):
+                    assert onglets.nth(i).bounding_box()["y"] > 844 - 120, "les quatre onglets en bas"
+                r = page.locator("#pa-rendre")
+                assert r.evaluate("b => b.scrollWidth <= b.clientWidth + 1"), "« Rendre le téléphone » tient dans son bouton"
+            dem = page.locator(".pa-demande")
+            assert dem.count() == 2 and dem.nth(0).get_attribute("data-demande") == "tour-aimants", "une ligne par demande, la plus ancienne d'abord"
+            assert "Petit Loup voudrait : La Tour aux Aimants" in page.inner_text(".pa-demande[data-demande=tour-aimants]").replace("\u00a0", " ")
+            assert page.evaluate("document.querySelector('.pa-demandes').compareDocumentPosition(document.querySelector('.pa-jour')) & Node.DOCUMENT_POSITION_FOLLOWING"), "en haut"
+            assert page.evaluate("document.documentElement.scrollWidth <= innerWidth + 1"), ("rien ne dépasse", name)
+            page.wait_for_timeout(400)
+            page.screenshot(path=str(OUT / f"{name}-p1-mes-jeux-demandes.png"))
+            # Tous les jeux : l'état pour l'enfant regardé
+            onglet(page, "catalogue")
+            assert page.locator(".pa-tous-grille .cat-mini").count() == 9
+            assert "Petit Loup le voudrait" in page.inner_text(".cat-mini[data-jeu=tour-aimants] .cat-mini-actions")
+            assert "Installé pour Petit Loup" in page.inner_text(".cat-mini[data-jeu=pluie-de-cochons] .cat-mini-actions")
+            assert page.evaluate("document.documentElement.scrollWidth <= innerWidth + 1"), ("rien ne dépasse", name)
+            page.wait_for_timeout(500)
+            page.screenshot(path=str(OUT / f"{name}-p1-tous-les-jeux.png"))
+            onglet(page, "jeux")
+            if name != "tablette":
+                ctx.close()
+                continue
+            # Installer depuis la demande ; « Annuler » ramène la demande ; puis « Pas maintenant » pour Simon
+            page.click(".pa-demande[data-demande=tour-aimants] [data-installer]")
+            page.wait_for_timeout(200)
+            e = stocke(page)["enfants"][0]
+            assert "tour-aimants" in e["jeux"] and "tour-aimants" not in e.get("demandes", {}) and "tour-aimants" in e["demandesVues"], e
+            assert "Changé : La Tour aux Aimants installé pour Petit Loup" in page.inner_text("#pa-journal").replace("\u00a0", " "), page.inner_text("#pa-journal")
+            assert page.locator(".pa-ligne[data-jeu=tour-aimants]").count() == 1 and page.locator(".pa-demande").count() == 1
+            page.click("#pa-journal .pa-journal-annuler")
+            page.wait_for_timeout(200)
+            e = stocke(page)["enfants"][0]
+            assert "tour-aimants" not in e["jeux"] and "tour-aimants" in e["demandes"], ("Annuler : la demande revient", e)
+            page.click(".pa-demande[data-demande=tour-aimants] [data-installer]")
+            page.click("[data-pas-maintenant=simon-des-monstres]")
+            page.wait_for_timeout(200)
+            e = stocke(page)["enfants"][0]
+            assert "demandes" not in e and "simon-des-monstres" not in e["jeux"] and "simon-des-monstres" in e["demandesVues"], e
+            assert page.locator(".pa-demandes").count() == 0
+            # Ranger dans « Régler » : le jeu passe dans « Rangés (1) », rien n'est effacé ; Annuler ; Ressortir
+            regler(page, "pluie-de-cochons")
+            page.locator(".pa-ligne[data-jeu=pluie-de-cochons] select").select_option("15")
+            page.click(".pa-ligne[data-jeu=pluie-de-cochons] [data-ranger]")
+            page.wait_for_timeout(200)
+            c = stocke(page)["enfants"][0]["jeux"]["pluie-de-cochons"]
+            assert c["range"] > 0 and c["max"] == 15, ("rangé, réglages gardés", c)
+            assert page.locator(".pa-lignes > .pa-ligne[data-jeu=pluie-de-cochons]:not(.pa-ligne-rangee)").count() == 0
+            assert page.inner_text(".pa-ranges summary").strip() == "Rangés (1)"
+            assert page.locator(".pa-ranges[open]").count() == 0, "replié"
+            page.click("#pa-journal .pa-journal-ligne >> nth=0 >> button")
+            page.wait_for_timeout(200)
+            assert "range" not in stocke(page)["enfants"][0]["jeux"]["pluie-de-cochons"], "Annuler ressort le jeu"
+            regler(page, "pluie-de-cochons")
+            page.click(".pa-ligne[data-jeu=pluie-de-cochons] [data-ranger]")
+            page.wait_for_timeout(200)
+            page.click(".pa-ranges summary")
+            page.wait_for_timeout(200)
+            page.screenshot(path=str(OUT / "tablette-p1-ranges.png"), full_page=True)
+            page.click(".pa-ranges [data-ressortir=pluie-de-cochons]")
+            page.wait_for_timeout(200)
+            assert "range" not in stocke(page)["enfants"][0]["jeux"]["pluie-de-cochons"] and page.locator(".pa-ranges").count() == 0
+            # Ranger depuis la fiche, puis « Rangé pour Petit Loup » ; « Retirer » reste dans la fiche
+            page.locator(".pa-ligne[data-jeu=pluie-de-cochons] .pa-ligne-jeu").click()
+            page.wait_for_selector("dialog.cat-fiche[open] [data-ranger]")
+            assert page.locator("dialog.cat-fiche .pa-retirer").count() == 1
+            page.click("dialog.cat-fiche [data-ranger]")
+            page.wait_for_timeout(200)
+            assert "Rangé pour Petit Loup" in page.inner_text("dialog.cat-fiche .pa-pour-enfants")
+            page.wait_for_timeout(300)
+            page.screenshot(path=str(OUT / "tablette-p1-fiche-range.png"))
+            page.keyboard.press("Escape")
+            page.wait_for_function("!document.querySelector('dialog.cat-fiche').open")
+            assert page.locator("#pa-page .pa-retirer").count() == 0, "« Retirer » seulement dans la fiche"
+            # Côté enfant : le jeu rangé (pas fini) est dans « Finis », jouable ; Simon (pas maintenant) peut se redemander
+            page.click("#pa-rendre")
+            page.wait_for_selector(".tuile")
+            groupe = page.locator(".e-rangee-groupe", has=page.locator(".e-rangee-finis"))
+            assert groupe.locator(".tuile", has_text="Pluie de Cochons").count() == 1, "rangé : dans « Finis »"
+            page.wait_for_timeout(2300)
+            page.screenshot(path=str(OUT / "tablette-p1-enfant-range-finis.png"))
+            page.click("#e-vitrine")
+            page.wait_for_selector(".v-tuile")
+            assert page.locator(".v-tuile[data-jeu=simon-des-monstres] .v-marque").count() == 0, "après « Pas maintenant », plus de marque"
+            assert page.locator(".v-tuile[data-jeu=tour-aimants]").count() == 0, "installé : plus dans la vitrine"
+            page.click(".v-retour")
+            page.wait_for_selector("#vitrine", state="hidden")
+            page.locator(".tuile", has_text="Pluie de Cochons").click()
+            page.wait_for_selector("#player:not([hidden])")
+            page.click("#player-back")
+            page.wait_for_selector("#player", state="hidden")
+            # La case de Réglages coupe le bouton de l'enfant
+            page.focus("#e-parents")
+            page.keyboard.press("Enter")
+            code(page, PIN)
+            parent(page)
+            onglet(page, "reglages")
+            case = page.locator("[data-reglage=regarder]")
+            assert case.is_checked() and "Petit Loup peut regarder tous les jeux et en demander un" in page.inner_text(".pa-bloc-enfant")
+            case.uncheck()
+            page.wait_for_timeout(200)
+            assert stocke(page)["enfants"][0]["regarderTout"] is False
+            assert "Petit Loup ne peut plus regarder tous les jeux" in page.inner_text("#pa-journal")
+            page.screenshot(path=str(OUT / "tablette-p1-reglages-case.png"), full_page=True)
+            page.click("#pa-rendre")
+            page.wait_for_selector(".tuile")
+            assert page.locator("#e-vitrine").is_hidden(), "bouton coupé"
+            # Tout installé : « Tous les jeux » montre encore tout ; la vitrine de l'enfant n'a plus rien à montrer
+            page.goto(BASE + "/ludiworld/jeux/index.json")   # l'appli fermée (elle réécrit ses données en partant), même origine
+            page.evaluate("""() => { var s = JSON.parse(localStorage.getItem('ludiworld.v1')); var e = s.famille.enfants[0]; delete e.regarderTout;
+              ['tour-aimants','du-feu-a-la-fusee','chasseur-dragons','simon-des-monstres','monde-a-la-craie','les-petits-enclos','chemin-du-roi'].forEach(function (id) { e.jeux[id] = e.jeux[id] || { max: null }; });
+              localStorage.setItem('ludiworld.v1', JSON.stringify(s)); }""")
+            page.goto(APP)
+            page.wait_for_selector(".tuile")
+            assert page.locator("#e-vitrine").is_hidden(), "tout installé : rien à regarder"
+            page.focus("#e-parents")
+            page.keyboard.press("Enter")
+            code(page, PIN)
+            parent(page)
+            onglet(page, "catalogue")
+            assert page.locator(".pa-tous-grille .cat-mini").count() == 9 and page.locator(".pa-tous-grille .pa-installer").count() == 0, "tout installé : tous les jeux restent là"
+            ctx.close()
+
+        # « Nouveau » : une petite marque écrite, 30 jours après l'entrée du jeu au catalogue ; les nouveaux d'abord. Horloge au 5 décembre 2026 :
+        # Le Chemin du Roi (15 novembre) puis Les Petits Enclos (11 novembre) ; les autres, entrés avant le 6 novembre, ne le sont plus.
+        ctx = contexte(browser, famille(), **formats["tablette"])
+        page = ctx.new_page()
+        page.on("pageerror", lambda e: errors.append(str(e)))
+        page.clock.install(time=datetime.datetime(2026, 12, 5, 16, 0))
+        page.goto(APP + "#carnet")
+        code(page, PIN)
+        parent(page)
+        onglet(page, "catalogue")
+        assert page.locator(".cat-nouveau").count() == 2, page.locator(".cat-nouveau").count()
+        ordre = [page.locator(".pa-tous-grille .cat-mini").nth(i).get_attribute("data-jeu") for i in range(3)]
+        assert ordre[:2] == ["chemin-du-roi", "les-petits-enclos"], ordre
+        assert page.inner_text(".cat-mini[data-jeu=chemin-du-roi] .cat-nouveau") == "Nouveau"
+        page.wait_for_timeout(500)
+        page.screenshot(path=str(OUT / "tablette-p1-nouveau.png"))
+        onglet(page, "reglages")
+        page.locator(".pa-maison .langs button", has_text="EN").click()
+        onglet(page, "catalogue")
+        assert page.inner_text(".cat-mini[data-jeu=chemin-du-roi] .cat-nouveau") == "New"
+        assert page.inner_text("[data-onglet=catalogue]").strip() == "All games" and page.inner_text("[data-onglet=jeux]").strip() == "My games"
+        page.goto(BASE + "/ludiworld/les-jeux/")
+        page.wait_for_selector(".cat-mini")
+        assert page.locator(".cat-nouveau").count() == 2 and page.locator(".jx-grille .cat-mini").first.get_attribute("data-jeu") == "chemin-du-roi", "la vitrine du site aussi"
+        ctx.close()
+        # Le 1er février 2027 : plus rien de nouveau, pas de marque
+        ctx = contexte(browser, famille(), **formats["tablette"])
+        page = ctx.new_page()
+        page.on("pageerror", lambda e: errors.append(str(e)))
+        page.clock.install(time=datetime.datetime(2027, 2, 1, 16, 0))
+        page.goto(BASE + "/ludiworld/les-jeux/")
+        page.wait_for_selector(".cat-mini")
+        assert page.locator(".cat-nouveau").count() == 0
+        ctx.close()
+
+        # Deux enfants : la demande de l'un ne s'affiche que quand on le regarde
+        ctx = contexte(browser, famille(), **formats["telephone"])
+        page = ctx.new_page()
+        page.on("pageerror", lambda e: errors.append(str(e)))
+        page.goto(APP)
+        page.wait_for_selector(".tuile")
+        page.goto(BASE + "/ludiworld/jeux/index.json")
+        page.evaluate("""() => { var s = JSON.parse(localStorage.getItem('ludiworld.v1')); var f = s.famille, e = f.enfants[0];
+          f.enfants.push({ id: 'e2', enfant: { nom: 'Inès', age: 7 }, jeux: {}, regles: JSON.parse(JSON.stringify(e.regles)), games: {}, demandes: { 'simon-des-monstres': Date.now() } });
+          localStorage.setItem('ludiworld.v1', JSON.stringify(s)); }""")
+        page.goto(APP)
+        page.wait_for_selector(".tuile")
+        page.focus("#e-parents")
+        page.keyboard.press("Enter")
+        code(page, PIN)
+        parent(page)
+        assert page.locator(".pa-demande").count() == 0, "Petit Loup n'a rien demandé"
+        page.locator("#pa-enfants button", has_text="Inès").click()
+        page.wait_for_selector(".pa-demande")
+        assert "Inès voudrait : Simon des Monstres" in page.inner_text(".pa-demande").replace("\u00a0", " ")
+        assert "Aucun jeu installé pour l’instant." in page.inner_text(".pa-ses-jeux") and page.locator(".pa-voir-tout").count() == 1
+        page.wait_for_timeout(300)
+        page.screenshot(path=str(OUT / "telephone-p1-deux-enfants-sans-jeu.png"), full_page=True)
+        page.click(".pa-voir-tout")
+        page.wait_for_selector(".pa-tous-grille")
+        assert "Inès le voudrait" in page.inner_text(".cat-mini[data-jeu=simon-des-monstres] .cat-mini-actions")
         ctx.close()
 
         # 3. Fin douce : on prévient, on attend la fin de manche, puis la nuit tombe
         ctx = contexte(browser, famille("douce"), **formats["tablette"])
         page = ctx.new_page()
         page.on("pageerror", lambda e: errors.append(str(e)))
-        page.goto(BASE + "/ludiworld/")
+        page.goto(APP)
         page.locator(".tuile", has_text="Jeu kit").click()
         game = page.frame_locator("#player iframe")
         assert "fullscreen" not in (page.get_attribute("#player iframe", "allow") or ""), "le plein écran se décide dans Ludiworld, pas dans le jeu"
@@ -408,29 +1119,114 @@ def run():
         page.evaluate("ludiDemo.ajouter('jeu-kit', 26)")
         page.wait_for_timeout(1500)
         assert page.locator("#p-bandeau").is_visible(), "5 min avant : la marmotte prévient"
+        assert page.inner_text("#p-bandeau b") == "Le soleil se couche", page.inner_text("#p-bandeau")
+        assert page.inner_text("#p-bandeau span") == "Ça s’arrête à la fin de ta partie.", page.inner_text("#p-bandeau")
+        assert page.inner_text("#p-bandeau small") == "encore 4\u00a0min", "les minutes en petit, le vrai nombre"
         assert "wrapup" in game.locator("#msg").inner_text(), "le jeu est prévenu (ludi:wrapup)"
         page.screenshot(path=str(OUT / "tablette-9-bientot.png"))
         page.evaluate("ludiDemo.ajouter('jeu-kit', 5)")
         page.wait_for_timeout(1500)
+        assert page.inner_text("#p-bandeau span") == "C’est ta dernière partie.", page.inner_text("#p-bandeau")
+        assert page.locator("#p-bandeau small").count() == 0
         assert page.locator("#p-rideau").is_hidden(), "fin douce : on n'interrompt pas la manche"
         assert "derniere" in page.get_attribute("#p-reste", "class"), "pastille « dernière partie »"
         game.locator("#fin").click()
         page.wait_for_timeout(1500)
         assert page.locator("#p-rideau").is_visible(), "fin de manche : on s'arrête"
         assert "pause" in game.locator("#msg").inner_text(), "le jeu reçoit ludi:pause"
+        assert page.inner_text("#p-rideau .rideau-apres p") == APRES_FR, "sous « Bravo », l'idée hors écran du dernier jeu"
+        assert page.locator("#p-rideau .rideau-apres button, #p-rideau .rideau-apres a").count() == 0, "rien à toucher"
+        page.wait_for_timeout(2200)
         page.screenshot(path=str(OUT / "tablette-10-rideau.png"))
         page.click("#p-rideau .btn-sun")
         page.wait_for_timeout(2500)
         assert page.get_attribute("#v-enfant", "data-moment") == "nuit", "la nuit est tombée"
         assert page.locator(".tuile").count() == 0
         page.screenshot(path=str(OUT / "tablette-11-nuit.png"))
+        # Une fois par jour : rouvert le même jour (ici, plus de temps donné), l'écran de fin ne la redit pas
+        page.goto(BASE + "/ludiworld/jeux/index.json")   # l'appli fermée (elle réécrit ses données en partant), même origine
+        page.evaluate("""() => { var s = JSON.parse(localStorage.getItem('ludiworld.v1')); var e = s.famille.enfants[0];
+          e.regles.ecole = e.regles.libre = 60; e.regles.fini = null; localStorage.setItem('ludiworld.v1', JSON.stringify(s)); }""")
+        page.goto(APP)
+        page.locator(".tuile", has_text="Jeu kit").click()
+        page.frame_locator("#player iframe").locator("#fin").wait_for()
+        page.evaluate("ludiDemo.ajouter('jeu-kit', 30)")
+        page.wait_for_timeout(1500)
+        page.frame_locator("#player iframe").locator("#fin").click()
+        page.wait_for_selector("#p-rideau:not([hidden])")
+        assert "Bravo" in page.inner_text("#p-rideau"), page.inner_text("#p-rideau")
+        assert page.locator("#p-rideau .rideau-apres").count() == 0, "l'idée ne revient pas une deuxième fois le même jour"
+        ctx.close()
+
+        # 3 bis. Les mots de la marmotte et l'écran de fin sur les trois formats (captures à regarder) ;
+        #        l'idée n'apparaît pas quand seul ce jeu s'arrête (l'enfant peut en choisir un autre)
+        trois = dict(formats, ordinateur=dict(viewport={"width": 1440, "height": 900}))
+        for name, opts in trois.items():
+            ctx = contexte(browser, famille("douce"), **opts)
+            page = ctx.new_page()
+            page.on("pageerror", lambda e: errors.append(str(e)))
+            page.goto(APP)
+            page.locator(".tuile", has_text="Jeu kit").click()
+            page.frame_locator("#player iframe").locator("#fin").wait_for()
+            page.evaluate("ludiDemo.ajouter('jeu-kit', 26)")
+            page.wait_for_timeout(1500)
+            vw, vh = opts["viewport"]["width"], opts["viewport"]["height"]
+            b = page.locator("#p-bandeau").bounding_box()
+            assert b["x"] >= 0 and b["x"] + b["width"] <= vw, ("la marmotte tient dans l'écran", name, b)
+            assert page.inner_text("#p-bandeau small") == "encore 4\u00a0min", name
+            page.screenshot(path=str(OUT / f"{name}-10a-marmotte-bientot.png"))
+            page.evaluate("ludiDemo.ajouter('jeu-kit', 5)")
+            page.wait_for_timeout(1500)
+            assert page.inner_text("#p-bandeau span") == "C’est ta dernière partie.", name
+            page.screenshot(path=str(OUT / f"{name}-10b-marmotte-derniere.png"))
+            page.frame_locator("#player iframe").locator("#fin").click()
+            page.wait_for_selector("#p-rideau .rideau-apres")
+            page.wait_for_timeout(2400)
+            carte = page.locator("#p-rideau .rideau-carte").bounding_box()
+            assert carte["x"] >= 0 and carte["x"] + carte["width"] <= vw and carte["y"] >= 0 and carte["y"] + carte["height"] <= vh, ("l'écran de fin tient", name, carte)
+            assert page.evaluate("(() => { var p = document.querySelector('.rideau-apres p'); return p.scrollWidth <= p.clientWidth; })()"), ("la phrase ne déborde pas", name)
+            page.screenshot(path=str(OUT / f"{name}-10c-fin-idee.png"))
+            ctx.close()
+        ctx = contexte(browser, famille("nette", max_kit=10), **formats["telephone"])
+        page = ctx.new_page()
+        page.on("pageerror", lambda e: errors.append(str(e)))
+        page.goto(APP)
+        page.locator(".tuile", has_text="Jeu kit").click()
+        page.frame_locator("#player iframe").locator("#fin").wait_for()
+        page.evaluate("ludiDemo.ajouter('jeu-kit', 10)")
+        page.wait_for_selector("#p-rideau:not([hidden])")
+        assert page.inner_text("#p-rideau h2") == "Fini pour ce jeu aujourd’hui", page.inner_text("#p-rideau h2")
+        assert page.locator("#p-rideau .rideau-apres").count() == 0, "changer de jeu en cours de journée : pas d'idée"
+        assert not page.evaluate("JSON.parse(localStorage.getItem('ludiworld.v1')).apresVu"), "rien n'est noté"
+        ctx.close()
+        # En anglais, sur téléphone
+        ctx = contexte(browser, famille("douce"), **formats["telephone"])
+        ctx.add_init_script("localStorage.setItem('ludiworld.lang', 'en');")
+        page = ctx.new_page()
+        page.on("pageerror", lambda e: errors.append(str(e)))
+        page.goto(APP)
+        page.locator(".tuile", has_text="Kit game").click()
+        page.frame_locator("#player iframe").locator("#fin").wait_for()
+        page.evaluate("ludiDemo.ajouter('jeu-kit', 26)")
+        page.wait_for_timeout(1500)
+        assert page.inner_text("#p-bandeau b") == "The sun is setting", page.inner_text("#p-bandeau")
+        assert page.inner_text("#p-bandeau span") == "It stops at the end of your game." and page.inner_text("#p-bandeau small") == "4\u00a0min left", page.inner_text("#p-bandeau")
+        page.screenshot(path=str(OUT / "telephone-10d-marmotte-en.png"))
+        page.evaluate("ludiDemo.ajouter('jeu-kit', 5)")
+        page.wait_for_timeout(1500)
+        assert page.inner_text("#p-bandeau span") == "This is your last game.", page.inner_text("#p-bandeau")
+        page.frame_locator("#player iframe").locator("#fin").click()
+        page.wait_for_selector("#p-rideau .rideau-apres")
+        assert page.inner_text("#p-rideau .rideau-apres p") == "How about drawing a pig in a barn?"
+        page.wait_for_timeout(2400)
+        page.screenshot(path=str(OUT / "telephone-10e-fin-idee-en.png"))
         ctx.close()
 
         # 4. Fin nette : on s'arrête à la minute, sans attendre la manche
         ctx = contexte(browser, famille("nette"), **formats["telephone"])
         page = ctx.new_page()
         page.on("pageerror", lambda e: errors.append(str(e)))
-        page.goto(BASE + "/ludiworld/")
+        page.goto(APP)
         page.locator(".tuile", has_text="Jeu kit").click()
         page.wait_for_timeout(800)
         page.evaluate("ludiDemo.ajouter('jeu-kit', 31)")
@@ -443,7 +1239,7 @@ def run():
         ctx = contexte(browser, famille("nette", max_kit=10), **formats["telephone"])
         page = ctx.new_page()
         page.on("pageerror", lambda e: errors.append(str(e)))
-        page.goto(BASE + "/ludiworld/")
+        page.goto(APP)
         page.wait_for_selector(".tuile")
         page.evaluate("ludiDemo.ajouter('jeu-kit', 10)")
         page.wait_for_timeout(500)
@@ -455,6 +1251,132 @@ def run():
         page.screenshot(path=str(OUT / "telephone-6-limite-jeu.png"))
         ctx.close()
 
+        # 5 bis. Côté enfant, un lundi : sous « Pas aujourd'hui », pourquoi (les jours réglés, « Encore demain ») ; ces jeux ne se touchent pas ;
+        #        « Fini » sans pourcentage ; « Parents » ne couvre aucune tuile, en haut comme en bas de la page
+        lundi = (7 - datetime.date.today().weekday()) % 7
+        for name, opts in formats.items():
+            store = famille("nette", max_kit=10, fini_pluie=True)
+            store["games"]["pluie-de-cochons"]["etat"]["complet"] = 0.67
+            store["famille"]["jeux"]["simon-des-monstres"] = {"max": None, "libres": True}
+            store["famille"]["jeux"]["tour-aimants"] = {"max": None}
+            ctx = contexte(browser, store, **opts)
+            page = ctx.new_page()
+            page.on("pageerror", lambda e: errors.append(str(e)))
+            page.clock.install(time=a(15, 0, jours=lundi))
+            page.goto(APP)
+            page.wait_for_selector(".tuile")
+            page.evaluate("ludiDemo.ajouter('jeu-kit', 10)")
+            page.wait_for_selector(".e-repos-fini")
+            page.wait_for_timeout(2500)
+            assert page.inner_text(".e-repos-titre").strip() == "Pas aujourd’hui"
+            assert page.inner_text(".e-repos-libres .e-repos-pourquoi").strip() == "Le mercredi, le samedi et le dimanche", page.inner_text(".e-repos-libres")
+            assert page.locator(".e-repos-libres .e-repos-pourquoi svg").count() == 1, "une petite icône"
+            assert page.inner_text(".e-repos-fini .e-repos-pourquoi").strip() == "Encore demain", page.inner_text(".e-repos-fini")
+            assert page.locator(".e-repos-libres .e-repos-jeu", has_text="Simon").count() == 1 and page.locator(".e-repos-fini .e-repos-jeu", has_text="Jeu kit").count() == 1
+            assert page.locator(".tuile", has_text="Simon").count() == 0, "un jeu fermé n'est pas une tuile"
+            assert page.evaluate("getComputedStyle(document.querySelector('.e-repos')).pointerEvents") == "none", "rien ne se passe au toucher"
+            tuile_pluie = page.locator(".tuile", has_text="Pluie de Cochons")
+            assert "Fini" in tuile_pluie.inner_text() and "%" not in tuile_pluie.inner_text(), tuile_pluie.inner_text()
+            page.screenshot(path=str(OUT / f"{name}-6b-pas-aujourdhui.png"))
+            for haut in [0, 100000]:
+                page.evaluate(f"scrollTo(0, {haut})")
+                page.wait_for_timeout(200)
+                parents_b = page.locator("#e-parents").bounding_box()
+                vitrine_b = page.locator("#e-vitrine").bounding_box()
+                assert vitrine_b and not croise(parents_b, vitrine_b), ("le bouton de la vitrine, à côté de « Parents »", name)
+                for i in range(page.locator(".tuile, .e-repos-jeu, .e-repos-pourquoi").count()):
+                    b = page.locator(".tuile, .e-repos-jeu, .e-repos-pourquoi").nth(i).bounding_box()
+                    assert not croise(parents_b, b), ("« Parents » couvre une tuile", name, haut, parents_b, b)
+                    assert not croise(vitrine_b, b), ("la vitrine couvre une tuile", name, haut, vitrine_b, b)
+            page.screenshot(path=str(OUT / f"{name}-6c-bas-de-liste.png"))
+            ctx.close()
+
+        # 5 ter. Plus de quatre tuiles sur une tablette en largeur : elles prennent toute la largeur et tout tient sans défiler
+        store = famille(fini_pluie=True)
+        store["games"]["chasseur-dragons"] = {"ms": 60000, "sessions": 1, "days": {}, "scores": {}, "progress": {}, "etat": {"fini": True}}
+        store["games"]["tour-aimants"] = {"ms": 60000, "sessions": 1, "days": {}, "scores": {}, "progress": {}}
+        for g in ["chasseur-dragons", "tour-aimants", "du-feu-a-la-fusee", "simon-des-monstres"]:
+            store["famille"]["jeux"][g] = {"max": None}
+        for name, opts in formats.items():
+            ctx = contexte(browser, store, **opts)
+            page = ctx.new_page()
+            page.on("pageerror", lambda e: errors.append(str(e)))
+            page.goto(APP)
+            page.wait_for_selector(".tuile")
+            page.wait_for_timeout(2500)
+            assert page.locator(".tuile").count() == 6
+            page.screenshot(path=str(OUT / f"{name}-6d-six-jeux.png"), full_page=True)
+            if name == "tablette":
+                assert "beaucoup" in page.get_attribute("#v-enfant", "class")
+                bas = max(page.locator(".tuile").nth(i).bounding_box()["y"] + page.locator(".tuile").nth(i).bounding_box()["height"] for i in range(6))
+                assert bas <= 820, ("tout tient sans défiler", bas)
+                assert min(page.locator(".tuile").nth(i).bounding_box()["x"] for i in range(6)) < 300, "les tuiles prennent aussi la moitié gauche"
+            ctx.close()
+
+        # 5 quater. Dans un jeu : une maison pour revenir (au moins 44 px, dans le coin) ; la pastille du temps repliée en petit soleil,
+        #           dépliée 5 min avant la fin, puis de nouveau repliée
+        for name, opts in formats.items():
+            ctx = contexte(browser, famille("douce"), **opts)
+            page = ctx.new_page()
+            page.on("pageerror", lambda e: errors.append(str(e)))
+            page.goto(APP)
+            page.locator(".tuile", has_text="Jeu kit").click()
+            page.wait_for_selector("#p-reste:not([hidden])")
+            retour = page.locator("#player-back").bounding_box()
+            assert retour["width"] >= 44 and retour["height"] >= 44 and retour["x"] < 30 and retour["y"] < 30, retour
+            assert page.get_attribute("#player-back", "aria-label") == "Revenir à Ludiworld"
+            pastille = page.locator("#p-reste").bounding_box()
+            assert pastille["width"] <= 50 and "ouverte" not in page.get_attribute("#p-reste", "class"), ("repliée", pastille)
+            assert not croise(retour, pastille), "la pastille ne couvre pas la maison"
+            page.screenshot(path=str(OUT / f"{name}-9d-jeu-pastille-repliee.png"))
+            page.evaluate("ludiDemo.ajouter('jeu-kit', 26)")
+            page.wait_for_timeout(1500)
+            assert "ouverte" in page.get_attribute("#p-reste", "class") and "Encore" in page.inner_text("#p-reste"), "5 min avant : elle se déplie"
+            page.screenshot(path=str(OUT / f"{name}-9e-jeu-pastille-depliee.png"))
+            b = page.locator("#p-bandeau").bounding_box()
+            assert not croise(b, page.locator("#player-back").bounding_box()), "la marmotte ne se pose pas sur la maison"
+            page.wait_for_timeout(8500)
+            assert "ouverte" not in page.get_attribute("#p-reste", "class"), "puis elle se replie"
+            page.click("#p-reste")
+            page.wait_for_timeout(600)
+            assert "ouverte" in page.get_attribute("#p-reste", "class"), "un toucher la déplie"
+            page.click("#player-back")
+            page.wait_for_selector("#player", state="hidden")
+            ctx.close()
+        # Le vrai Simon sur téléphone : la maison ne couvre pas son titre (capture à regarder)
+        if GAMES and (GAMES / "simon-des-monstres/index.html").is_file():
+            store = famille()
+            store["famille"]["jeux"]["simon-des-monstres"] = {"max": None}
+            ctx = contexte(browser, store, **formats["telephone"])
+            page = ctx.new_page()
+            page.on("pageerror", lambda e: errors.append(str(e)))
+            page.goto(APP)
+            page.locator(".tuile", has_text="Simon").click()
+            page.wait_for_timeout(3500)
+            page.screenshot(path=str(OUT / "telephone-9f-simon.png"))
+            ctx.close()
+
+        # 5 quinquies. « À deux possible » : sur la mini-fiche et dans la fiche de Simon seulement ; « gratuit pour l'instant » à l'accueil
+        ctx = contexte(browser, **formats["telephone"])
+        page = ctx.new_page()
+        page.on("pageerror", lambda e: errors.append(str(e)))
+        page.goto(BASE + "/ludiworld/les-jeux/")
+        page.wait_for_selector(".cat-mini[data-jeu=simon-des-monstres]")
+        assert "À deux possible" in page.inner_text(".cat-mini[data-jeu=simon-des-monstres] .cat-mini-faits")
+        assert page.locator(".cat-mini-faits", has_text="À deux possible").count() == 1, "seulement Simon"
+        page.locator(".cat-mini[data-jeu=simon-des-monstres] .cat-mini-ouvrir").click()
+        page.wait_for_selector("dialog.cat-fiche[open] .cat-faits")
+        assert "À deux possible" in page.inner_text("dialog.cat-fiche .cat-faits")
+        page.wait_for_timeout(600)
+        page.screenshot(path=str(OUT / "telephone-9g-fiche-a-deux.png"))
+        page.goto(BASE + "/ludiworld/")
+        page.wait_for_selector("#charte")
+        assert "Ludiworld est gratuit pour l’instant." in page.inner_text("#charte").replace("'", "’"), "gratuit pour l'instant, près de la charte"
+        page.locator("#charte").scroll_into_view_if_needed()
+        page.wait_for_timeout(800)
+        page.locator("#charte").screenshot(path=str(OUT / "telephone-0-site-charte.png"))
+        ctx.close()
+
         # 6. Heures de jeu : avant l'heure l'île dort ; 3 min avant la fin de la plage, la marmotte prévient
         maintenant = datetime.datetime.now()
         if maintenant.hour < 22:
@@ -463,7 +1385,7 @@ def run():
             ctx = contexte(browser, store, **formats["tablette"])
             page = ctx.new_page()
             page.on("pageerror", lambda e: errors.append(str(e)))
-            page.goto(BASE + "/ludiworld/")
+            page.goto(APP)
             page.wait_for_selector("#e-dodo:not([hidden])")
             assert page.get_attribute("#v-enfant", "data-moment") == "nuit", "avant l'heure, l'île dort"
             page.wait_for_timeout(2500)
@@ -474,7 +1396,7 @@ def run():
             ctx = contexte(browser, store, **formats["tablette"])
             page = ctx.new_page()
             page.on("pageerror", lambda e: errors.append(str(e)))
-            page.goto(BASE + "/ludiworld/")
+            page.goto(APP)
             page.locator(".tuile", has_text="Jeu kit").click()
             page.wait_for_timeout(1500)
             assert page.locator("#p-bandeau").is_visible(), "bientôt l'heure : la marmotte prévient"
@@ -486,7 +1408,7 @@ def run():
         ctx = contexte(browser, famille("douce"), **formats["tablette"])
         page = ctx.new_page()
         page.on("pageerror", lambda e: errors.append(str(e)))
-        page.goto(BASE + "/ludiworld/")
+        page.goto(APP)
         page.locator(".tuile", has_text="Jeu kit").click()
         page.frame_locator("#player iframe").locator("#fin").wait_for()
         page.evaluate("ludiDemo.ajouter('jeu-kit', 28)")
@@ -503,7 +1425,7 @@ def run():
         ctx = contexte(browser, famille(), **formats["tablette"])
         page = ctx.new_page()
         page.on("pageerror", lambda e: errors.append(str(e)))
-        page.goto(BASE + "/ludiworld/")
+        page.goto(APP)
         page.wait_for_selector(".tuile")
         page.focus("#e-parents")
         page.keyboard.press("Enter")
@@ -518,35 +1440,258 @@ def run():
         page.focus("#e-parents")
         page.keyboard.press("Enter")
         code(page, PIN)  # l'ancien code retrouvé annule la demande
-        page.wait_for_selector(".carnet:not([hidden])")
+        parent(page)
         assert page.evaluate("JSON.parse(localStorage.getItem('ludiworld.v1')).famille.reset") is None
         ctx.close()
 
-        # 9. Deux enfants : chacun son temps ; changer d'enfant demande le code
+        # 8 bis. « Code oublié ? » sur un appareil relié à un compte (plan 3) : le mot de passe du compte, vérifié comme à la connexion.
+        #        Faux : un message, rien d'autre ne change. Juste : un nouveau code tout de suite. Hors ligne : l'attente habituelle.
+        #        Sans compte (même avec un projet configuré) : comme avant, l'attente de 30 minutes.
+        MDP = "un-bon-mot-de-passe"
+        for name, opts in formats.items():
+            nuage = FauxSupabase()
+            nuage.comptes["parent@exemple.test"] = {"id": "u-1", "mdp": MDP, "confirme": True, "synchro": False, "nouvelles": False, "data": {}}
+            ctx = contexte(browser, famille(), nuage=nuage, **opts)
+            sess = {"jeton": nuage.jeton("parent@exemple.test"), "renouveau": "r", "expire": 4102444800000, "id": "u-1", "email": "parent@exemple.test"}
+            ctx.add_init_script("if (!sessionStorage.getItem('seedSession')) { localStorage.setItem('ludiworld.session', %s); sessionStorage.setItem('seedSession', '1'); }" % json.dumps(json.dumps(sess)))
+            page = ctx.new_page()
+            page.on("pageerror", lambda e: errors.append(str(e)))
+            page.goto(APP)
+            page.wait_for_selector(".tuile")
+            pin_avant = stocke(page)["pin"]
+            page.focus("#e-parents")
+            page.keyboard.press("Enter")
+            page.wait_for_selector("#gate[open] .pin")
+            page.click("#gate .lien")  # Code oublié ?
+            page.wait_for_selector("#gate-mdp")
+            texte = page.inner_text("#gate")
+            assert "Tapez le mot de passe du compte Ludiworld (parent@exemple.test). Vous choisirez ensuite un nouveau code." in texte, texte
+            assert "30 minutes" not in texte, "connecté et en ligne : pas d'attente proposée d'office"
+            assert page.is_visible("#gate .gate-email") and page.inner_text("#gate .gate-email") == "Je ne connais pas le mot de passe"
+            page.wait_for_timeout(300)
+            page.screenshot(path=str(OUT / f"{name}-13b-code-oublie-mot-de-passe.png"))
+            # Mauvais mot de passe
+            page.fill("#gate-mdp", "pas-le-bon")
+            page.click("#gate .gate-mdp button[type=submit]")
+            page.wait_for_function("document.getElementById('gate-mdp-msg').textContent.includes('pas le bon mot de passe')")
+            assert page.inner_text("#gate-mdp-msg") == "Ce n’est pas le bon mot de passe.", page.inner_text("#gate-mdp-msg")
+            assert page.input_value("#gate-mdp") == "", "le champ est vidé"
+            f = stocke(page)
+            assert f.get("reset") is None and f["pin"] == pin_avant and not f.get("codeChange"), "un mauvais mot de passe ne change rien"
+            assert page.locator(".tuile").count() > 0, "l'enfant joue toujours"
+            assert page.is_hidden("#gate .gate-attendre")
+            page.screenshot(path=str(OUT / f"{name}-13c-code-oublie-mauvais.png"))
+            # Hors ligne : on le dit, et on propose l'attente habituelle (les routes du faux réseau répondent même hors ligne : on les coupe)
+            hors_ligne = lambda r: r.abort("internetdisconnected")
+            ctx.set_offline(True)
+            page.route(nuage.URL + "/**", hors_ligne)
+            page.fill("#gate-mdp", MDP)
+            page.click("#gate .gate-mdp button[type=submit]")
+            page.wait_for_function("document.getElementById('gate-mdp-msg').textContent.includes('Pas de réseau')")
+            assert page.inner_text("#gate-mdp-msg") == "Pas de réseau : le mot de passe ne peut pas être vérifié. Réessayez avec le réseau, ou attendez 30 minutes.", page.inner_text("#gate-mdp-msg")
+            assert page.is_visible("#gate .gate-attendre") and page.inner_text("#gate .gate-attendre") == "Attendre 30 minutes à la place"
+            assert stocke(page).get("reset") is None and stocke(page)["pin"] == pin_avant
+            page.screenshot(path=str(OUT / f"{name}-13d-code-oublie-hors-ligne.png"))
+            ctx.set_offline(False)
+            page.unroute(nuage.URL + "/**", hors_ligne)
+            # Bon mot de passe : un nouveau code tout de suite
+            page.fill("#gate-mdp", MDP)
+            page.click("#gate .gate-mdp button[type=submit]")
+            page.wait_for_selector("#gate[open] .pin")
+            assert "Nouveau code" in page.inner_text("#gate") and page.locator("#gate-mdp").count() == 0
+            code(page, "1357")
+            code(page, "1357")
+            parent(page)
+            f = stocke(page)
+            assert f["pin"] != pin_avant and f.get("reset") is None and f.get("codeChange"), "nouveau code posé, noté pour l'autre parent"
+            garde = page.evaluate("JSON.stringify(Object.assign({}, localStorage)) + JSON.stringify(Object.assign({}, sessionStorage))")
+            assert MDP not in garde and "pas-le-bon" not in garde, "le mot de passe n'est gardé nulle part"
+            assert page.evaluate("JSON.parse(localStorage.getItem('ludiworld.session')).id") == "u-1", "la session de l'appareil reste"
+            essais = [c for c in nuage.appels if c.startswith("/auth/v1/token?grant_type=password")]
+            assert len(essais) == 2, nuage.appels   # le mauvais et le bon (hors ligne, rien n'est parti)
+            assert any(c.startswith("/auth/v1/logout") for c in nuage.appels), "la session de la vérification est refermée"
+            # Hors ligne dès l'ouverture : on le dit tout de suite, l'attente reste possible ; pendant l'attente, le mot de passe aussi
+            page.evaluate("LudiBarre.fermerParent()")
+            page.goto(APP + "?a=1#carnet")
+            page.wait_for_selector("#gate[open] .pin")
+            ctx.set_offline(True)
+            page.route(nuage.URL + "/**", hors_ligne)
+            page.click("#gate .lien")
+            page.wait_for_selector("#gate-mdp")
+            assert "Pas de réseau" in page.inner_text("#gate-mdp-msg")
+            page.click("#gate .gate-attendre")
+            page.wait_for_selector("#gate .btn-sun")
+            assert "il faut attendre 30 minutes" in page.inner_text("#gate")
+            page.click("#gate .btn-sun")
+            page.wait_for_timeout(400)
+            assert stocke(page).get("reset"), "l'attente habituelle est lancée"
+            assert page.locator(".tuile").count() == 0, "pendant l'attente, on ne joue pas"
+            ctx.set_offline(False)
+            page.unroute(nuage.URL + "/**", hors_ligne)
+            page.evaluate("LudiBarre.fermerParent()")
+            page.goto(APP + "?a=2#carnet")
+            page.wait_for_selector("#gate[open]")
+            assert "Taper plutôt le mot de passe du compte" in page.inner_text("#gate")
+            page.locator("#gate .lien", has_text="Taper plutôt").click()
+            page.fill("#gate-mdp", MDP)
+            page.click("#gate .gate-mdp button[type=submit]")
+            page.wait_for_selector("#gate[open] .pin")
+            code(page, "2468")
+            code(page, "2468")
+            parent(page)
+            assert stocke(page).get("reset") is None, "le mot de passe met fin à l'attente"
+            ctx.close()
+
+        # 8 ter. « Je ne connais pas le mot de passe » : un code à 6 chiffres par e-mail à l'adresse du compte, montrée masquée.
+        #        Mauvais code : un message, on retape. « Renvoyer » attend 60 s. Trop d'envois : un message. Bon code : un nouveau code parent.
+        #        Rien n'est gardé sur l'appareil.
+        for name, opts in formats.items():
+            nuage = FauxSupabase()
+            nuage.comptes["parent@exemple.test"] = {"id": "u-1", "mdp": MDP, "confirme": True, "synchro": False, "nouvelles": False, "data": {}}
+            ctx = contexte(browser, famille(), nuage=nuage, **opts)
+            ctx.clock.install()
+            sess = {"jeton": nuage.jeton("parent@exemple.test"), "renouveau": "r", "expire": 4102444800000, "id": "u-1", "email": "parent@exemple.test"}
+            ctx.add_init_script("if (!sessionStorage.getItem('seedSession')) { localStorage.setItem('ludiworld.session', %s); sessionStorage.setItem('seedSession', '1'); }" % json.dumps(json.dumps(sess)))
+            page = ctx.new_page()
+            page.on("pageerror", lambda e: errors.append(str(e)))
+            page.goto(APP)
+            page.wait_for_selector(".tuile")
+            pin_avant = stocke(page)["pin"]
+            session_avant = page.evaluate("localStorage.getItem('ludiworld.session')")
+            page.focus("#e-parents")
+            page.keyboard.press("Enter")
+            page.wait_for_selector("#gate[open] .pin")
+            page.click("#gate .lien")  # Code oublié ?
+            page.wait_for_selector("#gate-mdp")
+            page.click("#gate .gate-email")
+            page.wait_for_function("document.querySelector('#gate .gate-envoi') && document.querySelector('#gate .gate-envoi').textContent.includes('Code envoyé')")
+            assert page.inner_text("#gate .gate-envoi") == "Code envoyé à p•••@exemple.test.", page.inner_text("#gate .gate-envoi")
+            assert "parent@exemple.test" not in page.inner_text("#gate"), "l'adresse est masquée"
+            assert nuage.otp_demandes == [{"email": "parent@exemple.test", "create_user": False}], nuage.otp_demandes
+            assert page.get_attribute("#gate-otp", "inputmode") == "numeric" and page.get_attribute("#gate-otp", "autocomplete") == "one-time-code"
+            assert "Code à 6 chiffres" in page.inner_text("#gate")
+            assert page.is_disabled("#gate .gate-renvoyer") and page.inner_text("#gate .gate-renvoyer").startswith("Renvoyer (")
+            page.wait_for_timeout(300)
+            page.screenshot(path=str(OUT / f"{name}-13f-code-email.png"))
+            # Mauvais code : un message court, on retape ; rien ne change
+            page.fill("#gate-otp", "000000")
+            page.click("#gate .gate-mdp button[type=submit]")
+            page.wait_for_function("document.getElementById('gate-otp-msg').textContent.includes('ne marche pas')")
+            assert page.inner_text("#gate-otp-msg") == "Ce code ne marche pas.", page.inner_text("#gate-otp-msg")
+            assert page.input_value("#gate-otp") == "", "le champ est vidé"
+            f = stocke(page)
+            assert f.get("reset") is None and f["pin"] == pin_avant and not f.get("codeChange"), "un mauvais code ne change rien"
+            assert page.is_hidden("#gate .gate-attendre")
+            page.screenshot(path=str(OUT / f"{name}-13g-code-email-mauvais.png"))
+            # Renvoyer, après 60 s : un nouveau code remplace l'ancien
+            premier = nuage.otp["parent@exemple.test"]
+            page.clock.fast_forward(61000)
+            page.wait_for_function("!document.querySelector('#gate .gate-renvoyer').disabled")
+            assert page.inner_text("#gate .gate-renvoyer") == "Renvoyer"
+            page.click("#gate .gate-renvoyer")
+            page.wait_for_function("document.querySelector('#gate .gate-renvoyer').disabled")
+            assert len(nuage.otp_demandes) == 2 and nuage.otp["parent@exemple.test"] != premier
+            page.fill("#gate-otp", premier)
+            page.click("#gate .gate-mdp button[type=submit]")
+            page.wait_for_function("document.getElementById('gate-otp-msg').textContent.includes('ne marche pas')")
+            # Trop d'envois : un message court, l'attente de 30 minutes proposée
+            nuage.otp_limite = True
+            page.clock.fast_forward(61000)
+            page.wait_for_function("!document.querySelector('#gate .gate-renvoyer').disabled")
+            page.click("#gate .gate-renvoyer")
+            page.wait_for_function("document.getElementById('gate-otp-msg').textContent.includes('Trop de demandes')")
+            assert page.inner_text("#gate-otp-msg") == "Trop de demandes. Réessayez dans un moment.", page.inner_text("#gate-otp-msg")
+            assert page.is_visible("#gate .gate-attendre")
+            page.screenshot(path=str(OUT / f"{name}-13h-code-email-trop.png"))
+            nuage.otp_limite = False
+            # Bon code (le dernier envoyé) : un nouveau code parent tout de suite
+            bon = nuage.otp["parent@exemple.test"]
+            page.fill("#gate-otp", bon)
+            page.click("#gate .gate-mdp button[type=submit]")
+            page.wait_for_selector("#gate[open] .pin")
+            assert "Nouveau code" in page.inner_text("#gate") and page.locator("#gate-otp").count() == 0
+            code(page, "1357")
+            code(page, "1357")
+            parent(page)
+            f = stocke(page)
+            assert f["pin"] != pin_avant and f.get("reset") is None and f.get("codeChange"), "nouveau code posé, noté pour l'autre parent"
+            garde = page.evaluate("JSON.stringify(Object.assign({}, localStorage)) + JSON.stringify(Object.assign({}, sessionStorage))")
+            for c in (premier, bon, "000000"):
+                assert c not in garde, "aucun code reçu n'est gardé : " + c
+            assert page.evaluate("localStorage.getItem('ludiworld.session')") == session_avant, "la session de l'appareil ne change pas"
+            verifs = [i for i, c in enumerate(nuage.appels) if c.startswith("/auth/v1/verify")]
+            assert len(verifs) == 3, nuage.appels  # 000000, l'ancien code, le bon
+            assert nuage.appels[verifs[-1] + 1].startswith("/auth/v1/logout"), "la session de la vérification est refermée tout de suite"
+            assert not any(c.startswith("/auth/v1/token") for c in nuage.appels), "aucun mot de passe demandé"
+            ctx.close()
+
+        # Un projet configuré mais pas de compte sur cet appareil : comme avant
+        nuage = FauxSupabase()
+        ctx = contexte(browser, famille(), nuage=nuage, **formats["telephone"])
+        page = ctx.new_page()
+        page.on("pageerror", lambda e: errors.append(str(e)))
+        page.goto(APP)
+        page.wait_for_selector(".tuile")
+        page.focus("#e-parents")
+        page.keyboard.press("Enter")
+        page.wait_for_selector("#gate[open] .pin")
+        page.click("#gate .lien")
+        page.wait_for_selector("#gate .btn-sun")
+        assert page.locator("#gate-mdp").count() == 0 and "il faut attendre 30 minutes" in page.inner_text("#gate")
+        page.screenshot(path=str(OUT / "telephone-13e-code-oublie-sans-compte.png"))
+        page.locator("#gate .lien", has_text="Annuler").click()
+        page.goto(APP + "#reglages")
+        page.wait_for_selector("#gate[open]")
+        code(page, PIN)
+        parent(page)
+        onglet(page, "reglages")
+        assert not any(c.startswith("/auth/") for c in nuage.appels), "sans compte, aucun appel"
+        ctx.close()
+
+        # 9. Deux enfants : chacun son temps ; regarder un enfant ne lui donne pas l'appareil ; on choisit à qui le rendre ;
+        #    « Pas toi ? » montre les prénoms, puis le code
         ctx = contexte(browser, famille(), **formats["tablette"])
         page = ctx.new_page()
         page.on("pageerror", lambda e: errors.append(str(e)))
-        page.goto(BASE + "/ludiworld/")
+        page.goto(APP)
         page.wait_for_selector(".tuile")
         page.evaluate("ludiDemo.ajouter('jeu-kit', 20)")  # Petit Loup a déjà joué 20 min
         page.focus("#e-parents")
         page.keyboard.press("Enter")
         code(page, PIN)
-        page.get_by_role("tab", name="Réglages").click()
+        parent(page)
+        onglet(page, "reglages")
         page.click("text=Ajouter un enfant")
-        page.fill("#s-nom", "Lou")
-        page.keyboard.press("Tab")
-        page.wait_for_timeout(300)
+        page.fill("#s-nouveau", "Inès")
+        page.locator(".pa-ajout").get_by_role("radio", name="7").click()
+        page.locator(".pa-ajout button", has_text="Ajouter").click()
+        page.wait_for_selector(".pa-tous-grille")
+        assert page.get_attribute("[data-onglet=catalogue]", "aria-selected") == "true", "on arrive sur « Tous les jeux », pour le nouvel enfant"
+        assert "Pour Inès" in page.inner_text("#pa-page") and page.locator(".pa-etat-installe").count() == 0, "aucun jeu d'office"
+        page.locator("[data-installer=jeu-kit]").click()
+        page.wait_for_timeout(200)
+        assert "Changé pour Inès" in page.inner_text("#pa-journal"), "avec plusieurs enfants, la ligne nomme l'enfant"
+        onglet(page, "jeux")
+        assert "Les jeux d’Inès (1)" in page.inner_text("#pa-page"), "« d’Inès »"
         page.screenshot(path=str(OUT / "tablette-14-deux-enfants.png"))
-        page.get_by_role("button", name="Côté enfant").click()
-        assert page.inner_text("#e-salut").startswith("Salut Lou"), page.inner_text("#e-salut")
-        assert "30" in page.inner_text("#e-temps"), "Lou a tout son temps : " + page.inner_text("#e-temps")
-        page.click("#e-qui")
-        page.wait_for_selector("#gate[open]")
-        code(page, PIN)
+        fam = stocke(page)
+        assert len(fam["enfants"]) == 2 and fam["actif"] == fam["enfants"][0]["id"], "regarder Inès ne lui donne pas l'appareil"
+        assert page.locator("#pa-enfants button").count() == 2
+        page.click("#pa-rendre")
         page.wait_for_selector("#qui[open]")
-        page.screenshot(path=str(OUT / "tablette-15-qui-joue.png"))
+        page.screenshot(path=str(OUT / "tablette-15-rendre-a-qui.png"))
+        page.locator(".qui-enfant", has_text="Inès").click()
+        page.wait_for_selector(".tuile")
+        assert page.inner_text("#e-salut").startswith("Salut Inès"), page.inner_text("#e-salut")
+        assert "30" in page.inner_text("#e-temps"), "Inès a tout son temps : " + page.inner_text("#e-temps")
+        page.click("#e-qui")
+        page.wait_for_selector("#qui[open]")
+        assert "code" in page.inner_text("#qui .qui-note"), "on dit qu'un parent doit taper le code"
+        page.screenshot(path=str(OUT / "tablette-15b-pas-toi.png"))
         page.locator(".qui-enfant", has_text="Petit Loup").click()
+        page.wait_for_selector("#gate[open]")
+        assert "Petit Loup" in page.inner_text("#gate")
+        code(page, PIN)
         page.wait_for_timeout(300)
         assert page.inner_text("#e-salut").startswith("Salut Petit Loup")
         assert "10" in page.inner_text("#e-temps"), "Petit Loup garde son propre temps : " + page.inner_text("#e-temps")
@@ -559,13 +1704,18 @@ def run():
             ctx = contexte(browser, store, **formats["tablette"])
             page = ctx.new_page()
             page.on("pageerror", lambda e: errors.append(str(e)))
-            page.goto(BASE + "/ludiworld/")
+            page.goto(APP)
             page.locator(".tuile", has_text="Le Monde à la craie").click()
             page.wait_for_function("document.querySelector('#player iframe')?.contentWindow?.jeu?.pret", timeout=15000)
             cadre = next(fr for fr in page.frames if "/ludigames/monde-a-la-craie/" in fr.url)
             assert cadre.evaluate("Ludi.inLauncher()"), "le kit sait qu'il est dans Ludiworld"
             cadre.wait_for_function("jeu.app.joueur === 'Petit Loup'", timeout=3000)
             page.screenshot(path=str(OUT / "tablette-16-monde-a-la-craie.png"))
+            page.wait_for_timeout(600)
+            if cadre.locator(".cine [data-action=passer]").count():   # l'introduction du jeu (une histoire) : on la passe
+                cadre.click(".cine [data-action=passer]")
+                cadre.click(".cine [data-action=go]")
+                cadre.wait_for_selector(".cine", state="detached")
             cadre.click('[data-zone="europe"]')
             cadre.click('[data-action="jouer"]')
             cadre.wait_for_function("jeu.carte && jeu.carte.zone.id === 'europe'")
@@ -594,10 +1744,10 @@ def run():
         ctx = contexte(browser, **formats["tablette"])
         page = ctx.new_page()
         page.on("pageerror", lambda e: errors.append(str(e)))
-        page.goto(BASE + "/ludiworld/decouvrir/")
+        page.goto(BASE + "/ludiworld/")
         page.wait_for_selector(".lw-action")
         assert page.locator(".lw-compte").count() == 0, "pas de lien de compte sans projet"
-        assert page.get_attribute(".lw-action", "href").endswith("#demarrer")
+        assert page.get_attribute(".lw-action", "href").endswith("app/#demarrer")
         page.goto(BASE + "/ludiworld/compte/")
         page.wait_for_selector("[data-vue=ferme]:not([hidden])")
         page.goto(BASE + "/ludiworld/bureau/")
@@ -610,16 +1760,17 @@ def run():
             ctx = contexte(browser, nuage=nuage, **opts)
             page = ctx.new_page()
             page.on("pageerror", lambda e: errors.append(str(e)))
-            page.goto(BASE + "/ludiworld/decouvrir/")
+            page.goto(BASE + "/ludiworld/")
             page.wait_for_selector(".lw-compte")
             assert page.inner_text(".lw-compte") == "Se connecter"
             assert page.inner_text(".lw-action").strip() == "Essayer", "pas de « gratuitement » : ça laisserait croire que c'est payant ensuite"
-            assert page.get_attribute(".hero-copy .btn-sun", "href").endswith("compte/#essayer")
+            assert page.get_attribute(".hero-copy .btn-sun", "href").endswith("app/#demarrer"), "« Essayer » mène droit à la préparation"
+            assert page.get_attribute(".lw-action", "href").endswith("app/#demarrer")
             page.wait_for_timeout(500)
             page.screenshot(path=str(OUT / f"{name}-20-barre-comme-calm.png"))
             boite = page.evaluate("[document.documentElement.scrollWidth, innerWidth]")
             assert boite[0] <= boite[1], ("la barre déborde", name, boite)
-            page.locator(".lw-action").click()
+            page.goto(BASE + "/ludiworld/compte/#essayer")
             page.wait_for_selector("#q-go")
             page.wait_for_timeout(1300)
             page.screenshot(path=str(OUT / f"{name}-21-essayer.png"))
@@ -675,7 +1826,7 @@ def run():
             page.click("#f-creer button[type=submit]")
             page.wait_for_selector("[data-vue=verifier]:not([hidden])")
             assert page.inner_text("#v-email") == f"parent-{name}@exemple.test"
-            assert page.get_attribute("[data-vue=verifier] .btn-sun", "href") == "../#demarrer", "on peut préparer la tablette sans attendre"
+            assert page.get_attribute("[data-vue=verifier] .btn-sun", "href") == "../app/#demarrer", "on peut préparer la tablette sans attendre"
             page.screenshot(path=str(OUT / f"{name}-25-verifier.png"))
             compte = nuage.comptes[f"parent-{name}@exemple.test"]
             assert compte["data"]["envie_id"] == rep["p_id"], "les réponses suivent le compte"
@@ -701,7 +1852,7 @@ def run():
             page.wait_for_selector("#e-corps:not([hidden])")
             assert "access_token" not in page.url, page.url
             page.wait_for_selector("#e-bienvenue:not([hidden])")
-            assert page.inner_text(".lw-compte") == "Mon compte"
+            assert page.locator(".lw-compte").count() == 0 and page.locator(".lw-qui .lw-pastille").get_attribute("aria-label") == f"Connecté : parent-{name}"
             page.wait_for_function("document.getElementById('e-formule').textContent.includes('Gratuit')")
             assert page.is_hidden("#e-bureau-p"), "un parent ne voit pas le lien du bureau"
             page.wait_for_function("document.getElementById('e-synchro').checked")
@@ -713,6 +1864,120 @@ def run():
             assert "free" in page.inner_text("#e-formule").lower()
             page.locator(".lw-langs button", has_text="FR").click()
             ctx.close()
+
+        # 12 bis. Connecté, ça se voit (Julien, 2026-11-18) : une pastille (initiale, « Connecté », le début de l'adresse) à la place
+        #         de « Mon compte », la même sur le site et côté parent ; son menu : Ouvrir l'appli (sur le site) ou Le site Ludiworld
+        #         (dans l'appli), Mon compte, Se déconnecter. Pas connecté : « Se connecter ». Sur le site, le bouton de droite : « Ouvrir l'appli ».
+        for name, opts in formats.items():
+            nuage = FauxSupabase()
+            nuage.comptes["camille.dupont@exemple.test"] = {"id": "u-7", "mdp": "un-bon-mot-de-passe", "confirme": True, "synchro": False, "nouvelles": False, "data": {}}
+            sess = {"jeton": nuage.jeton("camille.dupont@exemple.test"), "renouveau": "r", "expire": 4102444800000, "id": "u-7", "email": "camille.dupont@exemple.test"}
+            ctx = contexte(browser, famille(), nuage=nuage, **opts)
+            page = ctx.new_page()
+            page.on("pageerror", lambda e: errors.append(str(e)))
+            # Pas connecté, appareil préparé
+            page.goto(BASE + "/ludiworld/")
+            page.wait_for_selector(".lw-compte")
+            assert page.locator(".lw-qui").count() == 0, "pas de pastille sans compte ouvert"
+            assert page.inner_text(".lw-compte") == "Se connecter"
+            assert page.inner_text(".lw-action").strip() == "Ouvrir l’appli" and page.get_attribute(".lw-action", "href") == "app/#carnet"
+            page.wait_for_timeout(1500)
+            page.screenshot(path=str(OUT / f"{name}-20b-barre-pas-connecte.png"))
+            # Connecté
+            page.evaluate("localStorage.setItem('ludiworld.session', %s)" % json.dumps(json.dumps(sess)))
+            page.reload()
+            page.wait_for_selector(".lw-qui .lw-pastille")
+            assert page.locator(".lw-compte").count() == 0, "plus de « Mon compte » ni de « Se connecter »"
+            pas = page.locator(".lw-pastille")
+            assert pas.get_attribute("aria-label") == "Connecté : camille.dupont" and pas.get_attribute("aria-expanded") == "false"
+            assert page.inner_text(".lw-rond").strip() == "C"
+            assert page.locator(".lw-rond .lw-coche").count() == 1, "une coche, pas seulement une couleur"
+            if name == "tablette":
+                assert page.locator(".lw-qui-txt").is_visible() and page.inner_text(".lw-qui-txt").split() == ["Connecté", "camille.dupont"]
+            else:
+                assert not page.locator(".lw-qui-txt").is_visible(), "sur téléphone, l'initiale seule"
+            assert page.inner_text(".lw-action").strip() == "Ouvrir l’appli"
+            boite = page.evaluate("[document.documentElement.scrollWidth, innerWidth]")
+            assert boite[0] <= boite[1], ("la barre déborde", name, boite)
+            assert page.locator(".lw-barre .lw-cote").bounding_box()["y"] < 40, "la pastille tient dans la ligne du haut"
+            page.wait_for_timeout(1000)
+            page.screenshot(path=str(OUT / f"{name}-20c-barre-connecte.png"))
+            # Le menu : au toucher, trois choix ; il ne déborde pas ; Échap le ferme et rend le focus ; un toucher ailleurs aussi
+            pas.click()
+            page.wait_for_selector(".lw-qui-menu:not([hidden])")
+            assert pas.get_attribute("aria-expanded") == "true"
+            assert "camille.dupont@exemple.test" in page.inner_text(".lw-qui-tete")
+            items = page.locator(".lw-qui-menu .lw-qui-item")
+            assert [t.strip() for t in items.all_inner_texts()] == ["Ouvrir l’appli", "Mon compte", "Se déconnecter"], items.all_inner_texts()
+            assert items.nth(0).get_attribute("href") == "app/#carnet" and items.nth(1).get_attribute("href") == "compte/#espace"
+            m = page.locator(".lw-qui-menu").bounding_box()
+            largeur = page.evaluate("innerWidth")
+            assert m["x"] >= 0 and m["x"] + m["width"] <= largeur, ("le menu déborde", name, m, largeur)
+            page.wait_for_timeout(300)
+            page.screenshot(path=str(OUT / f"{name}-20d-menu-du-compte.png"))
+            page.keyboard.press("Escape")
+            assert page.locator(".lw-qui-menu[hidden]").count() == 1
+            assert page.evaluate("document.activeElement.classList.contains('lw-pastille')"), "le focus revient à la pastille"
+            page.keyboard.press("Enter")
+            page.wait_for_selector(".lw-qui-menu:not([hidden])")
+            page.keyboard.press("Tab")
+            assert page.evaluate("document.activeElement.textContent") == "Ouvrir l’appli", "au clavier, on entre dans le menu"
+            page.evaluate("document.body.dispatchEvent(new MouseEvent('click', { bubbles: true }))")
+            assert page.locator(".lw-qui-menu[hidden]").count() == 1, "un toucher ailleurs le ferme"
+            # « Mon compte » mène à l'espace du compte
+            pas.click()
+            page.locator(".lw-qui-menu .lw-qui-item", has_text="Mon compte").click()
+            page.wait_for_selector("#e-corps:not([hidden]), #e-code:not([hidden])")
+            assert page.url.endswith("/compte/#espace"), page.url
+            # Côté parent : la même pastille, au même endroit ; « Mon Ludiworld » y est la page en cours
+            page.goto(APP + "#carnet")
+            page.wait_for_selector("#gate[open], #v-parent:not([hidden])")
+            if page.locator("#gate[open]").count():
+                code(page, PIN)
+            parent(page)
+            page.wait_for_selector("#v-parent .lw-qui .lw-pastille")
+            assert page.locator("#v-parent .pa-barre .lw-compte").count() == 0 and page.locator("#pa-qui .lw-qui-txt").is_visible(), "connecté : la pastille entière, « Connecté » et le nom"
+            boite = page.evaluate("[document.documentElement.scrollWidth, innerWidth]")
+            assert boite[0] <= boite[1], ("la barre déborde côté parent", name, boite)
+            page.wait_for_timeout(600)
+            page.screenshot(path=str(OUT / f"{name}-20e-parent-connecte.png"))
+            page.click("#v-parent .lw-pastille")
+            page.wait_for_selector("#v-parent .lw-qui-menu:not([hidden])")
+            assert page.inner_text("#v-parent .lw-qui-item >> nth=0").strip() == "Le site Ludiworld" and page.get_attribute("#v-parent .lw-qui-item >> nth=0", "href") == "./"
+            m = page.locator("#v-parent .lw-qui-menu").bounding_box()
+            assert m["x"] >= 0 and m["x"] + m["width"] <= page.evaluate("innerWidth"), ("le menu déborde côté parent", name, m)
+            page.wait_for_timeout(300)
+            page.screenshot(path=str(OUT / f"{name}-20f-parent-menu-du-compte.png"))
+            # « Se déconnecter » : la session est fermée chez Supabase et oubliée ici ; retour à l'accueil du site.
+            # Tablette : depuis le côté parent (client du compte chargé) ; téléphone : depuis une page qui ne le charge pas.
+            if name == "telephone":
+                page.keyboard.press("Escape")
+                page.goto(BASE + "/ludiworld/aime-bien/")
+                page.wait_for_selector(".lw-qui .lw-pastille")
+                page.click(".lw-pastille")
+            page.locator(".lw-qui-menu:visible .lw-sortir").click()
+            page.wait_for_url(BASE + "/ludiworld/")
+            page.wait_for_selector(".lw-compte")
+            assert page.evaluate("localStorage.getItem('ludiworld.session')") is None
+            assert any(c.startswith("/auth/v1/logout") for c in nuage.appels), "la session est fermée chez Supabase"
+            assert page.locator(".lw-qui").count() == 0 and page.inner_text(".lw-compte") == "Se connecter"
+            assert page.evaluate("JSON.parse(localStorage.getItem('ludiworld.v1')).famille.pin") is not None, "l'appareil garde ce qui est à lui"
+            page.screenshot(path=str(OUT / f"{name}-20g-deconnecte.png"))
+            ctx.close()
+        # Connecté sur un appareil pas encore préparé : « Mon Ludiworld » ouvre l'appli (la préparation)
+        nuage = FauxSupabase()
+        nuage.comptes["camille.dupont@exemple.test"] = {"id": "u-7", "mdp": "x", "confirme": True, "synchro": False, "nouvelles": False, "data": {}}
+        sess = {"jeton": nuage.jeton("camille.dupont@exemple.test"), "renouveau": "r", "expire": 4102444800000, "id": "u-7", "email": "camille.dupont@exemple.test"}
+        ctx = contexte(browser, nuage=nuage, **formats["tablette"])
+        ctx.add_init_script("localStorage.setItem('ludiworld.session', %s);" % json.dumps(json.dumps(sess)))
+        page = ctx.new_page()
+        page.on("pageerror", lambda e: errors.append(str(e)))
+        page.goto(BASE + "/ludiworld/les-jeux/")
+        page.wait_for_selector(".lw-qui .lw-pastille")
+        assert page.inner_text(".lw-action").strip() == "Ouvrir l’appli" and page.get_attribute(".lw-action", "href") == "../app/"
+        page.click(".lw-pastille")
+        assert page.get_attribute(".lw-qui-item >> nth=0", "href") == "../app/"
+        ctx.close()
 
         # Un lien périmé le dit
         ctx = contexte(browser, nuage=nuage, **formats["tablette"])
@@ -757,13 +2022,14 @@ def run():
         page.fill("#s-email", "parent@exemple.test")
         page.fill("#s-mdp", "un-bon-mot-de-passe")
         page.click("#f-connexion button[type=submit]")
-        page.wait_for_selector("#e-code:not([hidden])")
-        assert page.is_hidden("#e-corps"), "un enfant sur la tablette ne voit pas le compte"
-        assert nuage.foyer is None, "rien ne part sans geste du parent"
-        page.click("#e-code .btn-sun")
+        # « Se connecter » mène dans l'appli : sur un appareil préparé, le côté parent, derrière le code
         page.wait_for_selector("#gate[open]")
+        assert "/ludiworld/app/" in page.url, page.url
+        assert nuage.foyer is None, "rien ne part sans geste du parent"
         code(page, PIN)
-        page.wait_for_selector("#v-parent:not([hidden])")
+        parent(page)
+        onglet(page, "reglages")
+        assert "copie en ligne désactivée" in page.inner_text(".pa-etat-compte"), "connecté sans copie : l'état est vrai (" + page.inner_text(".pa-etat-compte") + ")"
         page.goto(BASE + "/ludiworld/compte/#espace")
         page.wait_for_selector("#e-corps:not([hidden])")
         page.wait_for_function("document.getElementById('e-formule').textContent.includes('Gratuit')")
@@ -777,12 +2043,12 @@ def run():
         piege = contexte(browser, store=famille(), nuage=nuage, **formats["tablette"])
         pg = piege.new_page()
         pg.on("pageerror", lambda e: errors.append(str(e)))
-        pg.goto(BASE + "/ludiworld/#enfant")
+        pg.goto(APP + "#enfant")
         pg.wait_for_selector(".tuile")
         pg.goto(BASE + "/ludiworld/compte/#access_token=" + nuage.jeton("pirate@exemple.test") + "&refresh_token=r&expires_in=3600&type=signup")
         pg.wait_for_selector("#e-code:not([hidden])")
         assert pg.evaluate("localStorage.getItem('ludiworld.synchro')") is None, "un lien ne relie pas l'appareil"
-        pg.goto(BASE + "/ludiworld/#enfant")
+        pg.goto(APP + "#enfant")
         pg.wait_for_selector(".tuile")
         pg.wait_for_timeout(1800)
         assert nuage.version == version, "rien ne part vers le compte du lien"
@@ -796,17 +2062,15 @@ def run():
         autre = contexte(browser, store=famille(), nuage=nuage, **formats["tablette"])
         pg = autre.new_page()
         pg.on("pageerror", lambda e: errors.append(str(e)))
-        pg.goto(BASE + "/ludiworld/#enfant")
+        pg.goto(APP + "#enfant")
         pg.wait_for_selector(".tuile")
         pg.goto(BASE + "/ludiworld/compte/#connexion")
         pg.wait_for_selector("#f-connexion")
         pg.fill("#s-email", "parent@exemple.test")
         pg.fill("#s-mdp", "un-bon-mot-de-passe")
         pg.click("#f-connexion button[type=submit]")
-        pg.wait_for_selector("#e-code:not([hidden])")
-        assert nuage.version == version and pg.evaluate("localStorage.getItem('ludiworld.synchro')") is None
-        pg.click("#e-code .btn-sun")
         pg.wait_for_selector("#gate[open]")
+        assert nuage.version == version and pg.evaluate("localStorage.getItem('ludiworld.synchro')") is None
         code(pg, PIN)
         pg.wait_for_function("localStorage.getItem('ludiworld.synchro') !== null")
         autre.close()
@@ -820,25 +2084,25 @@ def run():
         tel.fill("#s-email", "parent@exemple.test")
         tel.fill("#s-mdp", "un-bon-mot-de-passe")
         tel.click("#f-connexion button[type=submit]")
-        tel.wait_for_selector("#e-code:not([hidden])")
+        tel.wait_for_selector("#gate[open]")   # dans l'appli, côté parent, derrière le code de la famille
+        assert "/ludiworld/app/" in tel.url, tel.url
         fam = tel.evaluate("JSON.parse(localStorage.getItem('ludiworld.v1')).famille")
         assert fam["enfants"][0]["enfant"]["nom"] == "Petit Loup", fam
         # Le parent règle depuis son téléphone
-        tel.click("#e-code .btn-sun")
-        tel.wait_for_selector("#gate[open]")
         code(tel, PIN)
-        tel.wait_for_selector("#v-parent:not([hidden])")
-        tel.locator("#c-nav button", has_text="Réglages").click()
+        parent(tel)
+        onglet(tel, "reglages")
+        assert "copie en ligne active" in tel.inner_text(".pa-etat-compte"), tel.inner_text(".pa-etat-compte")
         tel.fill("#s-nom", "Grand Loup")
         tel.locator("#s-nom").blur()
-        tel.wait_for_function("document.querySelector('#toast') !== null")
+        tel.wait_for_selector("#pa-journal .pa-journal-annuler")
         for _ in range(40):
             if nuage.foyer["enfants"][0]["enfant"]["nom"] == "Grand Loup":
                 break
             tel.wait_for_timeout(100)
         assert nuage.foyer["enfants"][0]["enfant"]["nom"] == "Grand Loup", "le réglage part en ligne"
         # La tablette le voit en revenant sur l'appli
-        page.goto(BASE + "/ludiworld/#enfant")
+        page.goto(APP + "#enfant")
         page.wait_for_selector(".tuile")
         page.wait_for_function("document.getElementById('e-salut').textContent.includes('Grand Loup')")
         # Pendant une partie, rien ne part : on attend la fin
@@ -848,7 +2112,7 @@ def run():
         assert len(nuage.appels) == avant, "le temps de jeu ne déclenche pas d'appel réseau à chaque seconde"
 
         # Limite atteinte : la tablette envoie sans cliquer sur le bouton de l'écran d'arrêt.
-        tel.locator("#c-nav button", has_text="Aujourd’hui").click()
+        onglet(tel, "temps")
         page.locator(".tuile", has_text="Jeu kit").click()
         page.frame_locator("#player iframe").locator("#b").click()
         page.evaluate("ludiDemo.ajouter('jeu-kit', 31)")
@@ -864,19 +2128,25 @@ def run():
         # Le carnet du téléphone est déjà ouvert : une réception met à jour le graphique.
         tel.evaluate("window.dispatchEvent(new Event('online'))")
         tel.wait_for_function("JSON.parse(localStorage.getItem('ludiworld.v1')).famille.enfants[0].games['jeu-kit']?.ms >= 31 * 60000")
-        assert int(tel.inner_text(".semaine .jour.auj .jour-val")) >= 31, "les minutes reçues apparaissent dans le graphique ouvert"
+        tel.wait_for_function("parseInt(document.querySelector('.semaine .jour.auj .jour-val').textContent) >= 31")
         tel.screenshot(path=str(OUT / "telephone-synchro-resultats.png"), full_page=True)
 
         # Désactiver sur le téléphone : la tablette conserve ses données sans recréer la copie en ligne.
         tel.goto(BASE + "/ludiworld/compte/#espace")
         tel.wait_for_selector("#e-corps:not([hidden])")
         tel.wait_for_function("!document.getElementById('e-synchro').disabled")
-        tel.uncheck("#e-synchro")
-        tel.wait_for_function("document.getElementById('e-synchro-etat').textContent.includes('désactivée')")
-        assert "téléphone" in tel.inner_text("#e-synchro-aide") and "ordinateur" in tel.inner_text("#e-synchro-aide")
-        tel.screenshot(path=str(OUT / "telephone-synchro-desactivee-fr.png"), full_page=True)
+        assert tel.is_visible("#e-synchro-aide") and "téléphone" in tel.inner_text("#e-synchro-aide") and "ordinateur" in tel.inner_text("#e-synchro-aide")
         tel.locator(".lw-langs button", has_text="EN").click()
         assert "phone" in tel.inner_text("#e-synchro-aide") and "computer" in tel.inner_text("#e-synchro-aide")
+        tel.locator(".lw-langs button", has_text="FR").click()
+        tel.wait_for_function("!document.getElementById('e-synchro').disabled")
+        tel.uncheck("#e-synchro")
+        tel.wait_for_function("document.getElementById('e-synchro-etat').textContent.includes('désactivée')")
+        assert tel.is_hidden("#e-synchro-aide"), "« Si vous la désactivez… » ne se dit pas quand elle l'est déjà"
+        texte_compte = tel.inner_text("#espace")
+        assert "ynchronis" not in texte_compte and "Explorer" not in texte_compte, "un seul mot : copie en ligne"
+        tel.screenshot(path=str(OUT / "telephone-synchro-desactivee-fr.png"), full_page=True)
+        tel.locator(".lw-langs button", has_text="EN").click()
         tel.screenshot(path=str(OUT / "telephone-synchro-desactivee-en.png"), full_page=True)
         tel.locator(".lw-langs button", has_text="FR").click()
         page.evaluate("window.dispatchEvent(new Event('online'))")
@@ -885,10 +2155,136 @@ def run():
         assert page.evaluate("JSON.parse(localStorage.getItem('ludiworld.v1')).famille.enfants[0].games['jeu-kit'].ms") >= 31 * 60000
         tel.wait_for_function("!document.getElementById('e-synchro').disabled")
         tel.check("#e-synchro")
-        tel.wait_for_function("document.getElementById('e-synchro-etat').textContent.includes('synchronisés')")
+        tel.wait_for_function("document.getElementById('e-synchro-etat').textContent.includes('Copie en ligne active')")
         page.evaluate("window.dispatchEvent(new Event('online'))")
         page.wait_for_function("JSON.parse(localStorage.getItem('ludiworld.synchro')).active === true")
         assert nuage.foyer["enfants"][0]["games"]["jeu-kit"]["ms"] >= 31 * 60000, "réactiver reprend la synchro sans reperdre les résultats"
+
+        # 13 bis. Plan 5, les avis de parents (refaits le 2026-11-18 : étoiles et « Le jeu marche bien chez vous ? »).
+        # Le téléphone est connecté. Plus de temps de jeu minimum : Pluie de Cochons, 2 min de jeu, a aussi le bloc.
+        nuage.semer_avis()
+        tel.goto(APP + "#carnet")
+        tel.wait_for_selector("#gate[open], #v-parent:not([hidden])")
+        if tel.locator("#gate[open]").count():
+            code(tel, PIN)
+        parent(tel)
+        onglet(tel, "jeux")
+        # Connecté : le bloc est là, même après 2 minutes de jeu ; moins de 5 avis : rien de l'avis des parents (pas même le nombre)
+        tel.click(".pa-ligne[data-jeu=pluie-de-cochons] .pa-ligne-jeu")
+        tel.wait_for_selector(".cat-fiche[open] .pa-pour")
+        tel.wait_for_timeout(400)
+        tel.wait_for_selector(".cat-fiche .pa-avis")
+        assert tel.locator(".cat-fiche .pa-avis").count() == 1, "connecté : « Votre avis », quel que soit le temps de jeu"
+        assert tel.locator(".cat-fiche .cat-avis:not([hidden])").count() == 0, "moins de 5 avis : rien n'est montré"
+        assert "sous le seuil" not in tel.inner_text(".cat-fiche"), "un mot accepté ne se montre pas sous 5 avis"
+        tel.click(".cat-fermer")
+        # Jeu kit : l'avis des parents : 11 avis, 48 étoiles (4,4), un parent chez qui le jeu ne marche pas,
+        # sans lui 47 étoiles sur 10 (4,7)
+        tel.click(".pa-ligne[data-jeu=jeu-kit] .pa-ligne-jeu")
+        tel.wait_for_selector(".cat-fiche[open] .pa-avis")
+        tel.wait_for_selector(".cat-fiche .cat-avis:not([hidden])")
+        pub = tel.inner_text(".cat-fiche .cat-avis").replace(" ", " ")
+        assert "4,4" in pub and "11 avis" in pub, pub
+        assert "1 parent dit que le jeu ne marche pas bien chez lui. Sans lui : 4,7." in pub, pub
+        assert tel.get_attribute(".cat-fiche .cat-etoiles", "aria-label") == "4,4 sur 5"
+        assert tel.locator(".cat-fiche .cat-etoiles-vides .cat-svg").count() == 5 and tel.locator(".cat-fiche .cat-etoiles-pleines .cat-svg").count() == 5
+        assert tel.evaluate("document.querySelector('.cat-fiche .cat-etoiles-pleines').style.width") == "88%", "les étoiles remplies jusqu'à 4,4"
+        assert "Mes deux filles y jouent ensemble" in pub and "Un mot à relire" not in pub, "seuls les mots acceptés se lisent"
+        for vieux in ["fiche dit vrai", "retourne", "disent que le jeu marche bien"]:
+            assert vieux not in pub, (vieux, pub)
+        av = tel.inner_text(".cat-fiche .pa-avis").replace(" ", " ")
+        for q in ["Votre avis", "Le jeu marche bien chez vous ?", "Oui", "Pas toujours", "Non", "Lu par Julien avant d’être montré"]:
+            assert q in av, (q, av)
+        for vieux in ["La fiche dit vrai", "y retourne", "Dites quoi", "appris"]:
+            assert vieux not in av, (vieux, av)
+        assert tel.locator(".pa-avis button[type=submit]").count() == 1, "un seul bouton d'envoi"
+        assert tel.locator(".pa-avis .pa-etoile").count() == 5 and tel.locator(".pa-avis .pa-etoile.plein").count() == 0
+        assert [tel.get_attribute(f".pa-etoile:nth-child({n}) input", "aria-label") for n in (1, 3)] == ["1 étoile", "3 étoiles"]
+        assert tel.get_attribute(".pa-avis-q[data-q=etoiles] input", "type") == "radio", "des boutons radio : le clavier et les lecteurs d'écran les connaissent"
+        bo = tel.locator(".pa-avis .pa-etoile").first.bounding_box()
+        assert bo["width"] >= 44 and bo["height"] >= 44, ("étoiles assez grandes pour un doigt", bo)
+        tel.locator(".pa-avis").scroll_into_view_if_needed()
+        tel.wait_for_timeout(300)
+        tel.screenshot(path=str(OUT / "telephone-40-votre-avis.png"))
+        # Rien ne part sans les étoiles et la réponse
+        tel.click(".pa-avis-envoyer")
+        tel.wait_for_function("document.querySelector('.pa-avis-statut').textContent === 'Choisissez les étoiles et une réponse.'")
+        tel.click(".pa-etoile:nth-child(2)")
+        assert tel.locator(".pa-avis .pa-etoile.plein").count() == 2
+        tel.click(".pa-avis-envoyer")
+        tel.wait_for_function("document.querySelector('.pa-avis-statut').textContent.includes('Choisissez')")
+        assert ("parent@exemple.test", "jeu-kit") not in nuage.avis, "rien ne part sans les étoiles et la réponse"
+        # Au clavier : les flèches changent la note
+        tel.focus(".pa-etoile:nth-child(2) input")
+        tel.keyboard.press("ArrowRight")
+        tel.keyboard.press("ArrowRight")
+        assert tel.locator(".pa-avis .pa-etoile.plein").count() == 4, "au clavier, 4 étoiles"
+        assert tel.is_checked(".pa-etoile:nth-child(4) input")
+        tel.click(".pa-avis-q[data-q=marche] .pa-avis-pastille:has(input[value=pas-toujours])")
+        tel.fill(".pa-avis-champ textarea[id$=-mot]", "On y joue le soir, à deux.")
+        tel.locator(".pa-avis").scroll_into_view_if_needed()
+        tel.screenshot(path=str(OUT / "telephone-40b-votre-avis-rempli.png"))
+        tel.click(".pa-avis-envoyer")
+        tel.wait_for_function("document.querySelector('.pa-avis-statut').textContent.includes('Merci')")
+        mien = nuage.avis[("parent@exemple.test", "jeu-kit")]
+        assert (mien["etoiles"], mien["marche"], mien["mot"], mien["mot_etat"]) == (4, "pas-toujours", "On y joue le soir, à deux.", "a-relire"), mien
+        assert not any(k in mien for k in ("fiche", "fiche_quoi", "retourne")), mien
+        # 12 avis, 52 étoiles (4,3) ; 2 parents chez qui le jeu ne marche pas bien ; sans eux, toujours 4,7
+        tel.wait_for_function("document.querySelector('.cat-fiche .cat-avis').textContent.includes('12 avis')")
+        pub = tel.inner_text(".cat-fiche .cat-avis").replace(" ", " ")
+        assert "4,3" in pub and "2 parents disent que le jeu ne marche pas bien chez eux. Sans eux : 4,7." in pub, pub
+        assert "On y joue le soir" not in pub, "le mot attend la relecture"
+        assert "attend d’être lu par Julien" in tel.inner_text(".pa-avis-etat-mot")
+        assert tel.inner_text(".pa-avis-envoyer") == "Enregistrer mon avis" and tel.is_visible(".pa-avis-retirer")
+        assert tel.locator(".pa-avis .pa-etoile.plein").count() == 4 and tel.is_checked(".pa-avis-pastille input[value=pas-toujours]"), "l'avis relu garde ses réponses"
+        tel.locator(".cat-fiche .cat-avis").scroll_into_view_if_needed()
+        tel.wait_for_timeout(300)
+        tel.screenshot(path=str(OUT / "telephone-41-avis-des-parents.png"))
+        tel.locator(".pa-avis").scroll_into_view_if_needed()
+        tel.screenshot(path=str(OUT / "telephone-42-avis-envoye.png"))
+        # La synchro redessine la fiche : ce qu'on écrit reste
+        tel.fill(".pa-avis-champ textarea[id$=-mot]", "Brouillon en cours")
+        tel.evaluate("window.dispatchEvent(new Event('online'))")
+        tel.wait_for_timeout(800)
+        assert tel.input_value(".pa-avis-champ textarea[id$=-mot]") == "Brouillon en cours", "une synchro ne vide pas ce qu'on écrit"
+        tel.fill(".pa-avis-champ textarea[id$=-mot]", "On y joue le soir, à deux.")
+        # En anglais
+        tel.click(".cat-fermer")
+        onglet(tel, "reglages")
+        tel.click("#pa-page .langs button[lang=en]")
+        onglet(tel, "jeux")
+        tel.click(".pa-ligne[data-jeu=jeu-kit] .pa-ligne-jeu")
+        tel.wait_for_selector(".cat-fiche[open] .pa-avis")
+        tel.wait_for_function("document.querySelector('.cat-fiche .cat-avis') && document.querySelector('.cat-fiche .cat-avis').textContent.includes('12 reviews')")
+        pub = tel.inner_text(".cat-fiche .cat-avis")
+        assert "4.3" in pub and "2 parents say the game does not work well at their home. Without them: 4.7." in pub, pub
+        assert tel.get_attribute(".cat-fiche .cat-etoiles", "aria-label") == "4.3 out of 5"
+        av = tel.inner_text(".cat-fiche .pa-avis")
+        assert "Does the game work well at your home?" in av and "Not always" in av, av
+        assert tel.get_attribute(".pa-etoile:nth-child(1) input", "aria-label") == "1 star"
+        tel.locator(".pa-avis").scroll_into_view_if_needed()
+        tel.screenshot(path=str(OUT / "telephone-43-your-view-en.png"))
+        tel.click(".cat-fermer")
+        onglet(tel, "reglages")
+        tel.click("#pa-page .langs button[lang=fr]")
+
+        # Sans compte : pas de « Votre avis », même après 31 minutes de jeu ; l'avis des parents se lit quand même
+        seul = famille()
+        seul["games"]["jeu-kit"] = {"ms": 31 * 60000, "sessions": 2, "days": {}, "scores": {}, "progress": {}}
+        sc = contexte(browser, store=seul, nuage=nuage, **formats["tablette"])
+        pg = sc.new_page()
+        pg.on("pageerror", lambda e: errors.append(str(e)))
+        avant = len([c for c in nuage.appels if c.startswith("/rest/v1/avis")])
+        pg.goto(APP + "#carnet")
+        pg.wait_for_selector("#gate[open]")
+        code(pg, PIN)
+        parent(pg)
+        pg.click(".pa-ligne[data-jeu=jeu-kit] .pa-ligne-jeu")
+        pg.wait_for_selector(".cat-fiche .cat-avis:not([hidden])")
+        assert pg.locator(".cat-fiche .pa-avis").count() == 0, "sans compte : pas de « Votre avis »"
+        assert "12 avis" in pg.inner_text(".cat-fiche .cat-avis")
+        assert len([c for c in nuage.appels if c.startswith("/rest/v1/avis")]) == avant, "sans compte, on ne lit aucun avis personnel"
+        sc.close()
 
         # 14. Le bureau : fermé à un parent, ouvert à son adresse
         tel.goto(BASE + "/ludiworld/bureau/")
@@ -924,6 +2320,33 @@ def run():
             b.wait_for_selector("#co-table tbody tr")
             assert "a@exemple.test" in b.inner_text("#co-table")
             b.screenshot(path=str(OUT / f"{name}-32-bureau-comptes.png"), full_page=True)
+            # Plan 5 : relire les mots libres des avis, accepter ou refuser
+            b.locator("#b-nav a", has_text="Les avis").click()
+            b.wait_for_selector("#av-jeux tbody tr")
+            jeux_txt = b.inner_text("#av-jeux")
+            assert "✓ montré" in jeux_txt and "pas encore (3 sur 5)" in jeux_txt, jeux_txt
+            assert "4,3" in jeux_txt and "4,7" in jeux_txt and "1 marche pas toujours" in jeux_txt and "1 ne marche pas" in jeux_txt, jeux_txt
+            assert b.locator("#av-fiche").count() == 0 and "Dites quoi" not in b.inner_text("[data-rub=avis]"), "plus de « Dites quoi »"
+            tous_txt = b.inner_text("#av-table")
+            assert "★☆☆☆☆ 1" in tous_txt and "ne marche pas" in tous_txt and "★★★★☆ 4" in tous_txt, "les étoiles et « marche » de chaque avis"
+            assert "@exemple.test" not in b.inner_text("[data-rub=avis]"), "pas d'adresse e-mail dans les avis"
+            if name == "telephone":
+                assert b.locator("#av-relire .b-avis").count() == 2 and "Mots à relire (2)" in b.inner_text("#av-relire-t")
+                note = b.locator("#av-relire .b-avis", has_text="On y joue le soir").locator(".b-avis-note").inner_text()
+                assert note == "★★★★☆ 4 · marche pas toujours", note
+                assert b.evaluate("window.XSS") is None and "<img" in b.inner_text("#av-relire"), "le mot d'un parent reste du texte"
+                b.screenshot(path=str(OUT / f"{name}-34-bureau-avis-a-relire.png"), full_page=True)
+                b.locator("#av-relire .b-avis", has_text="On y joue le soir").locator(".b-accepter").click()
+                b.wait_for_function("document.querySelectorAll('#av-relire .b-avis').length === 1")
+                assert nuage.avis[("parent@exemple.test", "jeu-kit")]["mot_etat"] == "accepte"
+                b.locator("#av-relire .b-avis .b-refuser").click()
+                b.wait_for_function("document.getElementById('av-relire').textContent.includes('Aucun mot à relire')")
+                assert nuage.avis[("autre-1@exemple.test", "jeu-kit")]["mot_etat"] == "refuse"
+                assert "✓ montré" in b.inner_text("#av-table") and "✗ pas montré" in b.inner_text("#av-table")
+            else:
+                b.wait_for_function("document.getElementById('av-relire').textContent.includes('Aucun mot à relire')")
+            b.wait_for_timeout(200)
+            b.screenshot(path=str(OUT / f"{name}-35-bureau-avis.png"), full_page=True)
             b.locator("#b-nav a", has_text="Le catalogue").click()
             b.wait_for_selector("#ca-jeux tbody tr")
             b.wait_for_selector("#ca-github li")
@@ -932,12 +2355,62 @@ def run():
             b.locator("#b-nav a", has_text="Les formules").click()
             b.wait_for_selector("#fo-table tbody tr")
             assert "synchro" in b.inner_text("#fo-table")
+            b.locator("#b-nav a", has_text="Aperçu").click()
+            b.wait_for_selector("#ap-attente a[href='#avis']")
+            assert "mots de parents à relire" in b.inner_text("#ap-attente")
             ctx.close()
+
+        # Le mot accepté se lit sur la fiche, sur le site comme dans l'appli ; sous 5 avis, toujours rien
+        for name, opts in formats.items():
+            ctx = contexte(browser, nuage=nuage, **opts)
+            s = ctx.new_page()
+            s.on("pageerror", lambda e: errors.append(str(e)))
+            s.goto(BASE + "/ludiworld/les-jeux/#jeu-kit")
+            s.wait_for_selector(".cat-fiche[open] .cat-avis:not([hidden])")
+            pub = s.inner_text(".cat-fiche .cat-avis")
+            assert "12 avis" in pub and "4,3" in pub and "Sans eux : 4,7." in pub.replace(" ", " ") and "On y joue le soir, à deux." in pub and "Mes deux filles" in pub, pub
+            assert "Un mot à relire" not in pub
+            assert s.locator(".cat-fiche .pa-avis").count() == 0, "le site ne propose pas de donner son avis"
+            s.locator(".cat-fiche .cat-avis").scroll_into_view_if_needed()
+            s.wait_for_timeout(400)
+            s.screenshot(path=str(OUT / f"{name}-44-site-avis-des-parents.png"))
+            s.goto(BASE + "/ludiworld/les-jeux/#pluie-de-cochons")
+            s.wait_for_function("(document.getElementById('cat-fiche-titre') || {}).textContent === 'Pluie de Cochons'")
+            s.wait_for_timeout(500)
+            assert s.locator(".cat-fiche .cat-avis:not([hidden])").count() == 0, "sous 5 avis, rien sur le site"
+            ctx.close()
+        tel.goto(APP + "#carnet")
+        tel.wait_for_selector("#gate[open], #v-parent:not([hidden])")
+        if tel.locator("#gate[open]").count():
+            code(tel, PIN)
+        parent(tel)
+        onglet(tel, "jeux")
+        tel.click(".pa-ligne[data-jeu=jeu-kit] .pa-ligne-jeu")
+        tel.wait_for_function("(document.querySelector('.pa-avis-etat-mot') || {}).textContent === 'Votre mot est montré sur la fiche.'")
+        assert "On y joue le soir, à deux." in tel.inner_text(".cat-fiche .cat-avis")
+        # Le même écran à la largeur d'un ordinateur : l'avis des parents, puis « Votre avis »
+        tel.set_viewport_size({"width": 1180, "height": 820})
+        tel.wait_for_timeout(300)
+        tel.locator(".cat-fiche .cat-avis").scroll_into_view_if_needed()
+        tel.wait_for_timeout(300)
+        tel.screenshot(path=str(OUT / "large-45-avis-des-parents.png"))
+        tel.locator(".pa-avis").scroll_into_view_if_needed()
+        tel.wait_for_timeout(300)
+        tel.screenshot(path=str(OUT / "large-46-votre-avis.png"))
+        tel.set_viewport_size({"width": 390, "height": 844})
+        tel.click(".cat-fermer")
 
         # 15. Tout effacer d'un geste : couper la copie, puis le compte
         tel.goto(BASE + "/ludiworld/compte/#espace")
         tel.wait_for_selector("#e-corps:not([hidden])")
         tel.wait_for_function("document.getElementById('e-formule').textContent.includes('Gratuit')")
+        # « Télécharger mes données » : mes avis, avec les étoiles, sans les anciennes questions
+        with tel.expect_download() as dl:
+            tel.click("#e-exporter")
+        donnees = json.loads(pathlib.Path(dl.value.path()).read_text(encoding="utf-8"))
+        mes_avis = donnees["avis"]
+        assert len(mes_avis) == 1 and mes_avis[0]["jeu"] == "jeu-kit" and mes_avis[0]["etoiles"] == 4 and mes_avis[0]["marche"] == "pas-toujours", mes_avis
+        assert any("avis?select=jeu,etoiles,marche,mot,mot_etat,langue,cree_le,maj_le" in c for c in nuage.appels), "l'export demande les étoiles"
         tel.locator(".e-effacer summary").click()
         tel.fill("#e-mot", "non")
         tel.click("#f-effacer button[type=submit]")
@@ -945,21 +2418,22 @@ def run():
         assert "parent@exemple.test" in nuage.comptes
         tel.fill("#e-mot", "EFFACER")
         tel.click("#f-effacer button[type=submit]")
-        tel.wait_for_url("**/decouvrir/")
+        tel.wait_for_url(BASE + "/ludiworld/")
         assert "parent@exemple.test" not in nuage.comptes and nuage.foyer is None
         assert tel.evaluate("localStorage.getItem('ludiworld.session')") is None
         assert tel.evaluate("JSON.parse(localStorage.getItem('ludiworld.v1')).famille.enfants[0].enfant.nom") == "Grand Loup", "l'appareil garde ce qui est à lui"
 
         # « Tout effacer » sur une tablette : elle ne reste liée à personne
-        page.goto(BASE + "/ludiworld/#carnet")
+        page.goto(APP + "#carnet")
         page.wait_for_selector("#gate[open]")
         code(page, PIN)
-        page.wait_for_selector("#v-parent:not([hidden])")
-        page.locator("#c-nav button", has_text="Réglages").click()
+        parent(page)
+        onglet(page, "reglages")
         page.on("dialog", lambda d: d.accept())
-        page.click(".btn-danger")
+        page.click("[data-action=effacer]")
         page.wait_for_selector("#v-accueil:not([hidden])")
         assert page.evaluate("localStorage.getItem('ludiworld.session')") is None and page.evaluate("localStorage.getItem('ludiworld.synchro')") is None
+        assert page.get_attribute(".a-deja a", "href") == "compte/#connexion", "après « Vider », on peut se reconnecter d'ici"
         telephone.close()
         tablette.close()
         browser.close()

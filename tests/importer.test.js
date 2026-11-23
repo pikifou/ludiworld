@@ -9,6 +9,7 @@ const SITE = 'https://parent.github.io/jeu-des-planetes/';
 function card(over = {}) {
   const base = JSON.parse(fs.readFileSync(path.join(__dirname, '../docs/jeux/pluie-de-cochons.json'), 'utf8'));
   delete base.source; delete base.embed;
+  delete base.screenshots; delete base.screens; // ses images sont celles de la copie du catalogue (img/pluie-de-cochons-N.webp)
   return Object.assign(base, {
     id: 'jeu-des-planetes', status: 'published',
     url: SITE, icon: SITE + 'icon-512.png',

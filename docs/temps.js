@@ -13,7 +13,7 @@
     joursLibres: [0, 3, 6],   // dimanche, mercredi, samedi
     fin: 'douce',             // 'douce' : on attend la fin de la manche ; 'nette' : on s'arrête à la minute
     grace: 10,                // fin douce : au plus 10 minutes de plus
-    bonus: null,              // { jour, min } : minutes ajoutées pour aujourd'hui
+    bonus: null,              // { jour, min, fin } : minutes ajoutées pour aujourd'hui ; fin ('HH:MM') : les heures de jeu vont jusque-là ce jour-là
     fini: null,               // jour (cleJour) où le parent a dit « fini pour aujourd'hui »
     heures: null,             // { debut: 'HH:MM', fin: 'HH:MM' } : on ne joue qu'entre ces heures (null : à toute heure)
     vacances: null            // 'AAAA-MM-JJ' : jusqu'à ce jour inclus, tous les jours sont des jours sans école
@@ -45,13 +45,20 @@
   }
 
   function minutesDe(hhmm) { var p = String(hhmm).split(':'); return Number(p[0]) * 60 + Number(p[1] || 0); }
+  function hhmm(m) { m = Math.max(0, Math.min(23 * 60 + 59, m)); return ('0' + Math.floor(m / 60)).slice(-2) + ':' + ('0' + (m % 60)).slice(-2); }
 
+  // La fin de la plage aujourd'hui (minutes depuis minuit) : l'heure réglée, ou plus tard si « +10 min » l'a repoussée ce jour-là.
+  function finPlage(r, d) {
+    var fin = minutesDe(r.heures.fin);
+    if (r.bonus && r.bonus.jour === cleJour(d) && r.bonus.fin) fin = Math.max(fin, minutesDe(r.bonus.fin));
+    return fin;
+  }
   // Heures de jeu : ms avant la fin de la plage (Infinity sans plage, 0 en dehors de la plage).
   function restePlage(r, d) {
     r = regles(r); d = d || new Date();
     if (!r.heures) return Infinity;
     var maintenant = d.getHours() * 60 + d.getMinutes() + d.getSeconds() / 60;
-    var debut = minutesDe(r.heures.debut), fin = minutesDe(r.heures.fin);
+    var debut = minutesDe(r.heures.debut), fin = finPlage(r, d);
     if (maintenant < debut || maintenant >= fin) return 0;
     return (fin - maintenant) * MIN;
   }
@@ -61,8 +68,28 @@
     if (!r.heures) return null;
     var maintenant = d.getHours() * 60 + d.getMinutes();
     if (maintenant < minutesDe(r.heures.debut)) return 'avant';
-    if (maintenant >= minutesDe(r.heures.fin)) return 'apres';
+    if (maintenant >= finPlage(r, d)) return 'apres';
     return null;
+  }
+
+  // « +10 min » : le bonus d'aujourd'hui après ce geste. Il donne vraiment ces minutes, tout de suite :
+  // du temps en plus dans la journée, et si l'heure de fin les couperait, elle recule pour aujourd'hui seulement
+  // (les heures réglées ne changent pas). Avant l'ouverture, seulement du temps en plus : on n'ouvre pas plus tôt.
+  // o : { date, joueTotal (ms aujourd'hui), minutes }
+  function rallonge(r0, o) {
+    var r = regles(r0), d = o.date || new Date(), k = cleJour(d), minutes = o.minutes || 10;
+    var b = r.bonus && r.bonus.jour === k ? { jour: k, min: r.bonus.min || 0, fin: r.bonus.fin || null } : { jour: k, min: 0, fin: null };
+    var avant = Math.max(0, reste({ regles: r, joueTotal: o.joueTotal, date: d }).total);
+    b.min += minutes;
+    if (r.heures && horsPlage(r, d) !== 'avant' && avant < Infinity) {
+      var voulu = avant + minutes * MIN;
+      var apres = Object.assign({}, r, { bonus: b });
+      if (restePlage(apres, d) < voulu) {
+        var maintenant = d.getHours() * 60 + d.getMinutes() + d.getSeconds() / 60;
+        b.fin = hhmm(Math.round(maintenant + voulu / MIN)); // à la minute la plus proche : « 10 min » à l'écran
+      }
+    }
+    return b;
   }
 
   // Temps restant (ms) pour un jeu donné. Infinity : aucune limite ne s'applique.
@@ -101,7 +128,7 @@
     MIN: MIN, AVERTIR: AVERTIR, POINT_DOUX: POINT_DOUX, GRACE_SANS_KIT: GRACE_SANS_KIT,
     REGLES_DEFAUT: REGLES_DEFAUT,
     cleJour: cleJour, iso: iso, regles: regles, jourLibre: jourLibre, minutesDuJour: minutesDuJour,
-    restePlage: restePlage, horsPlage: horsPlage,
+    restePlage: restePlage, horsPlage: horsPlage, finPlage: function (r, d) { r = regles(r); return r.heures ? hhmm(finPlage(r, d || new Date())) : null; }, rallonge: rallonge,
     reste: reste, part: part, decision: decision
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;

@@ -194,9 +194,24 @@
       return N.lierAppareil(foyerLocal()).then(function (m) {
         if (m) { ecrireFoyer(m); msg = 'synchroPrete'; }
       });
-    }).catch(function () { /* hors ligne : on voit l'espace quand même, il dira ce qui manque */ }).then(function () { entrer(msg); });
+    }).catch(function () { /* hors ligne : on entre quand même, l'appli dira ce qui manque */ }).then(function () { entrer(msg, true); });
   }
-  function entrer(msg) {
+  // Venu des Réglages du côté parent : on y retourne une fois connecté (l'état du compte s'y lit).
+  function retourReglages() {
+    var r = null;
+    try { r = sessionStorage.getItem('ludiworld.retourCompte'); sessionStorage.removeItem('ludiworld.retourCompte'); } catch (e) { /* rien */ }
+    return r === '../app/#reglages' && LudiBarre.configure() && LudiBarre.parentOuvert() ? r : null;
+  }
+  // Après « Se connecter » (versAppli), on entre dans l'appli, comme sur les sites des applis (Julien, 2026-11-18) :
+  // le côté parent sur un appareil préparé, ou que la copie en ligne vient de préparer (le code de la famille d'abord, s'il le faut),
+  // sinon la préparation. Après un lien reçu par e-mail ou une création de compte : l'espace du compte.
+  function entrer(msg, versAppli) {
+    var r = retourReglages();
+    if (r) { location.href = r; return; }
+    if (versAppli) {
+      location.href = !LudiBarre.configure() ? '../app/#demarrer' : LudiBarre.parentOuvert() ? '../app/#reglages' : '../app/#carnet';
+      return;
+    }
     sessionStorage.setItem('ludiworld.message', msg || '');
     LudiSite.rafraichir();
     aller('espace');
@@ -273,22 +288,39 @@
     if (e && e.code === 'session') { aller('connexion'); return; }
     dire($('e-alerte'), cleErreur(e));
   }
+  // Le mot qui va pour l'appareil qu'on tient (le même calcul que l'appli).
+  function appareil() {
+    var tactile = (window.matchMedia && matchMedia('(pointer: coarse)').matches) || navigator.maxTouchPoints > 0;
+    if (!tactile) return 'aOrdi';
+    return Math.min(screen.width, screen.height) < 600 ? 'aTelephone' : 'aTablette';
+  }
   function chargerEspace() {
     var verrou = verrouille();
     $('e-code').hidden = !verrou;
     $('e-corps').hidden = verrou;
+    var msg = sessionStorage.getItem('ludiworld.message');
+    sessionStorage.removeItem('ludiworld.message');
+    var pret = LudiBarre.configure(), ici = foyerLocal();
+    var liste = ici ? ici.enfants.map(function (e) { return e.enfant && e.enfant.nom; }).filter(Boolean) : [];
+    var noms = liste.join(', ');
+    // Reconnecté sur un appareil vidé : on dit que les enfants sont revenus (le prénom vient de l'appareil : du texte, jamais du HTML).
+    var retour = $('e-code-retour');
+    retour.hidden = !(verrou && msg === 'synchroPrete' && liste.length);
+    if (!retour.hidden) {
+      var et = liste.length > 1 ? liste.slice(0, -1).join(', ') + ' ' + tx('et') + ' ' + liste[liste.length - 1] : liste[0];
+      retour.textContent = tx(liste.length > 1 ? 'retourPlusieurs' : 'retourUn', { n: et, a: tx(appareil()) });
+    }
     if (verrou) return focaliser($('e-code').querySelector('h1'));
     focaliser($('e-corps').querySelector('h1'));
     $('e-email').textContent = N.email() || '';
     $('e-alerte').hidden = true;
-    var msg = sessionStorage.getItem('ludiworld.message');
-    sessionStorage.removeItem('ludiworld.message');
     var b = $('e-bienvenue');
     if (msg) dire(b, msg); else b.hidden = true;
-    var pret = LudiBarre.configure();
-    dire($('e-appareil'), pret ? 'appPret' : 'appVide');
-    $('e-ouvrir').textContent = tx(pret ? 'appOuvrir' : 'appPreparer');
-    $('e-ouvrir').setAttribute('href', pret ? '../' : '../#demarrer');
+    // Le prénom vient de l'appareil : écrit comme du texte, jamais comme du HTML.
+    if (pret) { $('e-appareil').textContent = tx('appPret', { n: noms }); $('e-appareil').hidden = false; } else dire($('e-appareil'), 'appVide');
+    var reglages = pret && LudiBarre.parentOuvert();
+    $('e-ouvrir').textContent = tx(reglages ? 'appReglages' : pret ? 'appOuvrir' : 'appPreparer');
+    $('e-ouvrir').setAttribute('href', reglages ? '../app/#reglages' : pret ? '../app/' : '../app/#demarrer');
     $('e-synchro').disabled = true;
     $('e-formule').innerHTML = tx('formuleLibre');
     Promise.all([N.lireTable('comptes?select=synchro,nouvelles'), N.rpc('mes_droits'), N.rpc('est_admin')]).then(function (r) {
@@ -297,6 +329,8 @@
       // La case représente le choix du compte, partagé entre tous les appareils.
       if (!c.synchro) N.poserSynchroLocale(false);
       $('e-synchro').checked = !!c.synchro;
+      $('e-synchro-aide').hidden = !c.synchro; // « Si vous la désactivez… » : seulement quand elle est active
+      $('e-synchro-etat').classList.toggle('neutre', !c.synchro);
       if (!c.synchro) dire($('e-synchro-etat'), 'syOff');
       else if (!N.appareilAutorise() && !N.liaisonDemandee()) dire($('e-synchro-etat'), 'syAutre');
       else $('e-synchro-etat').hidden = true;
@@ -318,7 +352,7 @@
         if (!on) return N.poserSynchroLocale(false);
         // L'appareil n'est relié qu'une fois la première synchro réussie : la case ne ment jamais.
         return (ancienFormat() ? Promise.resolve() : N.synchroniser(foyerLocal()).then(ecrireFoyer)).then(function () { N.poserSynchroLocale(true); });
-      }).then(function () { dire(etat, on ? 'syOn' : 'syOff'); })
+      }).then(function () { etat.classList.toggle('neutre', !on); dire(etat, on ? 'syOn' : 'syOff'); $('e-synchro-aide').hidden = !on; })
         .catch(function (e) { boite.checked = !on; erreurEspace(e); })
         .then(function () { boite.disabled = false; });
     });
@@ -327,16 +361,23 @@
       N.ecrireTable('comptes?id=not.is.null', { nouvelles: on }).catch(function (e) { boite.checked = !on; erreurEspace(e); });
     });
     $('e-sortir').addEventListener('click', function () {
+      // Pour que le côté parent dise vrai ensuite : la copie en ligne reste gardée si elle était active.
+      try { localStorage.setItem('ludiworld.copieVue', $('e-synchro').checked ? '1' : '0'); } catch (e) { /* rien */ }
       N.deconnecter().then(function () {
         try { localStorage.removeItem(CLE_ENVIE); } catch (e) { /* rien */ }
-        location.href = '../decouvrir/';
+        // Un appareil préparé : on revient à Ludiworld (aux Réglages si le côté parent est ouvert), avec une phrase qui confirme.
+        if (LudiBarre.configure()) {
+          try { sessionStorage.setItem('ludiworld.toast', 'signedOut'); } catch (e) { /* rien */ }
+          location.href = LudiBarre.parentOuvert() ? '../app/#reglages' : '../app/';
+        } else location.href = '../';
       });
     });
     $('e-exporter').addEventListener('click', function () {
       Promise.all([
-        N.lireTable('comptes?select=*'), N.rpc('mes_droits'), N.lireTable('envies?select=*'), N.lireTable('foyers?select=etat,version,maj_le')
+        N.lireTable('comptes?select=*'), N.rpc('mes_droits'), N.lireTable('envies?select=*'), N.lireTable('foyers?select=etat,version,maj_le'),
+        N.lireTable('avis?select=jeu,etoiles,marche,mot,mot_etat,langue,cree_le,maj_le').catch(function () { return []; })
       ]).then(function (r) {
-        var data = { adresse: N.email(), compte: r[0] && r[0][0], formule: r[1], reponses: r[2], copie_en_ligne: r[3] && r[3][0] || null };
+        var data = { adresse: N.email(), compte: r[0] && r[0][0], formule: r[1], reponses: r[2], copie_en_ligne: r[3] && r[3][0] || null, avis: r[4] || [] };
         var a = document.createElement('a');
         a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));
         a.download = 'ludiworld-mes-donnees.json';
@@ -351,7 +392,7 @@
         try { localStorage.removeItem(CLE_ENVIE); } catch (e) { /* rien */ }
         rep = { envie: [], profils: [], ages: [], priorites: [], experience: null, message: '' };
         N.oublier();
-        location.href = '../decouvrir/';
+        location.href = '../';
       }).catch(erreurEspace);
     });
   }

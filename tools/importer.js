@@ -110,7 +110,10 @@ async function importCard(input, { fetchImpl = fetch, write = true, today = new 
   if (errors.length) return r;
 
   // 6. Écriture
-  const saved = Object.assign({}, card, { embed, source: { card: r.cardUrl, imported: today } });
+  // « added » : le jour où le jeu entre au catalogue ; une nouvelle importation du même jeu garde sa date d'entrée.
+  let added = today;
+  try { const avant = JSON.parse(fs.readFileSync(target, 'utf8')); if (avant && /^\d{4}-\d{2}-\d{2}$/.test(avant.added || '')) added = avant.added; } catch (e) { /* nouveau jeu */ }
+  const saved = Object.assign({}, card, { added, embed, source: { card: r.cardUrl, imported: today } });
   r.card = saved;
   r.ok = true;
   if (write) {

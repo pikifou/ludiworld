@@ -164,6 +164,114 @@ const cherche = await en('authenticated', ID.adm, `select email from public.bure
 check('recherche par adresse', cherche.length === 1 && cherche[0].email === 'b@exemple.test', cherche);
 check('la recherche prend % au pied de la lettre', (await en('authenticated', ID.adm, `select email from public.bureau_comptes('%')`)).length === 0);
 
+console.log('Les avis de parents (deux migrations à la suite : la première, puis les étoiles)');
+const colonnes = (await db.query(`select column_name c from information_schema.columns where table_schema = 'public' and table_name = 'avis'`)).rows.map(r => r.c);
+check('les colonnes retirées n\'existent plus', !colonnes.some(c => ['fiche', 'fiche_quoi', 'retourne'].includes(c)), colonnes);
+check('la colonne des étoiles existe', colonnes.includes('etoiles'), colonnes);
+const signatures = (await db.query(`select p.oid::regprocedure::text s from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+  where n.nspname = 'public' and p.proname in ('donner_avis', 'avis_publics', 'bureau_avis', 'bureau_relire_mot') order by 1`)).rows.map(r => r.s);
+check('l\'ancienne donner_avis est supprimée, une seule version de chaque', JSON.stringify(signatures) === JSON.stringify([
+  'avis_publics(text,text)', 'bureau_avis(integer,integer)', 'bureau_relire_mot(uuid,text,text,boolean)', 'donner_avis(text,integer,text,text,text)']), signatures);
+const reglages = (await db.query(`select p.proname, p.prosecdef, p.proconfig from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+  where n.nspname = 'public' and p.proname in ('donner_avis', 'avis_publics', 'bureau_avis')`)).rows;
+check('security definer et search_path vide', reglages.length === 3 && reglages.every(r => r.prosecdef && (r.proconfig || []).length === 1 && /^search_path=(""|)$/.test(r.proconfig[0])), reglages);
+const droit = async (role, f) => (await db.query(`select has_function_privilege($1, $2, 'execute') x`, [role, f])).rows[0].x;
+check('anon : avis_publics oui, donner_avis et bureau_avis non',
+  await droit('anon', 'public.avis_publics(text,text)') && !(await droit('anon', 'public.donner_avis(text,int,text,text,text)')) && !(await droit('anon', 'public.bureau_avis(int,int)')));
+check('authenticated : les trois', await droit('authenticated', 'public.avis_publics(text,text)') && await droit('authenticated', 'public.donner_avis(text,int,text,text,text)') && await droit('authenticated', 'public.bureau_avis(int,int)'));
+check('aucun droit d\'exécuter pour tout le monde (public)', !(await db.query(`select coalesce(bool_or(a.grantee = 0), false) x from pg_proc p join pg_namespace n on n.oid = p.pronamespace,
+  aclexplode(p.proacl) a where n.nspname = 'public' and p.proname in ('donner_avis', 'avis_publics', 'bureau_avis')`)).rows[0].x);
+
+const P = [0, 1, 2, 3, 4, 5, 6].map(i => '20000000-0000-4000-8000-00000000000' + i);
+await db.exec(`insert into auth.users (id, email, email_confirmed_at) values ${P.map((id, i) => `('${id}', 'p${i}@exemple.test', now())`).join(', ')}`);
+const avisDe = async (uid, jeu, etoiles, m, mot, langue) =>
+  en('authenticated', uid, 'select public.donner_avis($1, $2, $3, $4, $5)', [jeu, etoiles, m, mot ?? null, langue ?? 'fr']);
+const publics = async (jeu, langue, role = 'anon', uid = null) => (await en(role, uid, 'select public.avis_publics($1, $2) p', [jeu, langue || 'fr']))[0].p;
+const ligneAvis = async (uid, jeu) => (await db.query('select * from public.avis where compte_id = $1 and jeu = $2', [uid, jeu])).rows[0];
+
+await refuse('anon ne lit pas la table des avis', 'anon', null, 'select * from public.avis');
+await refuse('anon ne donne pas d\'avis', 'anon', null, `select public.donner_avis('pluie', 4, 'oui')`);
+await refuse('adresse non confirmée : pas d\'avis', 'authenticated', ID.faux, `select public.donner_avis('pluie', 4, 'oui')`);
+await refuse('l\'ancienne forme (trois réponses) ne passe plus', 'authenticated', ID.a, `select public.donner_avis('pluie', 'oui', 'oui', 'oui')`);
+await refuse('une réponse inconnue est refusée', 'authenticated', ID.a, `select public.donner_avis('pluie', 4, 'super')`);
+await refuse('0 étoile est refusé', 'authenticated', ID.a, `select public.donner_avis('pluie', 0, 'oui')`);
+await refuse('6 étoiles est refusé', 'authenticated', ID.a, `select public.donner_avis('pluie', 6, 'oui')`);
+await refuse('sans étoiles : refusé', 'authenticated', ID.a, `select public.donner_avis('pluie', null, 'oui')`);
+await refuse('un nom de jeu qui n\'en est pas un est refusé', 'authenticated', ID.a, `select public.donner_avis('../x', 4, 'oui')`);
+await refuse('un mot trop long est refusé', 'authenticated', ID.a, `select public.donner_avis('pluie', 4, 'oui', repeat('x', 401))`);
+
+await avisDe(ID.a, 'pluie', 5, 'oui', '  Mes deux enfants y jouent ensemble.  ');
+let la = await ligneAvis(ID.a, 'pluie');
+check('l\'avis est enregistré, le mot à relire', la && la.etoiles === 5 && la.marche === 'oui' && la.mot === 'Mes deux enfants y jouent ensemble.' && la.mot_etat === 'a-relire', la);
+check('je relis le mien', (await en('authenticated', ID.a, 'select jeu, etoiles, mot_etat from public.avis')).length === 1);
+await vide('un compte ne lit pas l\'avis d\'un autre', 'authenticated', ID.b, 'select * from public.avis');
+await refuse('écrire dans la table sans passer par la fonction', 'authenticated', ID.a, `insert into public.avis (compte_id, jeu, etoiles, marche, mot, mot_etat) values ($1, 'autre', 5, 'oui', 'x', 'accepte')`, [ID.a]);
+await refuse('écrire un avis pour un autre compte', 'authenticated', ID.b, `insert into public.avis (compte_id, jeu, etoiles, marche) values ($1, 'autre', 1, 'non')`, [ID.a]);
+await refuse('accepter soi-même son mot', 'authenticated', ID.a, `update public.avis set mot_etat = 'accepte' where compte_id = $1`, [ID.a]);
+await refuse('changer ses étoiles sans passer par la fonction', 'authenticated', ID.a, `update public.avis set etoiles = 1 where compte_id = $1`, [ID.a]);
+await en('authenticated', ID.b, 'delete from public.avis where compte_id = $1', [ID.a]);
+check('retirer l\'avis d\'un autre : sans effet', !!(await ligneAvis(ID.a, 'pluie')));
+await refuse('un parent ne lit pas tous les avis', 'authenticated', ID.a, 'select * from public.bureau_avis()');
+await refuse('anon ne lit pas tous les avis', 'anon', null, 'select * from public.bureau_avis()');
+await refuse('un parent n\'accepte pas un mot', 'authenticated', ID.a, 'select public.bureau_relire_mot($1, $2, $3, true)', [ID.a, 'pluie', la.mot]);
+await refuse('anon n\'accepte pas un mot', 'anon', null, 'select public.bureau_relire_mot($1, $2, $3, true)', [ID.a, 'pluie', la.mot]);
+
+// Pluie : A 5 oui, B 1 non (« le jeu crashe »), P0 4 oui, P1 4 pas-toujours, P2 3 oui (en anglais).
+await avisDe(ID.b, 'pluie', 1, 'non', 'Avis de B');
+await avisDe(P[0], 'pluie', 4, 'oui');
+await avisDe(P[1], 'pluie', 4, 'pas-toujours');
+check('4 avis : le public ne lit rien, pas même le nombre', (await publics('pluie')) === null);
+check('4 avis : un parent connecté non plus', (await publics('pluie', 'fr', 'authenticated', ID.a)) === null);
+await avisDe(P[2], 'pluie', 3, 'oui', 'A thoughtful game.', 'en');
+let pub = await publics('pluie');
+check('5 avis : le total et la répartition des étoiles', pub && pub.total === 5 && JSON.stringify(pub.etoiles) === JSON.stringify({ 1: 1, 3: 1, 4: 2, 5: 1 }), pub);
+check('5 avis : la moyenne, un chiffre après la virgule (17 / 5 = 3,4)', Number(pub.moyenne) === 3.4, pub.moyenne);
+check('5 avis : la répartition de « marche »', pub.marche.oui === 3 && pub.marche['pas-toujours'] === 1 && pub.marche.non === 1, pub.marche);
+check('la moyenne chez ceux pour qui le jeu marche bien (5, 4, 3 : 4,0)', Number(pub.moyenne_marche_bien) === 4, pub.moyenne_marche_bien);
+check('plus rien de l\'ancien avis', !('fiche' in pub) && !('retourne' in pub), Object.keys(pub));
+check('aucun mot avant la relecture', pub.mots.length === 0, pub.mots);
+check('rien qui désigne un compte', !JSON.stringify(pub).includes(ID.a) && !JSON.stringify(pub).includes('@'));
+check('un autre jeu reste sous le seuil', (await publics('tour')) === null);
+
+const tous = await en('authenticated', ID.adm, 'select * from public.bureau_avis()');
+check('le bureau lit tous les avis, le mot à relire d\'abord', tous.length === 5 && tous[0].mot_etat === 'a-relire', tous.map(x => x.mot_etat));
+check('le bureau lit les étoiles et « marche »', tous.some(x => x.etoiles === 1 && x.marche === 'non') && tous.every(x => x.etoiles >= 1), tous.map(x => [x.etoiles, x.marche]));
+check('le bureau ne reçoit pas d\'adresse e-mail', !JSON.stringify(tous).includes('@exemple.test'));
+check('un texte qui a changé depuis la lecture : rien n\'est accepté', (await en('authenticated', ID.adm, 'select public.bureau_relire_mot($1, $2, $3, true) x', [ID.a, 'pluie', 'un autre texte']))[0].x === false);
+check('accepter le mot de A', (await en('authenticated', ID.adm, 'select public.bureau_relire_mot($1, $2, $3, true) x', [ID.a, 'pluie', la.mot]))[0].x === true);
+check('refuser le mot de B', (await en('authenticated', ID.adm, 'select public.bureau_relire_mot($1, $2, $3, false) x', [ID.b, 'pluie', 'Avis de B']))[0].x === true);
+await en('authenticated', ID.adm, 'select public.bureau_relire_mot($1, $2, $3, true)', [P[2], 'pluie', 'A thoughtful game.']);
+pub = await publics('pluie');
+check('le mot accepté est public, le refusé non', pub.mots.length === 1 && pub.mots[0] === 'Mes deux enfants y jouent ensemble.', pub.mots);
+check('les mots dans la langue de la fiche', (await publics('pluie', 'en')).mots.join() === 'A thoughtful game.');
+await avisDe(ID.a, 'pluie', 2, 'pas-toujours', 'Mes deux enfants y jouent ensemble.');
+la = await ligneAvis(ID.a, 'pluie');
+check('changer ses étoiles garde la relecture d\'un mot inchangé', la.mot_etat === 'accepte' && la.etoiles === 2 && la.marche === 'pas-toujours', la);
+pub = await publics('pluie');
+check('un avis par compte et par jeu, les calculs suivent (2,8 ; sans souci 3,5)', pub.total === 5 && pub.marche.oui === 2 && Number(pub.moyenne) === 2.8 && Number(pub.moyenne_marche_bien) === 3.5, pub);
+await avisDe(ID.a, 'pluie', 2, 'pas-toujours', 'Un mot changé après la relecture');
+la = await ligneAvis(ID.a, 'pluie');
+check('un mot changé repart à relire', la.mot_etat === 'a-relire' && la.mot_relu_le === null, la);
+check('et quitte la fiche publique', (await publics('pluie')).mots.length === 0);
+await avisDe(ID.a, 'pluie', 2, 'pas-toujours', '   ');
+la = await ligneAvis(ID.a, 'pluie');
+check('un mot vidé : plus de mot, plus d\'état', la.mot === null && la.mot_etat === null, la);
+
+// Personne pour qui le jeu marche bien : pas de moyenne « sans eux ».
+for (let i = 0; i < 5; i++) await avisDe(P[i], 'crash', 1, i % 2 ? 'non' : 'pas-toujours');
+pub = await publics('crash');
+check('personne pour qui le jeu marche bien : pas de moyenne à part', pub.total === 5 && Number(pub.moyenne) === 1 && pub.moyenne_marche_bien === null && !pub.marche.oui, pub);
+
+await en('authenticated', P[1], 'delete from public.avis where jeu = $1', ['pluie']);
+check('retirer son avis', !(await ligneAvis(P[1], 'pluie')) && (await publics('pluie')) === null);
+await db.exec(`insert into public.avis (compte_id, jeu, etoiles, marche) select '${P[6]}', 'jeu-' || i, 5, 'oui' from generate_series(1, 50) i`);
+await refuse('garde-fou : pas plus de 50 jeux par compte', 'authenticated', P[6], `select public.donner_avis('jeu-51', 5, 'oui')`);
+await avisDe(P[6], 'jeu-1', 3, 'non');
+la = await ligneAvis(P[6], 'jeu-1');
+check('changer un avis existant reste possible', la.marche === 'non' && la.etoiles === 3, la);
+await db.exec(`delete from auth.users where id in (${P.map(id => `'${id}'`).join(', ')})`);
+check('un compte effacé emporte ses avis', (await db.query('select count(*)::int n from public.avis where compte_id = any($1)', [P])).rows[0].n === 0);
+
 console.log('Tout effacer');
 await refuse('anon n\'efface rien', 'anon', null, 'select public.effacer_mon_compte()');
 await en('authenticated', ID.b, 'select public.effacer_mon_compte()');
@@ -172,7 +280,8 @@ const reste = (await db.query(`select
   (select count(*)::int from public.abonnements where compte_id = $1) a, (select count(*)::int from public.foyers where compte_id = $1) f,
   (select count(*)::int from public.envies where compte_id = $1) e`, [ID.b])).rows[0];
 check('le compte, le foyer, l\'abonnement et les réponses disparaissent', Object.values(reste).every(n => n === 0), reste);
-check('les réponses données une fois connecté partent aussi', (await db.query('select count(*)::int n from public.envies where id = $1', [ENV_CO])).rows[0].n === 0);
+check('ses avis partent aussi', (await db.query('select count(*)::int n from public.avis where compte_id = $1', [ID.b])).rows[0].n === 0);
+check('les réponses données une fois connecté partent aussi',(await db.query('select count(*)::int n from public.envies where id = $1', [ENV_CO])).rows[0].n === 0);
 check('les autres comptes restent', (await db.query('select count(*)::int n from public.comptes')).rows[0].n === 3);
 
 console.log('Garde-fou');

@@ -1,9 +1,12 @@
 // Service worker du launcher Ludiworld. Incrémenter VERSION à chaque publication.
 // Les jeux ont chacun leur propre service worker (autre dossier) : on ne s'en occupe pas.
-const VERSION = 'ludiworld-0.8.0';
+// Il est à la racine du site (sa portée couvre le site et l'appli) ; l'appli vit sous app/ (Julien, 2026-11-18) et marche hors ligne.
+// La racine ('./', l'accueil du site) et l'aiguillage restent en cache : une appli installée avant app/ (départ à la racine)
+// retombe dans l'appli, même hors ligne.
+const VERSION = 'ludiworld-0.10.0';
 const SHELL = [
-  './', 'index.html', 'style.css', 'app.js', 'textes.js', 'temps.js', 'synchro.js', 'site/nuage.js', 'manifest.webmanifest', 'kit/ludi.js',
-  'site/barre.js', 'site/barre.css',
+  'app/', 'app/index.html', './', 'site/aiguillage.js', 'style.css', 'app.js', 'textes.js', 'temps.js', 'synchro.js', 'site/nuage.js', 'manifest.webmanifest', 'kit/ludi.js',
+  'site/barre.js', 'site/barre.css', 'site/catalogue.js', 'site/catalogue.css',
   'fonts/baloo2-500.woff2', 'fonts/baloo2-700.woff2', 'fonts/baloo2-800.woff2',
   'fonts/lexend.woff2', 'fonts/fraunces.woff2', 'fonts/fraunces-italic.woff2',
   'img/ile-jour.webp', 'img/ile-nuit.webp', 'img/soleil.webp', 'img/lune.webp',

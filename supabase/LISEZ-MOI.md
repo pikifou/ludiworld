@@ -9,6 +9,8 @@ node supabase/verifier.mjs <ce dossier>
 ```
 
 ## Mettre en service
+La migration `20261118120000_avis.sql` ajoute les avis de parents (table `avis`, fonctions `donner_avis`, `avis_publics`, `bureau_avis`, `bureau_relire_mot`) ; `20261118180000_avis_etoiles.sql` les refait avec une note en étoiles (retire `fiche`, `fiche_quoi`, `retourne`, ajoute `etoiles`, recrée `donner_avis`, `avis_publics`, `bureau_avis`). Elle échoue si la table a déjà des avis, au lieu d'inventer une note. À appliquer avant de publier la fiche qui les montre ; sans elle, la fiche ne montre aucun avis et « Votre avis » ne part pas.
+
 La migration `20261109120000_synchro_inscription.sql` active la synchronisation pour les nouvelles inscriptions qui l'annoncent. À appliquer avant de publier le nouveau parcours. Elle ne modifie aucun compte existant.
 
 1. Créer un projet Supabase en région UE et appliquer `migrations/`.

@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Les jeux · Ludiworld</title>
-  <meta name="description" content="Les jeux de Ludiworld : ce que chacun apporte, pour quel âge, combien de temps dure une partie, et ce qu'il s'engage à ne pas faire.">
+  <meta name="description" content="Les jeux de Ludiworld, en images : pour quel âge, combien de temps dure une partie, et ce qu'on y apprend.">
   <meta name="theme-color" content="#16204a">
   <link rel="icon" href="../icons/marmotte-192.png">
   <link rel="apple-touch-icon" href="../icons/marmotte-180.png">
@@ -13,50 +13,33 @@
   <link rel="preload" href="../fonts/lexend.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="../site/barre.css">
   <link rel="stylesheet" href="../site/site.css">
-  <link rel="stylesheet" href="vitrine.css">
+  <link rel="stylesheet" href="../site/catalogue.css">
+  <link rel="stylesheet" href="jeux.css">
 </head>
-<body data-page="jeux" class="page-vitrine">
+<body data-page="jeux" class="page-jeux">
   <a class="skip" href="#contenu" data-t="skip">Aller au contenu</a>
   <div id="lw-barre"></div>
 
-  <header class="page-tete vt-tete">
+  <header class="page-tete jx-tete">
     <h1 data-t="h1">Les jeux, <em>et ce qu'ils apportent.</em></h1>
-    <p class="lede" data-t="lede">Faits par des parents, d'abord pour leurs enfants. Touchez un jeu pour voir ce qu'il apporte.</p>
-    <div class="vt-cherche" role="search">
-      <label class="vt-cache" for="vt-q" data-t="chercher">Chercher un jeu</label>
-      <input id="vt-q" type="search" autocomplete="off">
-    </div>
+    <p class="lede" data-t="lede">Faits par des parents, d'abord pour leurs enfants.</p>
   </header>
 
-  <main id="contenu" class="page-corps vt">
-    <div class="vt-filtres">
-      <div class="vt-themes" id="vt-themes" role="group" data-t-aria="apporte" aria-label="Ce que ça apporte"></div>
-      <div class="vt-autres">
-        <label class="vt-age"><span data-t="age">Âge</span> <select id="vt-age"></select></label>
-        <button type="button" class="vt-bascule" id="vt-lire" aria-pressed="false"></button>
-        <p class="vt-compte" id="vt-compte" aria-live="polite"></p>
-      </div>
-    </div>
-
-    <div class="vt-grille" id="vt-grille">
+  <main id="contenu" class="page-corps jx">
+    <h2 class="sr-only" data-t="liste">Tous les jeux</h2>
+    <div class="jx-grille" id="jx-grille" aria-live="polite">
       <p class="jeux-wait" data-t="loading">Les jeux arrivent…</p>
     </div>
 
-    <aside class="relais">
-      <h2 data-t="moreTitle">Vous faites un jeu pour votre enfant ?</h2>
-      <p data-t="moreText">Il a peut-être sa place ici. Pas besoin de savoir coder : une IA écrit le code avec vous.</p>
-      <a class="btn btn-sun" href="../creer/" data-t="moreGo">Créer un jeu, pas à pas</a>
-    </aside>
   </main>
-
-  <dialog class="vt-fiche" id="vt-fiche" aria-labelledby="vt-fiche-titre"></dialog>
 
   <footer class="foot" id="lw-pied"></footer>
 
   <script src="../site/barre.js" defer></script>
   <script src="../site/site.js" defer></script>
   <script src="en.js" defer></script>
-  <script src="../site/arbre.js" defer></script>
-  <script src="vitrine.js" defer></script>
+  <script src="../site/nuage.js" defer></script>
+  <script src="../site/catalogue.js" defer></script>
+  <script src="jeux.js" defer></script>
 </body>
 </html>

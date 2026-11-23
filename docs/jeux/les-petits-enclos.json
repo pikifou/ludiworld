@@ -2,6 +2,7 @@
   "ludi": 1,
   "id": "les-petits-enclos",
   "status": "published",
+  "added": "2026-11-11",
   "title": {
     "fr": "Les Petits Enclos",
     "en": "Little Enclosures"
@@ -12,6 +13,12 @@
   },
   "url": "https://pikifou.github.io/les-petits-enclos/",
   "icon": "https://pikifou.github.io/les-petits-enclos/icon-512.png",
+  "screenshots": [
+    { "src": "img/les-petits-enclos-1.webp", "alt": { "fr": "Placer les pandas dans leurs enclos", "en": "Placing pandas in their pens" } },
+    { "src": "img/les-petits-enclos-2.webp", "alt": { "fr": "Une grande grille de chats", "en": "A big grid of cats" } },
+    { "src": "img/les-petits-enclos-3.webp", "alt": { "fr": "Chaque mouton a sa place", "en": "Every sheep has its place" } }
+  ],
+  "screens": "portrait",
   "color": "#d8dfc8",
   "author": {
     "name": "Julien",
@@ -51,6 +58,10 @@
   "content": {
     "fr": "Des animaux à installer dans des paysages doux. Pas de chronomètre, de vies à perdre ni de combat.",
     "en": "Animals to settle in gentle landscapes. No timer, lives to lose or fighting."
+  },
+  "after": {
+    "fr": "Et si tu faisais des enclos en coussins pour tes peluches, avec une place pour chaque animal ?",
+    "en": "How about making pens out of cushions for your soft toys, with a place for each animal?"
   },
   "devices": [
     "phone",

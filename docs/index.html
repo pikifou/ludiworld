@@ -4,78 +4,216 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Ludiworld</title>
-  <meta name="description" content="Des petits jeux faits maison par des parents, qui font apprendre. Le parent choisit les jeux et le temps de jeu, le soleil dit quand on s'arrête.">
-  <meta name="theme-color" content="#7cc6f2">
-  <link rel="manifest" href="manifest.webmanifest">
-  <link rel="icon" href="icons/marmotte-64.png">
+  <script src="site/aiguillage.js"></script>
+  <meta name="description" content="De petits jeux faits par des parents, sans pub, sans achat, sans pièges. Vous choisissez, votre enfant joue, le soleil dit quand on s'arrête.">
+  <meta name="theme-color" content="#16204a">
+  <link rel="icon" href="icons/marmotte-192.png">
   <link rel="apple-touch-icon" href="icons/marmotte-180.png">
-  <link rel="preload" href="fonts/baloo2-800.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/fraunces.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="fonts/lexend.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="img/salon.webp" as="image" type="image/webp">
   <link rel="stylesheet" href="site/barre.css">
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="site/site.css">
+  <link rel="stylesheet" href="site/catalogue.css">
 </head>
-<body>
-  <!-- Première ouverture : le parent prépare Ludiworld -->
-  <section id="v-accueil" class="accueil" hidden></section>
+<body data-page="accueil" data-base="">
+  <a class="skip" href="#probleme" data-t="skip">Aller au contenu</a>
 
-  <!-- Côté enfant : l'île et le soleil -->
-  <section id="v-enfant" class="enfant" hidden>
-    <div class="ciel" aria-hidden="true">
-      <img class="astre soleil" src="img/soleil.webp" alt="">
-      <img class="astre lune" src="img/lune.webp" alt="">
-      <span class="etoiles"></span>
-      <img class="nuage n1" src="img/nuage-1.webp" alt="">
-      <img class="nuage n2" src="img/nuage-2.webp" alt="">
-      <img class="nuage n3" src="img/nuage-3.webp" alt="">
+  <div id="lw-barre"></div>
+
+  <!-- 1. Ouverture -->
+  <header class="hero">
+    <div class="hero-pic">
+      <img class="hero-img" src="img/salon.webp" width="1600" height="893" fetchpriority="high"
+           alt="Le soir dans un salon, un parent et son enfant sur le canapé. Une petite île flotte au-dessus de la tablette."
+           data-t-alt="heroAlt">
     </div>
-    <header class="e-haut">
-      <h1 class="e-salut" id="e-salut"></h1>
-      <p class="e-temps" id="e-temps" aria-live="polite"></p>
-      <button type="button" class="e-qui" id="e-qui" hidden><svg viewBox="0 0 24 24" aria-hidden="true" class="ico"><circle cx="12" cy="8" r="4.5" fill="currentColor"/><path d="M3.5 21c1.2-4.6 4.6-7 8.5-7s7.3 2.4 8.5 7z" fill="currentColor"/></svg><span></span></button>
-    </header>
-    <div class="e-monde" aria-hidden="true">
-      <div class="ile">
-        <img class="ile-jour" src="img/ile-jour.webp" alt="">
-        <img class="ile-nuit" src="img/ile-nuit.webp" alt="">
-        <img class="marmotte" id="e-marmotte" src="img/marmotte-salut.webp" alt="">
+    <div class="hero-copy">
+      <div class="arc" aria-hidden="true">
+        <span class="arc-path"></span>
+        <span class="pivot"><img class="sun" src="img/soleil.webp" width="420" height="422" alt=""></span>
+        <span class="horizon"></span>
+      </div>
+      <h1 class="hero-title">
+        <span class="l1" data-t="h1a">Le soleil dit</span>
+        <span class="l2" data-t="h1b">quand on s'arrête.</span>
+      </h1>
+      <p class="lede" data-t="lede">De petits jeux faits par des parents. Vous choisissez, votre enfant joue, le soleil donne le rythme.</p>
+      <div class="ctas">
+        <a class="btn btn-sun" href="app/#demarrer" data-app data-t="cta">Ouvrir Ludiworld</a>
+        <a class="btn-ghost" href="#comment"><span data-t="how">Comment ça marche</span> <span aria-hidden="true">↓</span></a>
       </div>
     </div>
-    <nav class="e-jeux" id="e-jeux" aria-label="Jeux"></nav>
-    <div class="e-dodo" id="e-dodo" hidden></div>
-    <button type="button" class="e-parents" id="e-parents"><svg viewBox="0 0 24 24" aria-hidden="true" class="ico"><rect x="4" y="10.5" width="16" height="11" rx="2.5" fill="currentColor"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5" fill="none" stroke="currentColor" stroke-width="2.4"/></svg><span class="e-parents-txt" data-fr="Parents" data-en="Parents">Parents</span><span class="e-parents-hint"></span></button>
-  </section>
+  </header>
 
-  <!-- Le carnet parent : « Expériences installées », un onglet du site -->
-  <section id="v-parent" class="carnet" hidden>
-    <div class="c-barre" id="c-barre"></div>
-    <aside class="c-rail">
-      <div class="c-marque">
-        <img src="img/marmotte-carnet.webp" alt="">
-        <div><h1 id="c-titre"></h1><p id="c-de"></p></div>
+  <main>
+    <!-- 2. Le problème -->
+    <section class="sec probleme" id="probleme" aria-labelledby="pb-title">
+      <div class="pb-grid">
+        <div class="pb-head">
+          <p class="kicker" data-t="pbKick">Le problème</p>
+          <h2 id="pb-title" data-t="pbTitle">Sur la tablette, la plupart des jeux sont faits pour qu'on ne la lâche pas.</h2>
+        </div>
+        <div class="hooks">
+          <p class="hooks-title" data-t="hooksTitle">Les hameçons habituels</p>
+          <ul>
+            <li><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2v11a5 5 0 1 1-10 0v-2l3 3"/><circle cx="14" cy="2.5" r="1.5"/></svg><span data-t="hook1">Une pub entre deux niveaux.</span></li>
+            <li><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2v11a5 5 0 1 1-10 0v-2l3 3"/><circle cx="14" cy="2.5" r="1.5"/></svg><span data-t="hook2">Quelque chose à acheter, «&nbsp;juste une fois&nbsp;».</span></li>
+            <li><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2v11a5 5 0 1 1-10 0v-2l3 3"/><circle cx="14" cy="2.5" r="1.5"/></svg><span data-t="hook3">«&nbsp;Reviens demain&nbsp;», sinon la série est perdue.</span></li>
+            <li><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2v11a5 5 0 1 1-10 0v-2l3 3"/><circle cx="14" cy="2.5" r="1.5"/></svg><span data-t="hook4">Des niveaux qui ne finissent jamais.</span></li>
+          </ul>
+        </div>
+        <p class="pb-end" data-t="pbEnd">Et le soir, il faut se fâcher pour l'éteindre.</p>
+        <p class="pb-turn" data-t="pbTurn">Ludiworld part de l'autre bout&nbsp;: peu de jeux, choisis par vous, et une fin prévue d'avance.</p>
       </div>
-      <nav class="c-nav" id="c-nav" role="tablist"></nav>
-      <button type="button" class="c-exit" id="c-exit"><svg viewBox="0 0 24 24" aria-hidden="true" class="ico"><circle cx="12" cy="12" r="5" fill="currentColor"/><g stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 1.5v3M12 19.5v3M1.5 12h3M19.5 12h3M4.6 4.6l2.1 2.1M17.3 17.3l2.1 2.1M4.6 19.4l2.1-2.1M17.3 6.7l2.1-2.1"/></g></svg><span></span></button>
-    </aside>
-    <main class="c-page" id="c-page"></main>
-  </section>
+    </section>
 
-  <dialog id="sheet" class="sheet" aria-labelledby="sheet-title"></dialog>
-  <dialog id="gate" class="gate"></dialog>
-  <dialog id="qui" class="gate qui"></dialog>
-  <p id="toast" class="toast" role="status" hidden></p>
+    <!-- 3. Comment ça marche : une journée -->
+    <section class="sec journee" id="comment" aria-labelledby="j-title">
+      <img class="cloud c1" src="img/nuage-2.webp" width="460" height="288" alt="">
+      <img class="cloud c2" src="img/nuage-3.webp" width="307" height="191" alt="">
+      <div class="j-head">
+        <p class="kicker" data-t="jKick">Comment ça marche</p>
+        <h2 id="j-title" data-t="jTitle">Une journée, le long du soleil</h2>
+        <p data-t="jIntro">Le temps de jeu, c'est le soleil qui traverse le ciel. Votre enfant le voit descendre, sans avoir à lire l'heure.</p>
+      </div>
 
-  <div id="player" class="player" hidden>
-    <button type="button" class="player-back" id="player-back"></button>
-    <p class="p-reste" id="p-reste" hidden></p>
-    <div class="p-bandeau" id="p-bandeau" role="status" hidden></div>
-    <div class="p-rideau" id="p-rideau" hidden></div>
-  </div>
+      <div class="steps-wrap">
+        <svg class="j-arc" viewBox="0 0 1000 320" preserveAspectRatio="none" aria-hidden="true">
+          <path d="M10 310 C 220 -60, 780 -60, 990 310"/>
+        </svg>
+        <ol class="steps">
+          <li class="step s1">
+            <div class="badge">
+              <svg viewBox="0 0 64 40" aria-hidden="true"><circle class="sb" cx="20" cy="30" r="9"/><path class="ray" d="M20 14v-5M8 22l-4-3M32 22l4-3"/><path class="hz" d="M2 32h60"/></svg>
+              <span data-t="t1">Matin</span>
+            </div>
+            <img class="mascot" src="img/marmotte-carnet.webp" width="469" height="775" alt="" loading="lazy">
+            <h3 data-t="s1Title">Le parent prépare</h3>
+            <p data-t="s1Text">Le côté parent s'ouvre avec votre code. Il a quatre onglets&nbsp;:</p>
+            <ul class="chips onglets">
+              <li data-t="f1">Mes jeux</li>
+              <li data-t="f4">Tous les jeux</li>
+              <li data-t="f2">Temps</li>
+              <li data-t="f3">Réglages</li>
+            </ul>
+            <p data-t="s1Time">Dans Mes jeux&nbsp;: le temps joué aujourd'hui, et ses jeux, avec une limite par jour pour chacun si vous voulez. Dans Tous les jeux&nbsp;: tout le catalogue, à installer d'un geste. Dans Temps&nbsp;: un temps pour les jours que vous choisissez (le mercredi et le week-end, par exemple), un autre pour les autres jours.</p>
+          </li>
+          <li class="step s2">
+            <div class="badge">
+              <svg viewBox="0 0 64 40" aria-hidden="true"><circle class="sb" cx="32" cy="14" r="9"/><path class="ray" d="M18 14h-5M46 14h5M22 4l-3-3M42 4l3-3"/><path class="hz" d="M2 32h60"/></svg>
+              <span data-t="t2">Après-midi</span>
+            </div>
+            <img class="mascot" src="img/marmotte-salut.webp" width="520" height="756" alt="" loading="lazy">
+            <h3 data-t="s2Title">L'enfant joue</h3>
+            <p data-t="s2Text">Il joue aux jeux que vous avez choisis. Il peut regarder les autres et vous en demander un&nbsp;: rien ne s'installe sans vous.</p>
+            <p data-t="s2Sun">Pendant qu'il joue, le soleil descend dans le ciel. Il sait où il en est d'un coup d'œil.</p>
+          </li>
+          <li class="step s3">
+            <div class="badge">
+              <svg viewBox="0 0 64 40" aria-hidden="true"><circle class="sb late" cx="46" cy="32" r="9"/><path class="ray" d="M46 17v-4M34 24l-4-2M58 24l4-2"/><path class="hz" d="M2 32h60"/></svg>
+              <span data-t="t3">Soir</span>
+            </div>
+            <img class="mascot" src="img/marmotte-baille.webp" width="461" height="775" alt="" loading="lazy">
+            <h3 data-t="s3Title">On s'arrête, sans surprise</h3>
+            <p data-t="s3Text">Cinq minutes avant la fin, la marmotte baille. Vous choisissez comment ça finit&nbsp;:</p>
+            <dl class="ends">
+              <div class="end-soft">
+                <dt><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 14c3-5 6-5 9 0s6 5 9 0"/></svg><span data-t="softT">Fin douce</span></dt>
+                <dd data-t="softD">attend la fin de la course ou du niveau en cours, pour les jeux qui le permettent.</dd>
+              </div>
+              <div class="end-hard">
+                <dt><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4v16M18 4v16"/></svg><span data-t="hardT">Fin nette</span></dt>
+                <dd data-t="hardD">s'arrête à la minute près.</dd>
+              </div>
+            </dl>
+            <p data-t="s3Sleep">Puis l'île s'endort. Pour aujourd'hui, c'est fini.</p>
+          </li>
+        </ol>
+      </div>
 
-  <script src="site/barre.js"></script>
-  <script src="textes.js"></script>
-  <script src="temps.js"></script>
-  <script src="synchro.js"></script>
-  <script src="site/nuage.js"></script>
-  <script src="app.js"></script>
+      <aside class="note" aria-labelledby="note-title">
+        <p class="note-title" id="note-title" data-t="noteTitle">À savoir, honnêtement</p>
+        <p data-t="noteText">Une app web ne peut pas verrouiller une tablette à elle seule. Associez-la à l'épinglage d'écran d'Android ou à Family Link, ou à l'Accès guidé sur iPad. L'app explique comment faire.</p>
+      </aside>
+    </section>
+
+    <!-- 4. Les jeux -->
+    <section class="sec jeux" id="jeux" aria-labelledby="jeux-title">
+      <div class="jeux-grid">
+        <div class="jeux-head">
+          <p class="kicker" data-t="gKick">Les jeux</p>
+          <h2 id="jeux-title" data-t="gTitle">Peu de jeux, et chacun dit la vérité.</h2>
+          <p data-t="gIntro">Chaque jeu a une fiche honnête&nbsp;: l'âge, ce qu'on y apprend, la durée d'une partie. Même quand c'est moins flatteur. Touchez un jeu pour la lire.</p>
+        </div>
+        <div class="jeux-list" id="jeux-list" aria-live="polite">
+          <p class="jeux-wait" data-t="gLoading">Les fiches arrivent…</p>
+        </div>
+      </div>
+      <p class="jeux-more"><a class="btn btn-ink" id="jeux-tous" href="les-jeux/" data-t="gMore">Voir tous les jeux</a></p>
+    </section>
+
+    <!-- 5. La charte : ce que sont les jeux de Ludiworld, en positif (Julien, 2026-11-18) -->
+    <section class="sec charte" id="charte" aria-labelledby="ch-title">
+      <div class="ch-grid">
+        <div class="ch-head">
+          <p class="kicker" data-t="cKick">La charte</p>
+          <h2 id="ch-title" data-t="cTitle">Des jeux pensés pour faire du bien aux enfants</h2>
+          <p class="ch-gratuit" data-t="cFree">Ludiworld est gratuit pour l'instant.</p>
+        </div>
+        <ul class="promises">
+          <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12.5l5 5L20 6.5"/></svg><span data-t="p1">Le jeu, et rien d'autre&nbsp;: ni pub, ni achat.</span></li>
+          <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12.5l5 5L20 6.5"/></svg><span data-t="p2">Autour de l'enfant, seulement sa famille&nbsp;: aucun inconnu ne lui parle.</span></li>
+          <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12.5l5 5L20 6.5"/></svg><span data-t="p3">Il revient quand il en a envie&nbsp;: ni récompense au hasard, ni «&nbsp;reviens demain&nbsp;», ni notification.</span></li>
+          <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12.5l5 5L20 6.5"/></svg><span data-t="p4">Il peut s'arrêter sans rien perdre.</span></li>
+          <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12.5l5 5L20 6.5"/></svg><span data-t="p5">Le parent choisit les jeux et le temps de jeu.</span></li>
+        </ul>
+        <div class="donnees">
+          <div>
+            <p data-t="dText">Ludiworld garde des données d'usage pour s'améliorer. Elles ne sont jamais vendues.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. Ludiworld aime bien -->
+    <section class="sec series" id="series" aria-labelledby="se-title">
+      <div class="se-grid">
+        <div class="se-head">
+          <p class="kicker" data-t="sKick">Ludiworld aime bien</p>
+          <h2 id="se-title" data-t="sTitle">Apprendre peut être fun, même loin des jeux.</h2>
+          <p data-t="sIntro">Des séries, des films et des applis qui rendent curieux, choisis par des parents. Pour que le temps d'écran ait du sens, même quand ce n'est pas l'heure de jouer.</p>
+          <p><a class="btn btn-ink" href="aime-bien/" data-t="sMore">Toutes les recommandations</a></p>
+        </div>
+        <dl class="carnet" id="aime-apercu" aria-live="polite"></dl>
+      </div>
+    </section>
+
+    <!-- 8. La nuit -->
+    <section class="sec nuit" id="nuit" aria-labelledby="n-title">
+      <img class="moon" src="img/lune.webp" width="380" height="415" alt="" loading="lazy">
+      <div class="n-grid">
+        <div class="n-island">
+          <img class="island" src="img/ile-nuit.webp" width="1100" height="994" loading="lazy"
+               alt="L'île de Ludiworld la nuit, ses fenêtres allumées." data-t-alt="islandAlt">
+        </div>
+        <div class="n-copy">
+          <img class="dodo" src="img/marmotte-dodo.webp" width="520" height="557" loading="lazy"
+               alt="La marmotte dort, enroulée dans son écharpe." data-t-alt="dodoAlt">
+          <h2 id="n-title" data-t="nTitle">L'île dort. Elle se réveille quand vous l'ouvrez.</h2>
+          <a class="btn btn-sun" href="app/#demarrer" data-app data-t="cta">Ouvrir Ludiworld</a>
+          <p class="install" data-t="install">Sur la tablette, ouvrez Ludiworld, puis le menu du navigateur, et choisissez «&nbsp;Ajouter à l'écran d'accueil&nbsp;»&nbsp;: Ludiworld s'ouvre alors comme une app.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot" id="lw-pied"></footer>
+
+  <script src="site/barre.js" defer></script>
+  <script src="site/site.js" defer></script>
+  <script src="site/accueil-en.js" defer></script>
+  <script src="site/nuage.js" defer></script>
+  <script src="site/catalogue.js" defer></script>
 </body>
 </html>

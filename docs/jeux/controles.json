@@ -1,0 +1,42 @@
+{
+  "jeux": {
+    "chasseur-dragons": {
+      "le": "2026-11-18",
+      "sites": []
+    },
+    "chemin-du-roi": {
+      "le": "2026-11-18",
+      "sites": []
+    },
+    "du-feu-a-la-fusee": {
+      "le": "2026-11-18",
+      "sites": [
+        "fonts.googleapis.com",
+        "fonts.gstatic.com"
+      ]
+    },
+    "les-petits-enclos": {
+      "le": "2026-11-18",
+      "sites": []
+    },
+    "monde-a-la-craie": {
+      "le": "2026-11-18",
+      "sites": []
+    },
+    "pluie-de-cochons": {
+      "le": "2026-11-18",
+      "sites": []
+    },
+    "simon-des-monstres": {
+      "le": "2026-11-18",
+      "sites": []
+    },
+    "tour-aimants": {
+      "le": "2026-11-18",
+      "sites": [
+        "fonts.googleapis.com",
+        "fonts.gstatic.com"
+      ]
+    }
+  }
+}

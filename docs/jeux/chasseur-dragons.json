@@ -2,6 +2,7 @@
   "ludi": 1,
   "id": "chasseur-dragons",
   "status": "draft",
+  "added": "2026-10-28",
   "title": { "fr": "Chasseur de Dragons", "en": "Dragon Hunter" },
   "pitch": {
     "fr": "Un jeune archer affronte dix dragons, de salle en salle jusqu'au Roi Dragon. Il tire tout seul quand il s'arrête ; entre deux salles, il choisit un pouvoir.",
@@ -9,6 +10,12 @@
   },
   "url": "https://pikifou.github.io/chasseur-dragons/",
   "icon": "https://pikifou.github.io/chasseur-dragons/icon-512.png",
+  "screenshots": [
+    { "src": "img/chasseur-dragons-1.webp", "alt": { "fr": "Combat contre le dragon de feu", "en": "Fighting the fire dragon" } },
+    { "src": "img/chasseur-dragons-2.webp", "alt": { "fr": "Victoire dans la grotte de glace", "en": "Victory in the ice cave" } },
+    { "src": "img/chasseur-dragons-3.webp", "alt": { "fr": "Choisir un nouveau pouvoir", "en": "Choosing a new power" } }
+  ],
+  "screens": "portrait",
   "color": "#07050c",
   "author": { "name": "Julien", "url": "https://github.com/pikifou/chasseur-dragons" },
   "languages": ["fr", "en"],
@@ -30,6 +37,10 @@
   "content": {
     "fr": "Combat fantastique : des flèches contre des dragons, sans sang. Musique douce qui donne du courage. Peut frustrer, et c'est voulu : les premières fois, mieux vaut être à côté pour en parler.",
     "en": "Fantasy combat: arrows against dragons, no blood. Gentle, encouraging music. It can be frustrating, on purpose: the first few times, it helps to be nearby to talk about it."
+  },
+  "after": {
+    "fr": "Et si tu pliais un dragon en papier ?",
+    "en": "How about folding a paper dragon?"
   },
   "devices": ["phone", "tablet", "computer"],
   "offline": true,

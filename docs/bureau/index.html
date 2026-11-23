@@ -20,11 +20,12 @@
 
   <div class="bureau" id="bureau" hidden>
     <aside class="b-rail">
-      <a class="lw-marque" href="../decouvrir/" aria-label="Ludiworld">Ludi<span>world</span></a>
+      <a class="lw-marque" href="../" aria-label="Ludiworld">Ludi<span>world</span></a>
       <nav id="b-nav" aria-label="Rubriques">
         <a href="#apercu">Aperçu</a>
         <a href="#envies">Les envies</a>
         <a href="#comptes">Les comptes</a>
+        <a href="#avis">Les avis</a>
         <a href="#catalogue">Le catalogue</a>
         <a href="#formules">Les formules</a>
       </nav>
@@ -78,6 +79,17 @@
           <button type="button" class="btn-ligne" id="co-csv">Exporter ceux qui acceptent nos messages</button>
         </div>
         <div class="b-tableau"><table id="co-table"></table></div>
+      </section>
+
+      <section data-rub="avis" hidden>
+        <h1>Les avis de parents</h1>
+        <p class="b-note">Un mot libre n'apparaît sur la fiche qu'une fois accepté ici, et seulement quand le jeu a 5 avis ou plus. Un mot que le parent change revient à relire. Les adresses des parents ne sont pas données à cet écran.</p>
+        <h2 id="av-relire-t">Mots à relire</h2>
+        <div id="av-relire"></div>
+        <h2>Par jeu</h2>
+        <div class="b-tableau"><table id="av-jeux"></table></div>
+        <h2>Tous les avis</h2>
+        <div class="b-tableau"><table id="av-table"></table></div>
       </section>
 
       <section data-rub="catalogue" hidden>

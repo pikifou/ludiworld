@@ -279,3 +279,153 @@ test('synchro : le lien de l\'appareil porte le nom du compte', async () => {
   await c.n.connecter('b@exemple.test', 'x');
   assert.strictEqual(c.n.synchroLocale(), false, 'un autre compte n\'hérite pas du lien');
 });
+
+test('code oublié : le mot de passe du compte ouvert est vérifié par l\'appel de la connexion, rien d\'autre ne change', async () => {
+  const autre = Object.assign({}, SESSION, { access_token: 'jeton-verif', user: { id: 'u1', email: 'a@exemple.test' } });
+  const c = client([{ status: 200, body: SESSION }, { status: 200, body: autre }, { status: 204 }]);
+  await c.n.connecter('a@exemple.test', 'x');
+  const avant = JSON.stringify(c.stockage.m);
+  assert.strictEqual(await c.n.verifierMotDePasse('bon'), true);
+  assert.strictEqual(c.fetch.appels[1].url, URL_ + '/auth/v1/token?grant_type=password');
+  assert.deepStrictEqual(c.fetch.appels[1].corps, { email: 'a@exemple.test', password: 'bon' });
+  assert.strictEqual(c.fetch.appels[2].url, URL_ + '/auth/v1/logout?scope=local', 'la session de la vérification est refermée');
+  assert.strictEqual(c.fetch.appels[2].entetes.Authorization, 'Bearer jeton-verif');
+  assert.strictEqual(JSON.stringify(c.stockage.m), avant, 'rien n\'est écrit sur l\'appareil');
+  assert.ok(!JSON.stringify(c.stockage.m).includes('bon'), 'le mot de passe n\'est gardé nulle part');
+});
+
+test('code oublié : mauvais mot de passe, hors ligne, sans compte', async () => {
+  const c = client([{ status: 200, body: SESSION }, { status: 400, body: { error_code: 'invalid_credentials' } }, new TypeError('Failed to fetch')]);
+  await c.n.connecter('a@exemple.test', 'x');
+  const avant = JSON.stringify(c.stockage.m);
+  await assert.rejects(c.n.verifierMotDePasse('faux'), (e) => e.code === 'identifiants');
+  await assert.rejects(c.n.verifierMotDePasse('bon'), (e) => e.code === 'reseau');
+  assert.strictEqual(JSON.stringify(c.stockage.m), avant);
+  assert.strictEqual(c.n.connecte(), true, 'la session de l\'appareil reste');
+  const d = client([]);
+  await assert.rejects(d.n.verifierMotDePasse('x'), (e) => e.code === 'session');
+  assert.strictEqual(d.fetch.appels.length, 0);
+});
+
+test('code oublié par e-mail : envoi à l\'adresse du compte ouvert, sans créer de compte', async () => {
+  const c = client([{ status: 200, body: SESSION }, { status: 200, body: {} }]);
+  await c.n.connecter('a@exemple.test', 'x');
+  const avant = JSON.stringify(c.stockage.m);
+  assert.strictEqual(await c.n.envoyerCodeEmail(), true);
+  assert.strictEqual(c.fetch.appels[1].url, URL_ + '/auth/v1/otp');
+  assert.strictEqual(c.fetch.appels[1].methode, 'POST');
+  assert.deepStrictEqual(c.fetch.appels[1].corps, { email: 'a@exemple.test', create_user: false });
+  assert.strictEqual(c.fetch.appels[1].entetes.Authorization, undefined);
+  assert.strictEqual(JSON.stringify(c.stockage.m), avant, 'rien n\'est écrit sur l\'appareil');
+  assert.strictEqual(c.n.emailMasque(), 'a•••@exemple.test');
+});
+
+test('code oublié par e-mail : bon code, la session de la vérification est refermée, rien d\'autre ne change', async () => {
+  const verif = Object.assign({}, SESSION, { access_token: 'jeton-otp', user: { id: 'u1', email: 'a@exemple.test' } });
+  const c = client([{ status: 200, body: SESSION }, { status: 200, body: verif }, { status: 204 }]);
+  await c.n.connecter('a@exemple.test', 'x');
+  const avant = JSON.stringify(c.stockage.m);
+  assert.strictEqual(await c.n.verifierCodeEmail(' 123 456 '), true);
+  assert.strictEqual(c.fetch.appels[1].url, URL_ + '/auth/v1/verify');
+  assert.deepStrictEqual(c.fetch.appels[1].corps, { type: 'email', email: 'a@exemple.test', token: '123456' });
+  assert.strictEqual(c.fetch.appels[2].url, URL_ + '/auth/v1/logout?scope=local');
+  assert.strictEqual(c.fetch.appels[2].entetes.Authorization, 'Bearer jeton-otp');
+  assert.strictEqual(JSON.stringify(c.stockage.m), avant, 'la session de l\'appareil ne change pas');
+  assert.ok(!JSON.stringify(c.stockage.m).includes('123456'), 'le code n\'est gardé nulle part');
+  assert.strictEqual(c.n.connecte(), true);
+});
+
+test('code oublié par e-mail : mauvais code ou périmé, trop d\'envois, hors ligne, sans compte', async () => {
+  const c = client([
+    { status: 200, body: SESSION },
+    { status: 403, body: { error_code: 'otp_expired', msg: 'Token has expired or is invalid' } },
+    { status: 400, body: { error_code: 'validation_failed' } },
+    { status: 429, body: { error_code: 'over_email_send_rate_limit' } },
+    new TypeError('Failed to fetch'),
+    new TypeError('Failed to fetch'),
+    { status: 429, body: { error_code: 'over_request_rate_limit' } }
+  ]);
+  await c.n.connecter('a@exemple.test', 'x');
+  const avant = JSON.stringify(c.stockage.m);
+  await assert.rejects(c.n.verifierCodeEmail('111111'), (e) => e.code === 'code');
+  await assert.rejects(c.n.verifierCodeEmail('222222'), (e) => e.code === 'code');
+  await assert.rejects(c.n.envoyerCodeEmail(), (e) => e.code === 'trop_de_demandes');
+  await assert.rejects(c.n.envoyerCodeEmail(), (e) => e.code === 'reseau');
+  await assert.rejects(c.n.verifierCodeEmail('333333'), (e) => e.code === 'reseau');
+  await assert.rejects(c.n.verifierCodeEmail('444444'), (e) => e.code === 'trop_de_demandes');
+  const n = c.fetch.appels.length;
+  await assert.rejects(c.n.verifierCodeEmail('12a456'), (e) => e.code === 'code');
+  await assert.rejects(c.n.verifierCodeEmail('12345'), (e) => e.code === 'code');
+  assert.strictEqual(c.fetch.appels.length, n, 'un code qui n\'a pas 6 chiffres ne part pas');
+  assert.ok(!c.fetch.appels.some((a) => a.url.includes('logout')), 'aucune session ouverte, rien à refermer');
+  assert.strictEqual(JSON.stringify(c.stockage.m), avant);
+  assert.strictEqual(c.n.connecte(), true, 'la session de l\'appareil reste');
+  const d = client([]);
+  await assert.rejects(d.n.envoyerCodeEmail(), (e) => e.code === 'session');
+  await assert.rejects(d.n.verifierCodeEmail('123456'), (e) => e.code === 'session');
+  assert.strictEqual(d.n.emailMasque(), null);
+  assert.strictEqual(d.fetch.appels.length, 0);
+});
+
+test('code oublié par e-mail : une session d\'un autre compte est refermée et refusée', async () => {
+  const autre = Object.assign({}, SESSION, { access_token: 'jeton-autre', user: { id: 'u2', email: 'a@exemple.test' } });
+  const c = client([{ status: 200, body: SESSION }, { status: 200, body: autre }, { status: 204 }]);
+  await c.n.connecter('a@exemple.test', 'x');
+  await assert.rejects(c.n.verifierCodeEmail('123456'), (e) => e.code === 'code');
+  assert.strictEqual(c.fetch.appels[2].entetes.Authorization, 'Bearer jeton-autre');
+});
+
+test('avis publics : lus sans compte ni jeton, rien sous 5 avis', async () => {
+  const pub = { total: 12, etoiles: { 5: 7, 4: 3, 1: 2 }, moyenne: 4.2, marche: { oui: 10, non: 2 }, moyenne_marche_bien: 4.6, mots: ['Bien.'] };
+  const c = client([{ status: 200, body: pub }, { status: 200, body: null }, { status: 200, body: { total: 3 } }]);
+  assert.deepStrictEqual(await c.n.avisPublics('pluie-de-cochons', 'en'), pub);
+  const a = c.fetch.appels[0];
+  assert.strictEqual(a.url, URL_ + '/rest/v1/rpc/avis_publics');
+  assert.strictEqual(a.methode, 'POST');
+  assert.deepStrictEqual(a.corps, { p_jeu: 'pluie-de-cochons', p_langue: 'en' });
+  assert.strictEqual(a.entetes.Authorization, undefined, 'lecture publique : pas de jeton');
+  assert.strictEqual(await c.n.avisPublics('pluie-de-cochons', 'fr'), null, 'la base ne rend rien sous 5 avis');
+  assert.strictEqual(await c.n.avisPublics('pluie-de-cochons', 'xx'), null, 'et le client ne montre rien sous 5, quoi qu\'il reçoive');
+  assert.strictEqual(c.fetch.appels[2].corps.p_langue, 'fr');
+});
+
+test('avis publics : même connecté, sans jeton, sans renouveler la session', async () => {
+  const c = client([{ status: 200, body: Object.assign({}, SESSION, { expires_in: 1 }) }, { status: 200, body: null }]);
+  await c.n.connecter('a@exemple.test', 'x');
+  assert.strictEqual(await c.n.avisPublics('tour-aimants'), null);
+  assert.strictEqual(c.fetch.appels.length, 2, 'aucun renouvellement de jeton pour une lecture publique');
+  assert.strictEqual(c.fetch.appels[1].entetes.Authorization, undefined);
+});
+
+test('avis : un nom de jeu qui n\'en est pas un ne part pas', async () => {
+  const c = client([]);
+  for (const f of ['avisPublics', 'lireAvis', 'retirerAvis']) await assert.rejects(c.n[f]('x&select=*'), (e) => e.code === 'jeu', f);
+  await assert.rejects(c.n.donnerAvis('../comptes', { etoiles: 4, marche: 'oui' }), (e) => e.code === 'jeu');
+  assert.strictEqual(c.fetch.appels.length, 0);
+});
+
+test('avis : sans étoiles, ou hors de 1 à 5, rien ne part', async () => {
+  const c = client([]);
+  for (const e of [undefined, 0, 6, 2.5, 'beaucoup']) await assert.rejects(c.n.donnerAvis('pluie-de-cochons', { etoiles: e, marche: 'oui' }), (x) => x.code === 'etoiles', String(e));
+  assert.strictEqual(c.fetch.appels.length, 0);
+});
+
+test('mon avis : je le relis, je le donne, je le retire, avec mon jeton', async () => {
+  const mien = { etoiles: 4, marche: 'oui', mot: 'Bien.', mot_etat: 'a-relire' };
+  const c = client([{ status: 200, body: SESSION }, { status: 200, body: [] }, { status: 200, body: [mien] }, { status: 204 }, { status: 204 }, { status: 204 }]);
+  await c.n.connecter('a@exemple.test', 'x');
+  assert.strictEqual(await c.n.lireAvis('pluie-de-cochons'), null);
+  assert.deepStrictEqual(await c.n.lireAvis('pluie-de-cochons'), mien);
+  assert.strictEqual(c.fetch.appels[1].url, URL_ + '/rest/v1/avis?select=etoiles,marche,mot,mot_etat,maj_le&jeu=eq.pluie-de-cochons');
+  assert.strictEqual(c.fetch.appels[1].entetes.Authorization, 'Bearer jeton');
+  await c.n.donnerAvis('pluie-de-cochons', { etoiles: 1, marche: 'non', mot: 'Le jeu plante', langue: 'en', fiche: 'oui', retourne: 'oui' });
+  assert.strictEqual(c.fetch.appels[3].url, URL_ + '/rest/v1/rpc/donner_avis');
+  assert.deepStrictEqual(c.fetch.appels[3].corps, { p_jeu: 'pluie-de-cochons', p_etoiles: 1, p_marche: 'non', p_mot: 'Le jeu plante', p_langue: 'en' },
+    'seulement les étoiles, « marche », le mot et la langue');
+  await c.n.donnerAvis('pluie-de-cochons', { etoiles: '5', marche: 'oui' });
+  assert.deepStrictEqual(c.fetch.appels[4].corps, { p_jeu: 'pluie-de-cochons', p_etoiles: 5, p_marche: 'oui', p_mot: null, p_langue: 'fr' });
+  assert.ok(!('compte_id' in c.fetch.appels[4].corps), 'le compte vient du jeton, jamais du navigateur');
+  await c.n.retirerAvis('pluie-de-cochons');
+  assert.strictEqual(c.fetch.appels[5].url, URL_ + '/rest/v1/avis?jeu=eq.pluie-de-cochons');
+  assert.strictEqual(c.fetch.appels[5].methode, 'DELETE');
+});

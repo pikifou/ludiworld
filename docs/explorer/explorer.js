@@ -264,7 +264,7 @@
             sessionStorage.setItem(CLE_RETOUR, 'explorer/' + location.hash);
             sessionStorage.setItem(CLE_INSTALLER, id);
           } catch (err) { /* rien */ }
-          location.href = BASE + '#carnet';
+          location.href = BASE + 'app/#carnet';
           return;
         }
         basculerInstallation(id);
@@ -341,7 +341,7 @@
     var niveau = TX[lang()].goal[g.learning.level] ? g.learning.level : 'none';
     var gestes = '<div class="ex-actions">';
     if (e) {
-      if (ins) gestes += '<a class="ex-action" id="ex-jouer" href="' + BASE + '#jouer=' + esc(g.id) + '">' + esc(tx('jouer')) + '</a>';
+      if (ins) gestes += '<a class="ex-action" id="ex-jouer" href="' + BASE + 'app/#jouer=' + esc(g.id) + '">' + esc(tx('jouer')) + '</a>';
       gestes += boutonInstaller(g);
     } else {
       gestes += '<a class="ex-action" href="' + esc(LudiBarre.lienApp(BASE)) + '">' + esc(tx('essayer')) + '</a>';
