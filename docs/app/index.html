@@ -48,6 +48,11 @@
     <div class="e-dodo" id="e-dodo" hidden></div>
     <div class="e-pied">
     <button type="button" class="e-parents" id="e-parents"><svg viewBox="0 0 24 24" aria-hidden="true" class="ico"><rect x="4" y="10.5" width="16" height="11" rx="2.5" fill="currentColor"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5" fill="none" stroke="currentColor" stroke-width="2.4"/></svg><span class="e-parents-txt" data-fr="Parents" data-en="Parents">Parents</span><span class="e-parents-hint"></span></button>
+    <!-- Le son de la maison : un haut-parleur ; au toucher, musique, bruitages, voix (Julien, 2026-11-23) -->
+    <div class="e-son-zone">
+      <button type="button" class="e-son" id="e-son" aria-expanded="false" aria-controls="e-son-panneau"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 9h4l5.5-4.5v15L7.5 15h-4z" fill="currentColor"/><path class="ondes" d="M16 8.5a5 5 0 0 1 0 7M18.7 6a8.6 8.6 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path class="barre" d="M15.5 8.5l6 7m0-7l-6 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button>
+      <div class="e-son-panneau" id="e-son-panneau" role="group" hidden></div>
+    </div>
     <!-- Regarder tous les jeux : une vitrine dessinée, sans mot à lire (le nom est dans aria-label) -->
     <button type="button" class="e-vitrine" id="e-vitrine" hidden><svg viewBox="0 0 64 56" aria-hidden="true">
       <path class="v-mur" d="M9 25h46v27H9z"/>

@@ -77,6 +77,17 @@ Le launcher peut demander une pause (temps de jeu écoulé, parent qui reprend l
 ### `Ludi.onWrapUp(fn)` (facultatif)
 Le launcher prévient que le temps de jeu touche à sa fin : `fn(minutes)` reçoit les minutes qui restent (0 : c'est l'heure, finir la partie en cours). Le jeu peut par exemple ne plus proposer « encore une partie ». Le launcher affiche de toute façon son propre message.
 
+### `Ludi.son()`, `Ludi.onSon(fn)` et `Ludi.reglerSon(o)` (pour tout jeu qui a du son)
+Le son se règle pour toute la maison, dans Ludiworld (Julien, 2026-11-23) : côté parent (Réglages) et par le haut-parleur de l'enfant. Trois réglages séparés, des booléens : `musique`, `bruitages`, `voix` (la voix qui lit les textes). **Tous allumés au départ : un jeu ne démarre jamais muet.**
+- `Ludi.son()` : le réglage actuel, `{ musique, bruitages, voix }`.
+- `Ludi.onSon(fn)` : `fn(son)` est appelée **tout de suite** avec le réglage actuel, puis à chaque changement (le réglage de Ludiworld qui arrive, ou le bouton du jeu). Le jeu y coupe ou rallume sa musique, ses bruitages et sa voix.
+- `Ludi.reglerSon(o)` : le bouton du son du jeu, par exemple `Ludi.reglerSon({ musique: false })`. Dans Ludiworld, il change le réglage de **toute la maison**, pour tous les jeux. Ouvert seul, il change celui de cet appareil.
+- Le jeu garde son propre bouton (ou ses boutons) ; il n'a plus besoin de garder le son dans sa sauvegarde. Ouvert seul, le réglage reste dans le navigateur (`ludi.v1.son`, commun aux jeux de la même adresse).
+```js
+Ludi.onSon(function (s) { musique.muted = !s.musique; bruitagesOn = s.bruitages; voixOn = s.voix; });
+boutonMusique.onclick = function () { Ludi.reglerSon({ musique: !Ludi.son().musique }); };
+```
+
 ### `Ludi.inLauncher()`
 `true` quand le jeu est ouvert depuis Ludiworld. Le jeu cache alors ce qui ferait sortir l'enfant du cadre choisi par le parent (bouton ou conseil « installer l'appli », liens vers d'autres sites), cache son bouton plein écran et n'appelle jamais `requestFullscreen` (dans Ludiworld, c'est Ludiworld qui décide du plein écran ; le cadre du jeu ne l'autorise pas) et laisse libre le coin en haut à gauche (bouton retour de Ludiworld, environ 120 × 44 px).
 
@@ -89,7 +100,9 @@ Le kit ne regarde que l'origine du launcher, jamais son chemin : l'appli sous `a
 | Sens | `type` | Contenu |
 |---|---|---|
 | jeu → launcher | `ludi:hello` | `{ game, kit }` (version du kit) |
-| launcher → jeu | `ludi:welcome` | `{ player: { name }, save }` (`save` : `{ data, at }` ou `null`, la sauvegarde que Ludiworld garde pour cet enfant) |
+| launcher → jeu | `ludi:welcome` | `{ player: { name }, save, son }` (`save` : `{ data, at }` ou `null`, la sauvegarde que Ludiworld garde pour cet enfant ; `son` : `{ musique, bruitages, voix }`, le réglage de la maison, depuis le kit 0.5) |
+| launcher → jeu | `ludi:son` | `{ son }` : le réglage de la maison a changé |
+| jeu → launcher | `ludi:son` | `{ game, son }` : le bouton du jeu a changé le son ; Ludiworld le garde pour toute la maison |
 | jeu → launcher | `ludi:event` | `{ game, event }`, où `event` est `{ kind, at, … }` avec `kind` parmi `session`, `score`, `progress`, `skill`, `checkpoint`, `save` (`{ kind: "save", data, at }`) |
 | launcher → jeu | `ludi:wrapup` | `{ minutes }` (temps qui reste, 0 : finir la partie en cours) |
 | launcher → jeu | `ludi:pause` | `{ reason }` |

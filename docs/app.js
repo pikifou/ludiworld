@@ -103,6 +103,7 @@
   function saveStore() { try { localStorage.setItem(STORE, JSON.stringify(store)); } catch (e) { /* rien */ } }
   // Le foyer : le code parent et les enfants. Chaque enfant a son pseudo, ses jeux, ses règles et ses statistiques.
   function foyer() { return store.famille && store.famille.enfants ? store.famille : null; }
+  var SON_CLES = ['musique', 'bruitages', 'voix']; // le son de la maison, voir sonMaison()
   // L'enfant dont on parle : côté parent, celui que le parent regarde ; ailleurs, celui qui joue (h.actif).
   // Regarder un enfant côté parent ne lui donne pas l'appareil.
   var regarde = null;
@@ -752,6 +753,49 @@
     if (!ok && !vitrine.hidden) fermerVitrine();
   }
   boutonVitrine.addEventListener('click', function () { ouvrirVitrine(); });
+
+  // Côté enfant : le haut-parleur. Au toucher, trois gros boutons (musique, bruitages, voix), chacun allumé ou éteint :
+  // une image et un mot, et l'état se voit aussi par la forme (barré quand c'est éteint), pas seulement par la couleur.
+  var boutonSon = document.getElementById('e-son');
+  var panneauSon = document.getElementById('e-son-panneau');
+  var ICONES_SON = {
+    musique: '<path d="M9 17.5V5.5l11-2.5v12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><circle cx="6.5" cy="17.5" r="3" fill="currentColor"/><circle cx="17.5" cy="15" r="3" fill="currentColor"/>',
+    bruitages: '<path d="M12 2.5l2.3 5.6 6 .5-4.6 3.9 1.4 5.9L12 15.3l-5.1 3.1 1.4-5.9-4.6-3.9 6-.5z" fill="currentColor"/>',
+    voix: '<circle cx="9" cy="9" r="4.5" fill="currentColor"/><path d="M1.5 21c.9-4 3.8-6 7.5-6s6.6 2 7.5 6z" fill="currentColor"/><path d="M17 6.5a4 4 0 0 1 0 5M19.5 4a7.5 7.5 0 0 1 0 10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>'
+  };
+  function majBoutonSon() {
+    if (!boutonSon) return;
+    var s = sonMaison();
+    boutonSon.classList.toggle('coupe', !s.musique && !s.bruitages && !s.voix);
+    boutonSon.setAttribute('aria-label', t('kid.sound'));
+    boutonSon.title = t('kid.sound');
+    if (!panneauSon.hidden) dessinerPanneauSon();
+  }
+  function dessinerPanneauSon() {
+    var s = sonMaison();
+    panneauSon.textContent = '';
+    SON_CLES.forEach(function (k) {
+      var b = el('button', { type: 'button', class: 'e-son-choix' + (s[k] ? '' : ' eteint'), 'data-son': k, 'aria-pressed': s[k] ? 'true' : 'false', onclick: function () {
+        var o = {}; o[k] = !sonMaison()[k]; reglerSonMaison(o);
+      } });
+      b.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true">' + ICONES_SON[k] + '<path class="barre" d="M3 3l18 18"/></svg>';
+      b.appendChild(el('span', { text: t('kid.sound' + k.charAt(0).toUpperCase() + k.slice(1)) }));
+      panneauSon.appendChild(b);
+    });
+  }
+  function basculerPanneauSon(ouvrir) {
+    if (!boutonSon) return;
+    if (ouvrir === undefined) ouvrir = panneauSon.hidden;
+    panneauSon.hidden = !ouvrir;
+    boutonSon.setAttribute('aria-expanded', ouvrir ? 'true' : 'false');
+    if (ouvrir) dessinerPanneauSon();
+  }
+  if (boutonSon) {
+    boutonSon.addEventListener('click', function (e) { e.stopPropagation(); basculerPanneauSon(); });
+    panneauSon.addEventListener('click', function (e) { e.stopPropagation(); });
+    document.addEventListener('click', function () { if (!panneauSon.hidden) basculerPanneauSon(false); });
+    majBoutonSon();
+  }
   function ouvrirVitrine() {
     if (!vitrine.hidden || !fam()) return;
     vitrineJeu = null;
@@ -1946,6 +1990,16 @@
       } }),
       el('span', { text: t('parent.fullscreenCase') })
     ])]));
+    var son = sonMaison();
+    maison.push(rang(t('parent.sound'), SON_CLES.map(function (k) {
+      return el('label', { class: 'pa-case' }, [
+        el('input', { type: 'checkbox', checked: son[k], 'data-son': k, onchange: function (e) {
+          var v = e.target.checked;
+          changer(t('parent.cSound'), function () { var s = sonMaison(); s[k] = v; foyer().son = s; }, { maison: true });
+        } }),
+        el('span', { text: t('parent.sound_' + k) })
+      ]);
+    })));
     maison.push(el('details', { class: 'pa-plie' }, [
       el('summary', { text: t('parent.lock') }),
       el('p', { text: t('parent.lockText') }),
@@ -2214,9 +2268,12 @@
     if (m.type === 'ludi:hello') {
       playing.kit = true; g.kit = true; saveStore();
       var f = fam();
-      frame.contentWindow.postMessage({ type: 'ludi:welcome', player: f && !playing.essai ? { name: f.enfant.nom } : null, save: !playing.essai && g.save ? g.save : null }, playing.origin);
+      frame.contentWindow.postMessage({ type: 'ludi:welcome', player: f && !playing.essai ? { name: f.enfant.nom } : null, save: !playing.essai && g.save ? g.save : null, son: sonMaison() }, playing.origin);
       // Un jeu qui arrive alors que l'enfant a déjà été prévenu l'apprend aussi.
       if (playing.avertie) { var r = resteJeu(playing.game.id); postToGame({ type: 'ludi:wrapup', minutes: Math.max(0, Math.ceil(r.reste / MIN)) }); }
+    } else if (m.type === 'ludi:son' && m.son && typeof m.son === 'object') {
+      // Le bouton du son du jeu : il règle le son de toute la maison (Julien, 2026-11-23).
+      reglerSonMaison(m.son, true);
     } else if (m.type === 'ludi:event' && m.event) {
       var ev = m.event;
       if (playing.essai) return; // l'essai du parent ne compte pas dans les stats de l'enfant
@@ -2281,6 +2338,24 @@
   // on le demande donc au premier toucher côté enfant (y compris en touchant une tuile pour jouer).
   // Au doigt seulement : à la souris (ordinateur), le plein écran à chaque clic gêne plus qu'il n'aide.
   function pleinEcranVoulu() { var h = foyer(); return !!(h && h.pleinEcran !== false); }
+
+  // Le son de la maison (Julien, 2026-11-23) : musique, bruitages et voix, séparés, tous allumés au départ (un jeu ne démarre
+  // jamais muet). Réglé côté parent et par le bouton haut-parleur de l'enfant ; les jeux le reçoivent par le kit (ludi:welcome,
+  // ludi:son), et le bouton du son d'un jeu change ce réglage pour toute la maison.
+  function sonMaison() {
+    var h = foyer(), s = h && h.son, out = {};
+    SON_CLES.forEach(function (k) { out[k] = s && typeof s[k] === 'boolean' ? s[k] : true; });
+    return out;
+  }
+  function reglerSonMaison(o, depuisJeu) {
+    var h = foyer(); if (!h) return;
+    var s = sonMaison(), avant = JSON.stringify(s);
+    SON_CLES.forEach(function (k) { if (o && typeof o[k] === 'boolean') s[k] = o[k]; });
+    if (JSON.stringify(s) === avant) return;
+    h.son = s; enregistrer();
+    if (!depuisJeu) postToGame({ type: 'ludi:son', son: s });
+    majBoutonSon();
+  }
   document.addEventListener('pointerdown', function (e) {
     if (e.pointerType === 'mouse' || vue !== 'enfant' || !pleinEcranVoulu() || document.fullscreenElement) return;
     var d = document.documentElement, f = d.requestFullscreen || d.webkitRequestFullscreen;

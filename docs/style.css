@@ -355,6 +355,36 @@ select { width: auto; min-height: 40px; padding: 4px 10px; font-size: 1rem; }
 .e-parents-hint { display: none; font-weight: 500; }
 .enfant[data-moment="nuit"] .e-parents { background: rgba(255, 255, 255, .15); color: #c9d2ee; }
 
+/* Le son de la maison : un haut-parleur rond ; au toucher, trois gros boutons au-dessus (musique, bruitages, voix).
+   Éteint : grisé ET barré (pas seulement une couleur). Tout éteint : le haut-parleur lui-même est barré. */
+.e-son-zone { position: static; } /* le panneau s'ancre au pied (à gauche de l'écran), pas au bouton : il tient sur un téléphone */
+.e-son {
+  display: grid; place-items: center; width: 52px; height: 52px; border: 0; border-radius: 50%;
+  background: rgba(255, 255, 255, .5); color: var(--encre-douce); box-shadow: 0 2px 8px rgba(29, 43, 79, .12);
+}
+.e-son svg { width: 28px; height: 28px; }
+.e-son .barre { display: none; }
+.e-son.coupe .ondes { display: none; }
+.e-son.coupe .barre { display: inline; }
+.e-son:focus-visible, .e-son-choix:focus-visible { outline: 3px solid var(--encre); outline-offset: 3px; }
+.enfant[data-moment="nuit"] .e-son { background: rgba(255, 255, 255, .15); color: #c9d2ee; }
+.e-son-panneau {
+  position: absolute; left: 0; bottom: calc(100% + 12px); display: flex; gap: 10px; padding: 10px; max-width: calc(100vw - 28px);
+  background: var(--papier); border-radius: 22px 26px 20px 24px; box-shadow: 0 3px 0 rgba(29, 43, 79, .2), 0 14px 30px -10px rgba(29, 43, 79, .5);
+  transform-origin: 20px 100%; animation: son-ouvre .22s cubic-bezier(.3, 1.5, .5, 1);
+}
+.e-son-panneau[hidden] { display: none; }
+@keyframes son-ouvre { from { transform: scale(.6); opacity: 0; } }
+.e-son-choix {
+  display: grid; justify-items: center; gap: 4px; width: 84px; flex: 1 1 84px; min-width: 0; padding: 10px 4px 8px; border: 0; border-radius: 16px;
+  background: var(--soleil); color: var(--encre); font-family: var(--f-jeu); font-weight: 700; font-size: .9rem;
+}
+.e-son-choix svg { width: 34px; height: 34px; }
+.e-son-choix .barre { stroke: currentColor; stroke-width: 3; stroke-linecap: round; display: none; }
+.e-son-choix.eteint { background: #e3e6ee; color: #7a8196; }
+.e-son-choix.eteint .barre { display: inline; }
+@media (prefers-reduced-motion: reduce) { .e-son-panneau { animation: none; } }
+
 /* Regarder tous les jeux : une petite vitrine dessinée (auvent rayé, trois jeux derrière la vitre). Pas de mot à lire.
    Elle se distingue de « Parents » (pâle et discret) : c'est le bouton de l'enfant. */
 .e-vitrine {

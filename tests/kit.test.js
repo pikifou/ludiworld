@@ -275,3 +275,55 @@ test('fini et complet : posté au launcher, gardé, ne redescend jamais', () => 
   assert.deepStrictEqual(L.data().etat.fini, true);
   assert.strictEqual(L.data().etat.complet, 1);
 });
+
+// Le son (Julien, 2026-11-23) : jamais muet au départ, réglé par Ludiworld pour toute la maison, le bouton du jeu change le réglage de la maison.
+test('son : tout allumé au départ, onSon appelée tout de suite', () => {
+  const w = fakeWindow();
+  const L = createLudi(w.win, { now: clock() }).init({ game: 'jeu' });
+  assert.deepStrictEqual(L.son(), { musique: true, bruitages: true, voix: true });
+  const vus = [];
+  L.onSon((s) => vus.push(s));
+  assert.deepStrictEqual(vus, [{ musique: true, bruitages: true, voix: true }]);
+});
+
+test('son : ouvert seul, le bouton du jeu change le réglage de l\'appareil, gardé, rien de posté', () => {
+  const storage = new Map();
+  const w = fakeWindow({ storage });
+  const L = createLudi(w.win, { now: clock() }).init({ game: 'jeu' });
+  const vus = [];
+  L.onSon((s) => vus.push(s));
+  assert.deepStrictEqual(L.reglerSon({ musique: false }), { musique: false, bruitages: true, voix: true });
+  assert.strictEqual(vus.length, 2);
+  assert.strictEqual(w.sent.length, 0);
+  // Un autre jeu de la même adresse le retrouve.
+  const L2 = createLudi(fakeWindow({ storage }).win, { now: clock() }).init({ game: 'autre' });
+  assert.deepStrictEqual(L2.son(), { musique: false, bruitages: true, voix: true });
+});
+
+test('son : le réglage de la maison arrive avec l\'accueil et quand il change', () => {
+  const w = fakeWindow({ embedded: true });
+  const L = createLudi(w.win, { now: clock() }).init({ game: 'jeu' });
+  const vus = [];
+  L.onSon((s) => vus.push(s));
+  w.message({ type: 'ludi:welcome', player: null, save: null, son: { musique: false, bruitages: true, voix: false } });
+  assert.deepStrictEqual(L.son(), { musique: false, bruitages: true, voix: false });
+  w.message({ type: 'ludi:son', son: { musique: true, bruitages: true, voix: false } });
+  assert.deepStrictEqual(vus.map((s) => s.musique), [true, false, true]);
+  // Le même réglage renvoyé ne rappelle pas le jeu.
+  w.message({ type: 'ludi:son', son: { musique: true, bruitages: true, voix: false } });
+  assert.strictEqual(vus.length, 3);
+  // Un faux launcher est ignoré.
+  w.message({ type: 'ludi:son', son: { musique: false } }, 'https://pirate.example');
+  assert.strictEqual(L.son().musique, true);
+});
+
+test('son : dans Ludiworld, le bouton du jeu prévient le launcher (réglage de toute la maison)', () => {
+  const w = fakeWindow({ embedded: true });
+  const L = createLudi(w.win, { now: clock() }).init({ game: 'jeu' });
+  L.reglerSon({ bruitages: false, autre: 3, voix: 'non' });
+  const m = w.sent.map((x) => x.msg).filter((x) => x.type === 'ludi:son');
+  assert.strictEqual(m.length, 1);
+  assert.deepStrictEqual(m[0].son, { musique: true, bruitages: false, voix: true });
+  assert.strictEqual(m[0].game, 'jeu');
+  assert.strictEqual(w.sent.filter((x) => x.msg.type === 'ludi:son').every((x) => x.origin === 'https://pikifou.github.io'), true);
+});
