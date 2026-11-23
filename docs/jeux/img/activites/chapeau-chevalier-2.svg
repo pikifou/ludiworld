@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300" role="img" aria-label="La feuille pliée en deux, à plier de gauche à droite pour marquer le milieu">
+  <defs>
+    <marker id="f" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#e0a400"/></marker>
+  </defs>
+  <rect x="75" y="110" width="150" height="115" rx="3" fill="#fbf7ee" stroke="#1d2b4f" stroke-width="4"/>
+  <line x1="75" y1="110" x2="225" y2="110" stroke="#1d2b4f" stroke-width="8" stroke-linecap="round"/>
+  <line x1="150" y1="110" x2="150" y2="225" stroke="#4c5b7c" stroke-width="3" stroke-dasharray="10 8"/>
+  <path d="M92 95 Q 150 30 208 95" fill="none" stroke="#e0a400" stroke-width="7" stroke-linecap="round" marker-start="url(#f)" marker-end="url(#f)"/>
+</svg>

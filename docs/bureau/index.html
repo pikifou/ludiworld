@@ -23,6 +23,7 @@
       <a class="lw-marque" href="../" aria-label="Ludiworld">Ludi<span>world</span></a>
       <nav id="b-nav" aria-label="Rubriques">
         <a href="#apercu">Aperçu</a>
+        <a href="#usage">L'usage</a>
         <a href="#envies">Les envies</a>
         <a href="#comptes">Les comptes</a>
         <a href="#avis">Les avis</a>
@@ -51,6 +52,44 @@
         <div class="b-deux" id="ap-semaines"></div>
       </section>
 
+      <section data-rub="usage" hidden>
+        <h1>L'usage de l'appli</h1>
+        <p class="b-note">Des totaux seulement : la base ne donne pas les lignes. Sans nom : un numéro d'appareil tiré au hasard (renouvelé chaque année), la tranche d'âge, le type d'appareil, la langue. Les familles qui ont refusé dans Réglages n'y sont pas. Gardé 25 mois.</p>
+        <div class="b-outils">
+          <label>Période
+            <select id="us-periode">
+              <option value="30">30 derniers jours</option>
+              <option value="90" selected>90 derniers jours</option>
+              <option value="365">un an</option>
+              <option value="750">tout</option>
+            </select>
+          </label>
+        </div>
+        <dl class="b-chiffres" id="us-chiffres"></dl>
+        <h2>Chaque semaine</h2>
+        <div class="b-trois" id="us-semaines"></div>
+        <h2>Les jeux</h2>
+        <div class="b-tableau"><table id="us-jeux"></table></div>
+        <h2>L'activité de fin (« Comment faire ? »)</h2>
+        <p class="b-note">Pour chaque jeu qui a une activité : combien de fois l'idée a été montrée sur « C'est fini pour aujourd'hui », combien de fois l'activité a été ouverte, jusqu'où, et « J'ai fini » (l'enfant a appuyé : cela ne dit pas qu'il a vraiment plié).</p>
+        <div class="b-tableau"><table id="us-activites"></table></div>
+        <div class="b-deux">
+          <div><h2>Comment les parties s'arrêtent</h2><div id="us-fins"></div></div>
+          <div><h2>Les côtés de l'appli ouverts</h2><div id="us-vues"></div></div>
+        </div>
+        <h2>Ceux qui refusent</h2>
+        <p class="b-note">Quand un parent décoche la case dans Réglages, l'appli envoie une seule fois « refusé » (« accepté de nouveau » s'il recoche), avec un numéro neuf, la tranche d'âge et le type d'appareil. La part est approchée : refus moins reprises, sur les appareils vus plus ces refus. À comparer aux répartitions dessous pour voir si l'échantillon penche.</p>
+        <dl class="b-chiffres" id="us-refus"></dl>
+        <div class="b-deux">
+          <div><h3>Âge de ceux qui refusent</h3><div id="us-refus-age"></div></div>
+          <div><h3>Appareils de ceux qui refusent</h3><div id="us-refus-format"></div></div>
+        </div>
+        <div class="b-trois">
+          <div><h2>Âge (appareils)</h2><div id="us-age"></div></div>
+          <div><h2>Appareils</h2><div id="us-format"></div></div>
+          <div><h2>Langue (appareils)</h2><div id="us-langue"></div></div>
+        </div>
+      </section>
       <section data-rub="envies" hidden>
         <h1>Les envies</h1>
         <div class="b-trois" id="en-totaux"></div>

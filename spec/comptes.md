@@ -29,6 +29,7 @@ Voir `spec/donnees.md`. La base est décrite par `supabase/migrations/`.
 | `envies` | les réponses aux questions | le parent une fois rattachées, le bureau |
 | `foyers` | la copie en ligne du foyer | **le parent seul, jamais le bureau** |
 | `admins` | les adresses du bureau | personne depuis un navigateur |
+| `usage_evenements` | les statistiques d'usage, sans nom (voir `spec/donnees.md`) | écriture seule par `noter_usage`, sans compte ; le bureau des totaux par `bureau_usage` ; personne ne relit les lignes |
 | `avis` | l'avis d'un parent sur un jeu (1 à 5 étoiles, « le jeu marche bien chez vous ? », un mot libre) | le parent le sien ; le public des totaux et des moyennes à partir de 5 avis et les mots acceptés ; le bureau tout, sans adresse |
 
 ## La synchro

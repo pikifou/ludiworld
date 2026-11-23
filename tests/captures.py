@@ -50,6 +50,10 @@ FAKE_CARD = {
                                   "no_notifications", "no_strangers", "no_tracking", "natural_stops"]},
     "third_parties": [], "kit": True,
     "after": {"fr": "Et si tu dessinais un cochon dans une grange ?", "en": "How about drawing a pig in a barn?"},
+    # l'activité pas à pas (décision du 23 novembre) : deux étapes, avec les vrais schémas du catalogue
+    "activity": {"title": {"fr": "Le chapeau", "en": "The hat"}, "need": {"fr": "Une grande feuille.", "en": "A big sheet."},
+                 "steps": [{"img": "img/activites/chapeau-chevalier-1.svg", "text": {"fr": "Plie la feuille en deux.", "en": "Fold the sheet in half."}},
+                           {"img": "img/activites/chapeau-chevalier-6.svg", "text": {"fr": "Mets-le sur ta tête.", "en": "Put it on your head."}}]},
 }
 APRES_FR = "Et si tu dessinais un cochon dans une grange\u00a0?"
 
@@ -110,6 +114,8 @@ class FauxSupabase:
         self.otp = {}        # email -> le dernier code à 6 chiffres envoyé
         self.otp_demandes = []
         self.otp_limite = False
+        self.usage = []          # les statistiques d'usage reçues (noter_usage)
+        self.usage_avec_compte = 0  # envois qui portaient le jeton d'un compte : il n'y en a jamais
 
     def semer_avis(self):
         """D'autres parents ont déjà donné leur avis : 11 sur Jeu kit (un mot accepté, un à relire ; un parent chez qui le jeu
@@ -228,6 +234,11 @@ class FauxSupabase:
                 return self.repond(route, [a for (e, j), a in self.avis.items() if e == email])
             return self.repond(route, [self.avis[(email, jeu)]] if (email, jeu) in self.avis else [])
         fn = chemin.replace("/rest/v1/rpc/", "")
+        if fn == "noter_usage":
+            if req.headers.get("authorization"):
+                self.usage_avec_compte += 1
+            self.usage.extend(corps["p_evts"])
+            return self.repond(route, len(corps["p_evts"]))
         if fn == "avis_publics":
             return self.repond(route, self.avis_publics(corps["p_jeu"], corps.get("p_langue", "fr")))
         if fn == "enregistrer_envie":
@@ -272,6 +283,20 @@ class FauxSupabase:
         if fn.startswith("bureau_"):
             if email != "patron@exemple.test":
                 return self.repond(route, {"message": "reserve au bureau"}, 403)
+            if fn == "bureau_usage":
+                return self.repond(route, {
+                    "depuis": "2026-08-25", "evenements": 420, "appareils": 37, "revenus": 21,
+                    "semaines": [{"semaine": "2026-11-02", "appareils": 20, "lancements": 64, "minutes": 510.5},
+                                 {"semaine": "2026-11-09", "appareils": 28, "lancements": 90, "minutes": 720},
+                                 {"semaine": "2026-11-16", "appareils": 33, "lancements": 101, "minutes": 815.2}],
+                    "jeux": [{"jeu": "jeu-kit", "lancements": 120, "appareils": 30, "minutes": 900, "parties": 110, "installes": 25, "retires": 2, "ranges": 1,
+                              "demandes": 6, "fiches": 40, "idees": 24, "activites": 12, "activites_appareils": 10, "activites_finies": 5, "etapes": {"0": 2, "1": 3, "2": 7}},
+                             {"jeu": "pluie-de-cochons", "lancements": 80, "appareils": 22, "minutes": 640, "parties": 75, "installes": 18, "retires": 1, "ranges": 0,
+                              "demandes": 3, "fiches": 21, "idees": 0, "activites": 0, "activites_appareils": 0, "activites_finies": 0, "etapes": {}}],
+                    "fins": {"sortie": 60, "total": 40, "heure": 8, "jeu": 2},
+                    "repartition": {"age": {"6-7": 15, "8-10": 19, "?": 3}, "format": {"tablette": 25, "telephone": 9, "ordi": 3}, "langue": {"fr": 33, "en": 4}},
+                    "vues": {"enfant": 300, "parent": 80, "accueil": 12},
+                    "choix": {"refus": 3, "reprises": 1, "age": {"8-10": 2, "6-7": 1}, "format": {"telephone": 2, "tablette": 1}}})
             if fn == "bureau_apercu":
                 return self.repond(route, {
                     "parcours": {"commences": 48, "termines": 31, "rattaches": 19, "comptes": 22, "confirmes": 18, "actifs_7j": 9, "synchro": 6, "nouvelles": 11},
@@ -509,6 +534,10 @@ def run():
                 for k in PIN:
                     page.locator(".pin-keys button", has_text=k).first.click()
                 page.wait_for_timeout(250)
+            page.wait_for_selector(".a-fin .a-stats-ligne")
+            assert "sans nom" in page.inner_text(".a-fin .a-stats-ligne") and page.locator(".a-fin [data-action=stats-reglages]").count() == 1, "la préparation dit les statistiques, avec un lien vers Réglages"
+            evts = [e["evt"] for e in page.evaluate("JSON.parse(localStorage.getItem('ludiworld.usage') || '[]')")]
+            assert "preparation_finie" in evts, evts
             page.click(".a-fin .btn-sun")
             page.wait_for_selector(".tuile")
             page.wait_for_timeout(2500)
@@ -877,7 +906,7 @@ def run():
             avant_ms = page.evaluate("JSON.stringify(ludiDemo.etat().famille.enfants[0].games)")
             page.click("#e-vitrine")
             page.wait_for_selector(".v-tuile")
-            assert page.locator(".v-tuile").count() == 7, "les jeux qu'il n'a pas (9 au catalogue d'essai, 2 installés)"
+            assert page.locator(".v-tuile").count() == 8, "les jeux qu'il n'a pas (10 au catalogue d'essai, 2 installés)"
             assert page.locator(".v-tuile[data-jeu=pluie-de-cochons]").count() == 0
             page.wait_for_timeout(1500)
             assert page.evaluate("document.documentElement.scrollWidth <= innerWidth + 1"), ("rien ne dépasse", name)
@@ -930,7 +959,7 @@ def run():
             page.screenshot(path=str(OUT / f"{name}-p1-mes-jeux-demandes.png"))
             # Tous les jeux : l'état pour l'enfant regardé
             onglet(page, "catalogue")
-            assert page.locator(".pa-tous-grille .cat-mini").count() == 9
+            assert page.locator(".pa-tous-grille .cat-mini").count() == 10
             assert "Petit Loup le voudrait" in page.inner_text(".cat-mini[data-jeu=tour-aimants] .cat-mini-actions")
             assert "Installé pour Petit Loup" in page.inner_text(".cat-mini[data-jeu=pluie-de-cochons] .cat-mini-actions")
             assert page.evaluate("document.documentElement.scrollWidth <= innerWidth + 1"), ("rien ne dépasse", name)
@@ -1027,7 +1056,7 @@ def run():
             # Tout installé : « Tous les jeux » montre encore tout ; la vitrine de l'enfant n'a plus rien à montrer
             page.goto(BASE + "/ludiworld/jeux/index.json")   # l'appli fermée (elle réécrit ses données en partant), même origine
             page.evaluate("""() => { var s = JSON.parse(localStorage.getItem('ludiworld.v1')); var e = s.famille.enfants[0]; delete e.regarderTout;
-              ['tour-aimants','du-feu-a-la-fusee','chasseur-dragons','simon-des-monstres','monde-a-la-craie','les-petits-enclos','chemin-du-roi'].forEach(function (id) { e.jeux[id] = e.jeux[id] || { max: null }; });
+              ['tour-aimants','du-feu-a-la-fusee','chasseur-dragons','simon-des-monstres','monde-a-la-craie','les-petits-enclos','chemin-du-roi','defis-de-barnabe'].forEach(function (id) { e.jeux[id] = e.jeux[id] || { max: null }; });
               localStorage.setItem('ludiworld.v1', JSON.stringify(s)); }""")
             page.goto(APP)
             page.wait_for_selector(".tuile")
@@ -1037,11 +1066,11 @@ def run():
             code(page, PIN)
             parent(page)
             onglet(page, "catalogue")
-            assert page.locator(".pa-tous-grille .cat-mini").count() == 9 and page.locator(".pa-tous-grille .pa-installer").count() == 0, "tout installé : tous les jeux restent là"
+            assert page.locator(".pa-tous-grille .cat-mini").count() == 10 and page.locator(".pa-tous-grille .pa-installer").count() == 0, "tout installé : tous les jeux restent là"
             ctx.close()
 
         # « Nouveau » : une petite marque écrite, 30 jours après l'entrée du jeu au catalogue ; les nouveaux d'abord. Horloge au 5 décembre 2026 :
-        # Le Chemin du Roi (15 novembre) puis Les Petits Enclos (11 novembre) ; les autres, entrés avant le 6 novembre, ne le sont plus.
+        # Les Défis de Barnabé (23 novembre), Le Chemin du Roi (15 novembre) puis Les Petits Enclos (11 novembre) ; les autres, entrés avant le 6 novembre, ne le sont plus.
         ctx = contexte(browser, famille(), **formats["tablette"])
         page = ctx.new_page()
         page.on("pageerror", lambda e: errors.append(str(e)))
@@ -1050,9 +1079,9 @@ def run():
         code(page, PIN)
         parent(page)
         onglet(page, "catalogue")
-        assert page.locator(".cat-nouveau").count() == 2, page.locator(".cat-nouveau").count()
-        ordre = [page.locator(".pa-tous-grille .cat-mini").nth(i).get_attribute("data-jeu") for i in range(3)]
-        assert ordre[:2] == ["chemin-du-roi", "les-petits-enclos"], ordre
+        assert page.locator(".cat-nouveau").count() == 3, page.locator(".cat-nouveau").count()
+        ordre = [page.locator(".pa-tous-grille .cat-mini").nth(i).get_attribute("data-jeu") for i in range(4)]
+        assert ordre[:3] == ["defis-de-barnabe", "chemin-du-roi", "les-petits-enclos"], ordre
         assert page.inner_text(".cat-mini[data-jeu=chemin-du-roi] .cat-nouveau") == "Nouveau"
         page.wait_for_timeout(500)
         page.screenshot(path=str(OUT / "tablette-p1-nouveau.png"))
@@ -1063,7 +1092,7 @@ def run():
         assert page.inner_text("[data-onglet=catalogue]").strip() == "All games" and page.inner_text("[data-onglet=jeux]").strip() == "My games"
         page.goto(BASE + "/ludiworld/les-jeux/")
         page.wait_for_selector(".cat-mini")
-        assert page.locator(".cat-nouveau").count() == 2 and page.locator(".jx-grille .cat-mini").first.get_attribute("data-jeu") == "chemin-du-roi", "la vitrine du site aussi"
+        assert page.locator(".cat-nouveau").count() == 3 and page.locator(".jx-grille .cat-mini").first.get_attribute("data-jeu") == "defis-de-barnabe", "la vitrine du site aussi"
         ctx.close()
         # Le 1er février 2027 : plus rien de nouveau, pas de marque
         ctx = contexte(browser, famille(), **formats["tablette"])
@@ -1106,6 +1135,8 @@ def run():
         # 3. Fin douce : on prévient, on attend la fin de manche, puis la nuit tombe
         ctx = contexte(browser, famille("douce"), **formats["tablette"])
         page = ctx.new_page()
+        demandes = []
+        page.on("request", lambda r: demandes.append(r.url))
         page.on("pageerror", lambda e: errors.append(str(e)))
         page.goto(APP)
         page.locator(".tuile", has_text="Jeu kit").click()
@@ -1113,6 +1144,7 @@ def run():
         assert "fullscreen" not in (page.get_attribute("#player iframe", "allow") or ""), "le plein écran se décide dans Ludiworld, pas dans le jeu"
         game.locator("#b").click()
         page.wait_for_timeout(300)
+        assert any(u.endswith("/jeux/img/activites/chapeau-chevalier-6.svg") for u in demandes), "les schémas de l'activité se chargent dès le lancement du jeu (pour la fin hors ligne)"
         st = page.evaluate("JSON.parse(localStorage.getItem('ludiworld.v1')).famille.enfants[0].games['jeu-kit']")
         assert st["kit"] is True and st["scores"]["points"]["value"] == 42 and st["progress"]["niveau"] == 3, st
         assert st["skills"]["maths.multiplication/7x8"]["ok"] == 1, st
@@ -1135,14 +1167,59 @@ def run():
         assert page.locator("#p-rideau").is_visible(), "fin de manche : on s'arrête"
         assert "pause" in game.locator("#msg").inner_text(), "le jeu reçoit ludi:pause"
         assert page.inner_text("#p-rideau .rideau-apres p") == APRES_FR, "sous « Bravo », l'idée hors écran du dernier jeu"
-        assert page.locator("#p-rideau .rideau-apres button, #p-rideau .rideau-apres a").count() == 0, "rien à toucher"
+        assert page.inner_text("#p-rideau .rideau-apres .btn-activite") == "Comment faire\u00a0?", "l'idée porte son activité pas à pas"
         page.wait_for_timeout(2200)
         page.screenshot(path=str(OUT / "tablette-10-rideau.png"))
+        # L'activité : ce qu'il faut, puis une étape à la fois ; la voix au toucher ; le temps ne compte pas
+        page.evaluate("""() => { window.__dit = []; var s = window.speechSynthesis;
+          s.getVoices = function () { return [{ lang: 'fr-FR', localService: true }]; };
+          s.speak = function (u) { window.__dit.push(u.text); };
+          window.SpeechSynthesisUtterance = function (t) { this.text = t; }; }""")
+        temps = lambda: page.evaluate("JSON.parse(localStorage.getItem('ludiworld.v1')).famille.enfants[0].games['jeu-kit'].ms")
+        avant = temps()
+        page.click("#p-rideau .btn-activite")
+        page.wait_for_selector(".p-activite")
+        assert page.inner_text(".p-activite h2") == "Le chapeau"
+        assert page.inner_text(".p-activite .act-phrase") == "Une grande feuille.", "d'abord ce qu'il faut"
+        page.click(".p-activite .act-phrase")
+        assert page.evaluate("window.__dit") == ["Une grande feuille."], "appuyer sur le texte le fait lire"
+        page.click(".p-activite .act-suivant")
+        assert page.inner_text(".p-activite .act-compte") == "Étape 1 sur 2"
+        page.wait_for_function("document.querySelector('.act-schema').naturalWidth > 0")
+        page.wait_for_timeout(500)
+        page.screenshot(path=str(OUT / "tablette-10a-activite.png"))
+        page.keyboard.press("ArrowRight")
+        assert page.inner_text(".p-activite .act-phrase") == "Mets-le sur ta tête."
+        assert page.inner_text(".p-activite .act-suivant") == "J’ai fini\u00a0!", page.inner_text(".p-activite .act-suivant")
+        page.wait_for_timeout(2500)
+        page.click(".p-activite .act-suivant")
+        assert page.locator(".p-activite").count() == 0, "« J'ai fini » ferme l'activité"
+        assert page.locator("#p-rideau").is_visible(), "on revient à l'écran de fin"
+        assert temps() == avant, "le temps passé sur l'activité ne compte pas"
+        # Le retour du téléphone ferme seulement l'activité, pas l'écran de fin
+        page.click("#p-rideau .btn-activite")
+        page.wait_for_selector(".p-activite")
+        page.go_back()
+        page.wait_for_timeout(400)
+        assert page.locator(".p-activite").count() == 0, "le retour ferme l'activité"
+        assert page.locator("#p-rideau").is_visible() and page.locator("#p-rideau .btn-activite").count() == 1, "l'écran de fin reste, l'activité se rouvre"
         page.click("#p-rideau .btn-sun")
         page.wait_for_timeout(2500)
         assert page.get_attribute("#v-enfant", "data-moment") == "nuit", "la nuit est tombée"
         assert page.locator(".tuile").count() == 0
         page.screenshot(path=str(OUT / "tablette-11-nuit.png"))
+        # Les statistiques d'usage : notées sur l'appareil, sans nom (sans compte ni Supabase ici, elles attendent)
+        file = page.evaluate("JSON.parse(localStorage.getItem('ludiworld.usage'))")
+        evts = [e["evt"] for e in file]
+        for attendu in ["vue", "jeu_lance", "jeu_fini", "idee_montree", "activite_ouverte", "activite_fermee"]:
+            assert attendu in evts, (attendu, evts)
+        fin = [e for e in file if e["evt"] == "jeu_fini"][0]
+        assert fin["jeu"] == "jeu-kit" and fin["details"]["raison"] == "total" and fin["details"]["minutes"] >= 0, fin
+        fermees = [e["details"] for e in file if e["evt"] == "activite_fermee"]
+        assert fermees[0] == {"etape": 2, "etapes": 2, "finie": True}, fermees
+        assert fermees[1]["finie"] is False, ("le retour du téléphone n'est pas « J'ai fini »", fermees)
+        assert all(e["age"] == "8-10" and e["format"] in ("telephone", "tablette", "ordi") and e["langue"] == "fr" for e in file), file[0]
+        assert "Petit Loup" not in json.dumps(file) and len({e["appareil"] for e in file}) == 1, "jamais le prénom ; un seul numéro d'appareil"
         # Une fois par jour : rouvert le même jour (ici, plus de temps donné), l'écran de fin ne la redit pas
         page.goto(BASE + "/ludiworld/jeux/index.json")   # l'appli fermée (elle réécrit ses données en partant), même origine
         page.evaluate("""() => { var s = JSON.parse(localStorage.getItem('ludiworld.v1')); var e = s.famille.enfants[0];
@@ -1186,6 +1263,14 @@ def run():
             assert carte["x"] >= 0 and carte["x"] + carte["width"] <= vw and carte["y"] >= 0 and carte["y"] + carte["height"] <= vh, ("l'écran de fin tient", name, carte)
             assert page.evaluate("(() => { var p = document.querySelector('.rideau-apres p'); return p.scrollWidth <= p.clientWidth; })()"), ("la phrase ne déborde pas", name)
             page.screenshot(path=str(OUT / f"{name}-10c-fin-idee.png"))
+            page.evaluate("() => { window.speechSynthesis.getVoices = function () { return []; }; }")
+            page.click("#p-rideau .btn-activite")
+            page.click(".p-activite .act-suivant")
+            page.wait_for_function("document.querySelector('.act-schema').naturalWidth > 0")
+            assert page.locator(".act-phrase.sans-voix").count() == 1 and page.locator(".act-phrase .ico").count() == 0, ("sans voix sur l'appareil, pas de haut-parleur", name)
+            nav = page.locator(".p-activite .act-suivant").bounding_box()
+            assert nav["y"] + nav["height"] <= vh, ("le bouton « Suivant » se voit sans défiler", name, nav)
+            page.screenshot(path=str(OUT / f"{name}-10f-activite.png"))
             ctx.close()
         ctx = contexte(browser, famille("nette", max_kit=10), **formats["telephone"])
         page = ctx.new_page()
@@ -1220,6 +1305,48 @@ def run():
         assert page.inner_text("#p-rideau .rideau-apres p") == "How about drawing a pig in a barn?"
         page.wait_for_timeout(2400)
         page.screenshot(path=str(OUT / "telephone-10e-fin-idee-en.png"))
+        ctx.close()
+
+        # Les statistiques d'usage partent sans le compte, jamais pendant une partie ; le parent peut refuser (Réglages)
+        nuage = FauxSupabase()
+        ctx = contexte(browser, famille("douce"), nuage=nuage, **formats["tablette"])
+        page = ctx.new_page()
+        page.on("pageerror", lambda e: errors.append(str(e)))
+        page.goto(APP)
+        page.locator(".tuile", has_text="Jeu kit").click()
+        page.frame_locator("#player iframe").locator("#b").click()
+        page.wait_for_timeout(4500)
+        assert not nuage.usage, ("rien ne part pendant une partie", nuage.usage)
+        page.click("#player-back")
+        page.wait_for_function("JSON.parse(localStorage.getItem('ludiworld.usage') || '[]').length === 0")
+        evts = [e["evt"] for e in nuage.usage]
+        assert "jeu_lance" in evts and "jeu_fini" in evts, evts
+        assert [e for e in nuage.usage if e["evt"] == "jeu_fini"][0]["details"]["raison"] == "sortie", nuage.usage
+        assert nuage.usage_avec_compte == 0, "jamais avec le jeton d'un compte"
+        page.goto(APP + "#carnet")
+        code(page, PIN)
+        parent(page)
+        onglet(page, "reglages")
+        case = page.locator("[data-reglage=statistiques]")
+        assert case.is_checked(), "cochées par défaut"
+        case.scroll_into_view_if_needed()
+        page.screenshot(path=str(OUT / "tablette-reglages-statistiques.png"))
+        case.uncheck()
+        page.wait_for_timeout(300)
+        assert stocke(page)["mesures"] is False, "le refus vaut pour la maison (il suit la copie en ligne)"
+        assert page.evaluate("localStorage.getItem('ludiworld.usage') === null && localStorage.getItem('ludiworld.appareil') === null"), "ce qui attendait et le numéro s'effacent"
+        page.wait_for_timeout(500)
+        refus = [e for e in nuage.usage if e["evt"] == "statistiques_refusees"]
+        avant_refus = {e["appareil"] for e in nuage.usage if e["evt"] != "statistiques_refusees"}
+        assert len(refus) == 1 and refus[0]["appareil"] not in avant_refus and refus[0]["age"] == "8-10", ("« refusé » part une fois, avec un numéro neuf", refus)
+        n = len(nuage.usage)
+        page.click("#pa-rendre")
+        page.wait_for_selector("#v-enfant:not([hidden])")
+        page.locator(".tuile", has_text="Jeu kit").click()
+        page.frame_locator("#player iframe").locator("#b").click()
+        page.click("#player-back")
+        page.wait_for_timeout(600)
+        assert page.evaluate("localStorage.getItem('ludiworld.usage')") is None and len(nuage.usage) == n, "refusé : plus rien n'est noté ni envoyé"
         ctx.close()
 
         # 4. Fin nette : on s'arrête à la minute, sans attendre la manche
@@ -2306,6 +2433,19 @@ def run():
             assert "Aider" in b.inner_text("#ap-envie")
             b.wait_for_timeout(300)
             b.screenshot(path=str(OUT / f"{name}-30-bureau-apercu.png"), full_page=True)
+            # L'usage de l'appli : des totaux, et l'activité de fin du montré au « J'ai fini »
+            b.locator("#b-nav a", has_text="L'usage").click()
+            b.wait_for_selector("#us-jeux tbody tr")
+            assert b.locator("#us-jeux tbody tr").count() == 2 and "Jeu kit" in b.inner_text("#us-jeux"), b.inner_text("#us-jeux")
+            act = b.inner_text("#us-activites")
+            assert b.locator("#us-activites tbody tr").count() == 1 and "50 %" in act and "42 %" in act and "étape 2 : 7" in act, act
+            assert "L'enfant est sorti du jeu" in b.inner_text("#us-fins") and "Tablette" in b.inner_text("#us-format")
+            refus = b.inner_text("#us-refus")
+            assert "Ont refusé" in refus and "5 %" in refus and "8 à 10 ans" in b.inner_text("#us-refus-age"), refus
+            assert any(c.endswith("bureau_usage") for c in nuage.appels)
+            b.wait_for_timeout(300)
+            b.screenshot(path=str(OUT / f"{name}-30b-bureau-usage.png"), full_page=True)
+            b.locator("#b-nav a", has_text="Aperçu").click()
             b.locator("#b-nav a", has_text="Les envies").click()
             b.wait_for_selector("#en-table tbody tr")
             assert b.evaluate("window.XSS") is None and "<img" in b.inner_text("#en-table"), "le message d'un visiteur reste du texte"
@@ -2399,6 +2539,9 @@ def run():
         tel.screenshot(path=str(OUT / "large-46-votre-avis.png"))
         tel.set_viewport_size({"width": 390, "height": 844})
         tel.click(".cat-fermer")
+        # la fiche se ferme par un retour d'historique : il doit être fini avant d'aller ailleurs, sinon il annule la page suivante
+        tel.wait_for_function("!(history.state && history.state.lwCat)")
+        tel.wait_for_timeout(300)
 
         # 15. Tout effacer d'un geste : couper la copie, puis le compte
         tel.goto(BASE + "/ludiworld/compte/#espace")

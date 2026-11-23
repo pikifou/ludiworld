@@ -3,7 +3,10 @@
   "id": "chasseur-dragons",
   "status": "draft",
   "added": "2026-10-28",
-  "title": { "fr": "Chasseur de Dragons", "en": "Dragon Hunter" },
+  "title": {
+    "fr": "Chasseur de Dragons",
+    "en": "Dragon Hunter"
+  },
   "pitch": {
     "fr": "Un jeune archer affronte dix dragons, de salle en salle jusqu'au Roi Dragon. Il tire tout seul quand il s'arrête ; entre deux salles, il choisit un pouvoir.",
     "en": "A young archer faces ten dragons, room after room up to the Dragon King. He shoots by himself when he stands still; between rooms, he picks a power."
@@ -11,19 +14,50 @@
   "url": "https://pikifou.github.io/chasseur-dragons/",
   "icon": "https://pikifou.github.io/chasseur-dragons/icon-512.png",
   "screenshots": [
-    { "src": "img/chasseur-dragons-1.webp", "alt": { "fr": "Combat contre le dragon de feu", "en": "Fighting the fire dragon" } },
-    { "src": "img/chasseur-dragons-2.webp", "alt": { "fr": "Victoire dans la grotte de glace", "en": "Victory in the ice cave" } },
-    { "src": "img/chasseur-dragons-3.webp", "alt": { "fr": "Choisir un nouveau pouvoir", "en": "Choosing a new power" } }
+    {
+      "src": "img/chasseur-dragons-1.webp",
+      "alt": {
+        "fr": "Combat contre le dragon de feu",
+        "en": "Fighting the fire dragon"
+      }
+    },
+    {
+      "src": "img/chasseur-dragons-2.webp",
+      "alt": {
+        "fr": "Victoire dans la grotte de glace",
+        "en": "Victory in the ice cave"
+      }
+    },
+    {
+      "src": "img/chasseur-dragons-3.webp",
+      "alt": {
+        "fr": "Choisir un nouveau pouvoir",
+        "en": "Choosing a new power"
+      }
+    }
   ],
   "screens": "portrait",
   "color": "#07050c",
-  "author": { "name": "Julien", "url": "https://github.com/pikifou/chasseur-dragons" },
-  "languages": ["fr", "en"],
-  "age": { "min": 6, "max": 12 },
+  "author": {
+    "name": "Julien",
+    "url": "https://github.com/pikifou/chasseur-dragons"
+  },
+  "languages": [
+    "fr",
+    "en"
+  ],
+  "age": {
+    "min": 6,
+    "max": 12
+  },
   "reading": "none",
   "learning": {
     "level": "core",
-    "domains": ["emotions.frustration", "motricite.reflexes", "strategie.choix"],
+    "domains": [
+      "emotions.frustration",
+      "motricite.reflexes",
+      "strategie.choix"
+    ],
     "what": {
       "fr": "Accepter de perdre et tout recommencer. La plupart des jeux disent « bravo » à chaque pas ; celui-ci est exigeant. Il n'y a pas de seconde chance : une défaite renvoie à la salle 1 et il faut refaire tous les dragons. On y travaille la gestion de la frustration et la persévérance, et au passage les réflexes et la lecture des attaques d'un boss.",
       "en": "Accepting defeat and starting all over again. Most games say “well done” at every step; this one is tough. There is no second chance: losing sends you back to room 1 and every dragon has to be beaten again. It trains handling frustration and perseverance, and along the way reflexes and reading a boss's attacks."
@@ -33,20 +67,91 @@
       "en": "Each dragon telegraphs its attacks: you get better by understanding why you lost, not by luck. Beating the Dragon King has to be earned. Three difficulty levels, never with continues: easy (5 hearts and a possible shield), medium (3 hearts, no shield), hard (4 hearts and three arrows per shot from the start, but no powers between rooms, and a heart is won back only when a dragon is beaten)."
     }
   },
-  "session": { "minutes": [10, 25], "natural_end": true, "total_hours": 3 },
+  "session": {
+    "minutes": [
+      10,
+      25
+    ],
+    "natural_end": true,
+    "total_hours": 3
+  },
   "content": {
     "fr": "Combat fantastique : des flèches contre des dragons, sans sang. Musique douce qui donne du courage. Peut frustrer, et c'est voulu : les premières fois, mieux vaut être à côté pour en parler.",
     "en": "Fantasy combat: arrows against dragons, no blood. Gentle, encouraging music. It can be frustrating, on purpose: the first few times, it helps to be nearby to talk about it."
   },
   "after": {
-    "fr": "Et si tu pliais un dragon en papier ?",
-    "en": "How about folding a paper dragon?"
+    "fr": "Et si tu pliais un chapeau de chevalier en papier ?",
+    "en": "How about folding a paper knight's hat?"
   },
-  "devices": ["phone", "tablet", "computer"],
+  "activity": {
+    "title": {
+      "fr": "Le chapeau de chevalier",
+      "en": "The knight's hat"
+    },
+    "need": {
+      "fr": "Une grande feuille (une page de journal) et des feutres.",
+      "en": "A big sheet of paper (a newspaper page) and felt pens."
+    },
+    "steps": [
+      {
+        "img": "img/activites/chapeau-chevalier-1.svg",
+        "text": {
+          "fr": "Pose la feuille en hauteur. Plie-la en deux, du haut vers le bas.",
+          "en": "Lay the sheet upright. Fold it in half, from top to bottom."
+        }
+      },
+      {
+        "img": "img/activites/chapeau-chevalier-2.svg",
+        "text": {
+          "fr": "Plie-la en deux de gauche à droite, puis déplie-la : tu as marqué le milieu.",
+          "en": "Fold it in half from left to right, then unfold it: you have marked the middle."
+        }
+      },
+      {
+        "img": "img/activites/chapeau-chevalier-3.svg",
+        "text": {
+          "fr": "Le pli en haut, rabats les deux coins jusqu’au trait du milieu.",
+          "en": "With the fold at the top, fold both corners down to the middle line."
+        }
+      },
+      {
+        "img": "img/activites/chapeau-chevalier-4.svg",
+        "text": {
+          "fr": "Relève la bande du bas par-dessus les coins. Appuie bien sur le pli.",
+          "en": "Fold the bottom strip up over the corners. Press the fold well."
+        }
+      },
+      {
+        "img": "img/activites/chapeau-chevalier-5.svg",
+        "text": {
+          "fr": "Retourne le chapeau et relève l’autre bande de la même façon.",
+          "en": "Turn the hat over and fold the other strip up the same way."
+        }
+      },
+      {
+        "img": "img/activites/chapeau-chevalier-6.svg",
+        "text": {
+          "fr": "Ouvre-le par le bas et mets-le sur ta tête. Dessine ton blason dessus !",
+          "en": "Open it from the bottom and put it on your head. Draw your coat of arms on it!"
+        }
+      }
+    ]
+  },
+  "devices": [
+    "phone",
+    "tablet",
+    "computer"
+  ],
   "offline": true,
   "healthy": {
-    "no_ads": true, "no_purchases": true, "no_subscription": true, "no_loot_boxes": true,
-    "no_daily_pressure": true, "no_notifications": true, "no_strangers": true, "no_tracking": true,
+    "no_ads": true,
+    "no_purchases": true,
+    "no_subscription": true,
+    "no_loot_boxes": true,
+    "no_daily_pressure": true,
+    "no_notifications": true,
+    "no_strangers": true,
+    "no_tracking": true,
     "natural_stops": true
   },
   "third_parties": [],

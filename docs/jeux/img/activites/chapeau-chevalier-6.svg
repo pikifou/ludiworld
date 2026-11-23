@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300" role="img" aria-label="Le chapeau fini, ouvert par le bas, avec un blason dessiné dessus">
+  <!-- l'ouverture, par le bas -->
+  <ellipse cx="150" cy="226" rx="72" ry="16" fill="#4c5b7c"/>
+  <!-- le chapeau -->
+  <path d="M150 70 L78 175 L78 226 Q 150 212 222 226 L222 175 z" fill="#fbf7ee" stroke="#1d2b4f" stroke-width="4" stroke-linejoin="round"/>
+  <rect x="78" y="180" width="144" height="40" fill="#fff1c4" stroke="#1d2b4f" stroke-width="4"/>
+  <!-- un blason à dessiner : un bouclier bleu et un petit dragon -->
+  <path d="M150 112 L178 121 L176 146 Q 170 164 150 172 Q 130 164 124 146 L122 121 z" fill="#2f5fb3" stroke="#1d2b4f" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M136 152 Q 140 138 150 140 Q 158 141 160 132 Q 164 126 170 130 Q 164 134 166 140 Q 166 152 150 152 z" fill="#fbf7ee"/>
+  <circle cx="164" cy="132" r="1.8" fill="#1d2b4f"/>
+  <!-- des étincelles : c'est fini -->
+  <path d="M58 92 l5 12 12 5 -12 5 -5 12 -5 -12 -12 -5 12 -5 z" fill="#ffc83d" stroke="#e0a400" stroke-width="2"/>
+  <path d="M238 70 l4 9 9 4 -9 4 -4 9 -4 -9 -9 -4 9 -4 z" fill="#ffc83d" stroke="#e0a400" stroke-width="2"/>
+</svg>

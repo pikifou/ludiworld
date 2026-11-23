@@ -39,6 +39,7 @@ Les textes destinés aux gens sont bilingues : `{ "fr": "…", "en": "…" }`. L
 | `kit` | oui | `true` si le jeu utilise `ludi.js`. |
 | `after` | non | Une idée à faire sans écran, en lien avec le jeu, dite à l'enfant (fr, en ; une phrase, 160 signes au plus). Le launcher la montre une fois, sur l'écran « C'est fini pour aujourd'hui », pour le dernier jeu joué. Pas d'ordre sec : une proposition. |
 | `together` | non | `true` si le jeu se joue aussi à deux sur le même appareil (chacun son tour, ou côte à côte). La fiche affiche alors « À deux possible ». Absent : rien n'est dit. |
+| `activity` | non | L'activité hors écran pas à pas, ouverte depuis l'idée `after` (requise avec elle). Voir ci-dessous. |
 | `added` | non | Ajouté par Ludiworld quand le jeu entre au catalogue : la date `AAAA-MM-JJ`. Côté parent, la mini-fiche porte une petite marque « Nouveau » pendant 30 jours, et les jeux nouveaux passent en premier dans « Tous les jeux ». Pas de notification, pas de compte à rebours. Chaque jeu du catalogue en a une. |
 | `embed` | non | Ajouté à l'import : `false` si le site du jeu interdit l'affichage dans un cadre (le launcher ouvre alors un nouvel onglet). |
 | `source` | non | Ajouté à l'import : `{ "card": "<adresse de la fiche>", "imported": "AAAA-MM-JJ" }`. |
@@ -75,6 +76,21 @@ Les textes destinés aux gens sont bilingues : `{ "fr": "…", "en": "…" }`. L
 - `src` : dans la copie du catalogue, `img/<id>-N.webp` (fichier dans `docs/jeux/img/`, N de 1 à 9) ; sinon une adresse https. Dans le `ludi.json` d'un créateur, mettre des adresses https : le catalogue en garde une copie à la validation.
 - `alt` : ce que montre l'image, en une courte phrase (fr, en). C'est aussi la légende.
 - WebP de préférence, environ 960 × 540 (paysage) ou 720 × 1280 (portrait).
+
+### `activity`
+```json
+"activity": {
+  "title": { "fr": "Le chapeau de chevalier", "en": "The knight's hat" },
+  "need": { "fr": "Une grande feuille (une page de journal) et des feutres.", "en": "A big sheet of paper (a newspaper page) and felt pens." },
+  "steps": [
+    { "img": "img/activites/chapeau-chevalier-1.svg", "text": { "fr": "Plie la feuille en deux.", "en": "Fold the sheet in half." } }
+  ]
+}
+```
+- Décidé par Julien le 23 novembre 2026 : l'idée hors écran devient une petite fiche d'activité dans l'appli, pour tous les jeux. Elle ne compte pas comme du temps d'écran : on fait quelque chose en dehors de la tablette, avec la tablette.
+- Sur « C'est fini pour aujourd'hui », l'idée `after` porte alors un bouton « Comment faire ? » qui ouvre l'activité en plein écran : ce qu'il faut, puis les étapes une par une, un grand schéma et une phrase courte (140 signes au plus) que l'enfant peut entendre en appuyant dessus.
+- 2 à 10 étapes. `img` : un schéma exact, dessiné (SVG de préférence, fichier dans `docs/jeux/img/activites/`), ou une adresse https. Pas d'image de générateur pour un pliage : il se trompe sur les plis.
+- Une activité accessible à un enfant de 6 ans, avec ce qu'on a à la maison.
 
 ## Exemple complet
 Voir `docs/jeux/pluie-de-cochons.json`.

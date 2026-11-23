@@ -46,6 +46,8 @@ window.LudiTextes = {
       doneLock: 'Pour que {n} ne puisse pas sortir de Ludiworld : côté parent, Réglages, « Verrouiller l’appareil ».',
       doneAccount: 'Facultatif : un compte garde une copie en ligne pour retrouver tout cela sur vos autres appareils.',
       doneAccountGo: 'Créer un compte',
+      doneStats: 'Ludiworld compte, sans nom, les jeux lancés et ce qui est ouvert, pour améliorer ses jeux. Vous pouvez refuser.',
+      doneStatsGo: 'Réglages',
       doneGo: 'Passer côté enfant'
     },
 
@@ -80,6 +82,16 @@ window.LudiTextes = {
       stopText: 'Bravo, {n} ! Le soleil se couche sur Ludiworld.',
       stopTextGame: 'Tu peux choisir un autre jeu.',
       stopOk: 'D’accord',
+      // L'activité hors écran pas à pas (décision du 23 novembre)
+      howTo: 'Comment faire ?',
+      actNeed: 'Il te faut',
+      actStart: 'C’est parti !',
+      actStep: 'Étape {i} sur {n}',
+      actNext: 'Suivant',
+      actPrev: 'Retour',
+      actDone: 'J’ai fini !',
+      actClose: 'Fermer',
+      actListen: 'Écouter',
       lastRound: 'Dernière partie',
       opensAt: 'Ouvre à {h}',
       wakeTitle: 'Ludiworld dort encore.',
@@ -324,6 +336,9 @@ window.LudiTextes = {
       sound_musique: 'Musique',
       sound_bruitages: 'Bruitages',
       sound_voix: 'Voix qui lit les textes',
+      stats: 'Statistiques',
+      statsCase: 'Aider Ludiworld à améliorer ses jeux',
+      statsText: 'Des statistiques anonymes : quels jeux sont lancés, combien de temps, ce qui est ouvert à la fin. Elles servent seulement à comprendre comment Ludiworld est utilisé, pour mieux répondre aux besoins des enfants et voir si les jeux leur plaisent. Jamais le prénom, jamais vendues.',
       lock: 'Verrouiller l’appareil',
       lockText: 'Ludiworld ne peut pas bloquer le reste de l’appareil. Pour que l’enfant ne puisse pas en sortir :',
       lockAndroid: 'Android : installez Ludiworld sur l’écran d’accueil, activez l’épinglage d’application (Paramètres, Sécurité), puis épinglez Ludiworld.',
@@ -360,6 +375,7 @@ window.LudiTextes = {
       cProtect: 'code pour changer d’enfant',
       cFullscreen: 'plein écran',
       cSound: 'le son',
+      cStats: 'statistiques anonymes',
       cKidRemoved: '{n} retiré',
       cKidAdded: '{n} ajouté'
     }
@@ -409,6 +425,8 @@ window.LudiTextes = {
       doneLock: 'So that {n} can’t leave Ludiworld: parent side, Settings, “Lock the device”.',
       doneAccount: 'Optional: an account keeps an online copy so you find all this on your other devices.',
       doneAccountGo: 'Create an account',
+      doneStats: 'Ludiworld counts, without names, the games started and what is opened, to improve its games. You can refuse.',
+      doneStatsGo: 'Settings',
       doneGo: 'Go to the child side'
     },
 
@@ -442,6 +460,15 @@ window.LudiTextes = {
       stopText: 'Well done, {n}! The sun is setting on Ludiworld.',
       stopTextGame: 'You can pick another game.',
       stopOk: 'OK',
+      howTo: 'How do I do it?',
+      actNeed: 'You need',
+      actStart: 'Let’s go!',
+      actStep: 'Step {i} of {n}',
+      actNext: 'Next',
+      actPrev: 'Back',
+      actDone: 'I’m done!',
+      actClose: 'Close',
+      actListen: 'Listen',
       lastRound: 'Last game',
       opensAt: 'Opens at {h}',
       wakeTitle: 'Ludiworld is still asleep.',
@@ -673,6 +700,9 @@ window.LudiTextes = {
       sound_musique: 'Music',
       sound_bruitages: 'Sound effects',
       sound_voix: 'Voice that reads the texts',
+      stats: 'Statistics',
+      statsCase: 'Help Ludiworld improve its games',
+      statsText: 'Anonymous statistics: which games are started, for how long, what is opened at the end. They are only used to understand how Ludiworld is used, to better meet children’s needs and see whether they enjoy the games. Never the name, never sold.',
       lock: 'Lock the device',
       lockText: 'Ludiworld can’t block the rest of the device. So that your child can’t leave it:',
       lockAndroid: 'Android: install Ludiworld on the home screen, turn on app pinning (Settings, Security), then pin Ludiworld.',
@@ -708,6 +738,7 @@ window.LudiTextes = {
       cProtect: 'code to switch child',
       cFullscreen: 'full screen',
       cSound: 'sound',
+      cStats: 'anonymous statistics',
       cKidRemoved: '{n} removed',
       cKidAdded: '{n} added'
     }
