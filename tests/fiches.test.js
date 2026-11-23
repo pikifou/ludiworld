@@ -74,6 +74,28 @@ test('after : facultatif, une phrase fr et en ; les huit jeux du catalogue en on
   assert.deepStrictEqual(fiches.filter((f) => !f.after).map((f) => f.id), []);
 });
 
+test('activity : facultative, avec after, 2 à 10 étapes, schémas présents dans docs/jeux/img/activites', () => {
+  const base = JSON.parse(fs.readFileSync(catalogue()[0], 'utf8'));
+  delete base.activity;
+  const etape = (n) => ({ img: `img/activites/essai-${n}.svg`, text: { fr: 'Plie.', en: 'Fold.' } });
+  const act = { title: { fr: 'Le pliage', en: 'The fold' }, need: { fr: 'Une feuille.', en: 'A sheet.' }, steps: [etape(1), etape(2)] };
+  assert.deepStrictEqual(validate(base), [], 'sans activity, la fiche reste valide');
+  assert.deepStrictEqual(validate(Object.assign({}, base, { activity: act })), []);
+  const sansApres = Object.assign({}, base, { activity: act }); delete sansApres.after;
+  assert.ok(validate(sansApres).some((e) => e.startsWith('activity')), 'seulement avec after');
+  assert.ok(validate(Object.assign({}, base, { activity: Object.assign({}, act, { steps: [etape(1)] }) })).some((e) => e.startsWith('activity.steps')), 'au moins 2 étapes');
+  assert.ok(validate(Object.assign({}, base, { activity: Object.assign({}, act, { steps: [etape(1), { img: '../../x.svg', text: { fr: 'a', en: 'b' } }] }) })).some((e) => e.includes('.img')), 'pas de chemin qui sort du dossier');
+  assert.ok(validate(Object.assign({}, base, { activity: Object.assign({}, act, { steps: [etape(1), { img: 'img/activites/a.svg', text: { fr: 'a' } }] }) })).some((e) => e.includes('.text')), 'il manque l\'anglais');
+  assert.ok(validate(Object.assign({}, base, { activity: Object.assign({}, act, { need: undefined }) })).some((e) => e.startsWith('activity.need')), 'ce qu\'il faut');
+  // chaque schéma local d'une fiche du catalogue existe
+  catalogue().forEach((file) => {
+    const f = JSON.parse(fs.readFileSync(file, 'utf8'));
+    ((f.activity && f.activity.steps) || []).forEach((s) => {
+      if (/^img\//.test(s.img)) assert.ok(fs.existsSync(path.join(path.dirname(file), s.img)), `${f.id} : ${s.img} manque`);
+    });
+  });
+});
+
 test('une fiche qui triche est refusée', () => {
   const f = JSON.parse(fs.readFileSync(catalogue()[0], 'utf8'));
   f.healthy.no_purchases = false;

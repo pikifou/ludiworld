@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300" role="img" aria-label="Les deux coins du haut rabattus jusqu'au trait du milieu">
+  <defs>
+    <marker id="f" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#e0a400"/></marker>
+  </defs>
+  <!-- les coins avant le pli, en pointillés -->
+  <path d="M75 110 L150 110 L75 185 z M225 110 L150 110 L225 185 z" fill="none" stroke="#4c5b7c" stroke-width="2.5" stroke-dasharray="6 6"/>
+  <!-- la forme après le pli : une petite maison -->
+  <path d="M150 110 L75 185 L75 225 L225 225 L225 185 z" fill="#fbf7ee" stroke="#1d2b4f" stroke-width="4" stroke-linejoin="round"/>
+  <!-- les deux coins rabattus -->
+  <path d="M150 110 L75 185 L150 185 z M150 110 L225 185 L150 185 z" fill="#e8dec7" stroke="#1d2b4f" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M86 122 Q 100 165 136 172" fill="none" stroke="#e0a400" stroke-width="6" stroke-linecap="round" marker-end="url(#f)"/>
+  <path d="M214 122 Q 200 165 164 172" fill="none" stroke="#e0a400" stroke-width="6" stroke-linecap="round" marker-end="url(#f)"/>
+</svg>

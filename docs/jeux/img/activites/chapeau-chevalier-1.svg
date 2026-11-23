@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300" role="img" aria-label="Une feuille en hauteur, à plier en deux du haut vers le bas">
+  <defs>
+    <marker id="f" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#e0a400"/></marker>
+  </defs>
+  <rect x="75" y="35" width="150" height="230" rx="3" fill="#fbf7ee" stroke="#1d2b4f" stroke-width="4"/>
+  <line x1="75" y1="150" x2="225" y2="150" stroke="#4c5b7c" stroke-width="3" stroke-dasharray="10 8"/>
+  <path d="M240 45 C 292 90, 292 205, 240 250" fill="none" stroke="#e0a400" stroke-width="7" stroke-linecap="round" marker-end="url(#f)"/>
+</svg>

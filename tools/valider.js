@@ -84,6 +84,28 @@ function validate(f, domains = knownDomains()) {
     });
     if (!['portrait', 'landscape'].includes(f.screens)) err.push('screens : portrait ou landscape (requis avec screenshots)');
   } else if (f.screens !== undefined) err.push('screens : seulement avec screenshots');
+
+  // L'activité hors écran pas à pas (facultative, décision du 23 novembre) : elle s'ouvre depuis l'idée `after`,
+  // sur « C'est fini pour aujourd'hui ». Un titre, ce qu'il faut, puis 2 à 10 étapes : un schéma et une phrase courte.
+  if (f.activity !== undefined) {
+    const a = f.activity;
+    if (!a || typeof a !== 'object') err.push('activity : { "title", "need", "steps" } attendu');
+    else {
+      if (f.after === undefined) err.push('activity : seulement avec after (elle s\'ouvre depuis l\'idée hors écran)');
+      bi('activity.title', a.title);
+      bi('activity.need', a.need);
+      if (!Array.isArray(a.steps) || a.steps.length < 2 || a.steps.length > 10) err.push('activity.steps : liste de 2 à 10 étapes');
+      else a.steps.forEach((s, i) => {
+        const k = `activity.steps[${i}]`;
+        if (!s || typeof s !== 'object') { err.push(`${k} : { "img": …, "text": { "fr": …, "en": … } } attendu`); return; }
+        let ok = typeof s.img === 'string' && /^img\/activites\/[a-z0-9-]+\.(svg|webp)$/.test(s.img);
+        if (!ok) { try { ok = typeof s.img === 'string' && new URL(s.img).protocol === 'https:'; } catch (e) { ok = false; } }
+        if (!ok) err.push(`${k}.img : img/activites/<nom>.svg (ou .webp) ou adresse https`);
+        bi(`${k}.text`, s.text);
+        if (s.text && ['fr', 'en'].some((l) => typeof s.text[l] === 'string' && s.text[l].length > 140)) err.push(`${k}.text : une phrase de 140 signes au plus`);
+      });
+    }
+  }
   return err;
 }
 

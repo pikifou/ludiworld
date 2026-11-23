@@ -58,11 +58,12 @@
   }
 
   // Petites colonnes : une série par graphique, jamais deux échelles sur le même.
-  function colonnes(titre, semaines, cle) {
+  // sansTotal : pour une série qui ne s'additionne pas d'une semaine à l'autre (les mêmes appareils reviennent)
+  function colonnes(titre, semaines, cle, sansTotal) {
     var max = Math.max.apply(null, semaines.map(function (s) { return s[cle]; }).concat([1]));
     var total = semaines.reduce(function (a, s) { return a + s[cle]; }, 0);
     return el('figure', { class: 'b-colonnes' }, [
-      el('figcaption', null, [titre + ' : ', el('b', { text: total })]),
+      el('figcaption', null, sansTotal ? [titre] : [titre + ' : ', el('b', { text: total })]),
       el('div', { class: 'b-cols', role: 'img', 'aria-label': titre + ', ' + semaines.map(function (s) { return date(s.semaine) + ' ' + s[cle]; }).join(', ') }, semaines.map(function (s) {
         return el('span', { class: 'b-col', title: 'Semaine du ' + date(s.semaine) + ' : ' + s[cle] }, [el('i', { style: 'height:' + Math.max(s[cle] ? 6 : 1, 100 * s[cle] / max) + '%' })]);
       }))
@@ -246,6 +247,67 @@
     }).catch(function (e) { erreur($('av-relire'), e); });
   }
 
+  // ---------- L'usage de l'appli (statistiques sans nom, décision de Julien du 2026-11-23) ----------
+  var RAISONS = { sortie: 'L\'enfant est sorti du jeu', total: 'Le temps du jour était fini', heure: 'L\'heure de fin', jeu: 'La limite de ce jeu' };
+  var COTES = { enfant: 'Côté enfant', parent: 'Côté parent', accueil: 'La préparation' };
+  var FORMATS = { telephone: 'Téléphone', tablette: 'Tablette', ordi: 'Ordinateur' };
+  function entier(x) { return Math.round(Number(x) || 0); }
+  function enBarres(hote, objet, libelles) {
+    var o = objet || {}, tot = Object.keys(o).reduce(function (a, k) { return a + o[k]; }, 0);
+    barres(hote, Object.keys(o).map(function (k) { return { nom: (libelles && libelles[k]) || (k === '?' ? 'Pas dit' : k), n: o[k], note: pct(o[k], tot) }; })
+      .sort(function (a, b) { return b.n - a.n; }), { vide: 'Rien encore.' });
+  }
+  function tableau(hote, entetes, lignes, vide) {
+    var t = vider(hote);
+    t.appendChild(el('thead', null, [el('tr', null, entetes.map(function (h) { return el('th', { scope: 'col', text: h }); }))]));
+    var b = el('tbody');
+    lignes.forEach(function (l) { b.appendChild(el('tr', null, l.map(function (c, i) { return el('td', { class: i ? 'nowrap' : null, text: c }); }))); });
+    t.appendChild(b);
+    if (!lignes.length) t.appendChild(el('caption', { class: 'b-vide', text: vide }));
+  }
+  function rendreUsage() {
+    var jours = Number($('us-periode').value) || 90;
+    Promise.all([N.rpc('bureau_usage', { p_jours: jours }), catalogue().catch(function () { return { jeux: [] }; })]).then(function (r) {
+      var u = r[0] || {}, c = r[1];
+      var dl = vider($('us-chiffres'));
+      [['Appareils', u.appareils], ['Revenus au moins un autre jour', (u.revenus || 0) + (u.appareils ? ' (' + pct(u.revenus, u.appareils) + ')' : '')],
+        ['Événements notés', u.evenements], ['Depuis le', date(u.depuis)]].forEach(function (x) {
+        dl.appendChild(el('div', null, [el('dt', { text: x[0] }), el('dd', { text: x[1] === undefined || x[1] === null ? 0 : x[1] })]));
+      });
+      var sem = (u.semaines || []).map(function (s) { return { semaine: s.semaine, appareils: s.appareils, lancements: s.lancements, minutes: entier(s.minutes) }; });
+      var s = vider($('us-semaines'));
+      s.appendChild(colonnes('Appareils actifs chaque semaine', sem, 'appareils', true));
+      s.appendChild(colonnes('Jeux lancés', sem, 'lancements'));
+      s.appendChild(colonnes('Minutes jouées', sem, 'minutes'));
+      var jeux = u.jeux || [];
+      tableau($('us-jeux'), ['Jeu', 'Lancés', 'Appareils', 'Minutes', 'Min. par partie', 'Fiches ouvertes', 'Demandés par l\'enfant', 'Installés', 'Rangés', 'Retirés'],
+        jeux.map(function (j) {
+          return [nomJeu(c, j.jeu), j.lancements, j.appareils, entier(j.minutes), j.parties ? virgule(j.minutes / j.parties) : '', j.fiches, j.demandes, j.installes, j.ranges || 0, j.retires];
+        }), 'Rien encore : aucun appareil n\'a envoyé de statistiques.');
+      var avecActivite = jeux.filter(function (j) { return j.idees || j.activites; });
+      tableau($('us-activites'), ['Jeu', 'Idée montrée', 'Activité ouverte', 'Ouverte / montrée', 'Appareils', 'Allés au bout', '« J\'ai fini »', 'Étape la plus loin'],
+        avecActivite.map(function (j) {
+          var et = j.etapes || {}, plusLoin = Object.keys(et).sort(function (a, b) { return a - b; }).map(function (k) { return (k === '0' ? 'ce qu\'il faut' : 'étape ' + k) + ' : ' + et[k]; }).join(', ');
+          return [nomJeu(c, j.jeu), j.idees, j.activites, pct(j.activites, j.idees), j.activites_appareils, j.activites_finies, pct(j.activites_finies, j.activites), plusLoin];
+        }), 'Rien encore.');
+      var ch = u.choix || {}, net = Math.max(0, (ch.refus || 0) - (ch.reprises || 0));
+      var dr = vider($('us-refus'));
+      [['Ont refusé', ch.refus || 0], ['Ont recoché ensuite', ch.reprises || 0],
+        ['Part des appareils qui refusent (approchée)', (u.appareils || net) ? pct(net, (u.appareils || 0) + net) : '0 %']].forEach(function (x) {
+        dr.appendChild(el('div', null, [el('dt', { text: x[0] }), el('dd', { text: x[1] })]));
+      });
+      var AGES_U = { '4-5': '4 à 5 ans', '6-7': '6 à 7 ans', '8-10': '8 à 10 ans', '11-12': '11 à 12 ans' };
+      enBarres($('us-refus-age'), ch.age, AGES_U);
+      enBarres($('us-refus-format'), ch.format, FORMATS);
+      enBarres($('us-fins'), u.fins, RAISONS);
+      enBarres($('us-vues'), u.vues, COTES);
+      var rep = u.repartition || {};
+      enBarres($('us-age'), rep.age, AGES_U);
+      enBarres($('us-format'), rep.format, FORMATS);
+      enBarres($('us-langue'), rep.langue, { fr: 'Français', en: 'Anglais' });
+    }).catch(function (e) { erreur($('us-chiffres'), e); });
+  }
+
   // ---------- Le catalogue : les fichiers du site et les demandes GitHub ----------
   var cat = null, gh = null;
   function catalogue() {
@@ -334,7 +396,7 @@
   }
 
   // ---------- Navigation ----------
-  var RUBRIQUES = { apercu: rendreApercu, envies: rendreEnvies, comptes: rendreComptes, avis: rendreAvis, catalogue: rendreCatalogue, formules: rendreFormules };
+  var RUBRIQUES = { apercu: rendreApercu, usage: rendreUsage, envies: rendreEnvies, comptes: rendreComptes, avis: rendreAvis, catalogue: rendreCatalogue, formules: rendreFormules };
   function route() {
     var r = location.hash.replace('#', '');
     if (!RUBRIQUES[r]) r = 'apercu';
@@ -359,6 +421,7 @@
       $('bureau').hidden = false;
       $('b-qui').textContent = N.email() || '';
       $('en-filtre').addEventListener('change', rendreTableEnvies);
+      $('us-periode').addEventListener('change', rendreUsage);
       $('co-cherche').addEventListener('input', function () { clearTimeout(minuteur); minuteur = setTimeout(rendreComptes, 250); });
       $('en-csv').addEventListener('click', function () {
         csv('ludiworld-envies.csv', ['date', 'langue', 'vient pour', 'qui', 'ages', 'ce qui compte', 'ia', 'message', 'fini', 'adresse'],

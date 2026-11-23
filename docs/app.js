@@ -50,6 +50,7 @@
   var ICONS = {
     sun: '<circle cx="12" cy="12" r="5" fill="currentColor"/><g stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 1.5v3M12 19.5v3M1.5 12h3M19.5 12h3M4.6 4.6l2.1 2.1M17.3 17.3l2.1 2.1M4.6 19.4l2.1-2.1M17.3 6.7l2.1-2.1"/></g>',
     moon: '<path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z" fill="currentColor"/>',
+    parle: '<path d="M3.5 9.5h4l5-4.5v14l-5-4.5h-4z" fill="currentColor"/><path d="M16 9a4 4 0 0 1 0 6M18.6 6.4a7.6 7.6 0 0 1 0 11.2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
     hourglass: '<path d="M6 2h12M6 22h12M7 2c0 5 5 6 5 10s-5 5-5 10M17 2c0 5-5 6-5 10s5 5 5 10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
     lock: '<rect x="4" y="10.5" width="16" height="11" rx="2.5" fill="currentColor"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5" fill="none" stroke="currentColor" stroke-width="2.4"/>',
     play: '<path d="M7 4.5v15l12.5-7.5z" fill="currentColor"/>',
@@ -256,7 +257,7 @@
   var vues = { accueil: document.getElementById('v-accueil'), enfant: document.getElementById('v-enfant'), parent: document.getElementById('v-parent') };
   var vue = null;
   function show(v) {
-    if (v !== vue) document.getElementById('e-jeux').classList.remove('calme');
+    if (v !== vue) { document.getElementById('e-jeux').classList.remove('calme'); noterUsage('vue', null, { cote: v }); }
     if (v !== 'enfant' && vitrine && !vitrine.hidden) fermerVitrine();
     vue = v;
     Object.keys(vues).forEach(function (k) { vues[k].hidden = k !== v; });
@@ -470,6 +471,7 @@
           e.maj = Date.now();
           saveStore();
           planifierSynchro();
+          noterUsage('preparation_finie', null, { jeux: Object.keys(jeux).length });
           acc.step = 5; renderAccueil();
         }),
         el('div', { class: 'a-nav' }, [el('button', { type: 'button', class: 'btn-ghost', text: t('hello.prev'), onclick: function () { acc.pin1 = null; acc.step--; renderAccueil(); } })])
@@ -486,7 +488,10 @@
         el('p', { class: 'a-lead', text: t('hello.doneText', { n: nom }) }),
         el('p', { class: 'note' }, [icon('lock'), t('hello.doneLock', { n: nom })]),
         el('button', { type: 'button', class: 'btn-sun big', onclick: function () { show('enfant'); } }, [t('hello.doneGo')]),
-        compteEnLigne ? el('p', { class: 'a-compte-ligne' }, [t('hello.doneAccount') + ' ', el('a', { class: 'lien', href: 'compte/#creer', text: t('hello.doneAccountGo') })]) : null
+        compteEnLigne ? el('p', { class: 'a-compte-ligne' }, [t('hello.doneAccount') + ' ', el('a', { class: 'lien', href: 'compte/#creer', text: t('hello.doneAccountGo') })]) : null,
+        // Les statistiques anonymes, dites dès la préparation (Julien, 2026-11-23 : « ça va avec la transparence des données »)
+        el('p', { class: 'a-compte-ligne a-stats-ligne' }, [t('hello.doneStats') + ' ',
+          el('button', { type: 'button', class: 'lien', 'data-action': 'stats-reglages', text: t('hello.doneStatsGo'), onclick: function () { versParent('reglages'); } })])
       ])
     ]));
   }
@@ -777,6 +782,7 @@
     var f = fam();
     (f.demandes || (f.demandes = {}))[g.id] = Date.now();
     saveStore();
+    noterUsage('jeu_demande', g);
     planifierSynchro();
     dessinerVitrine();
     var m = vitrine.querySelector('.v-demande');
@@ -1217,6 +1223,26 @@
   // Pas d'envoi pendant une partie active. L'écran de fin peut synchroniser sans attendre un bouton.
   var Nuage = window.LudiNuage;
   var minuteurSynchro = null;
+
+  // ---------- Statistiques d'usage (décision de Julien du 2026-11-23 ; docs/usage.js, spec/donnees.md) ----------
+  // Sans nom, envoyées hors des parties. Le parent peut refuser dans Réglages (foyer().mesures === false, pour toute la maison).
+  function mesuresPermises() { var h = foyer(); return !(h && h.mesures === false); }
+  // Le serveur de dev de Julien n'envoie rien à la vraie base (le banc d'essai, lui, pose LUDI_NUAGE).
+  var usageEnvoi = !!(Nuage && Nuage.noterUsage) && !(/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !window.LUDI_NUAGE);
+  var versionAppli = '';
+  try { if (window.caches) caches.keys().then(function (k) { var v = k.filter(function (x) { return /^ludiworld-/.test(x); }).sort().pop(); if (v) versionAppli = v.replace(/^ludiworld-/, ''); }).catch(function () {}); } catch (e) { /* rien */ }
+  var Usage = window.LudiUsage ? window.LudiUsage.creer({
+    stockage: window.localStorage,
+    aleatoire: function (n) { var b = new Uint8Array(n); window.crypto.getRandomValues(b); return b; },
+    permis: mesuresPermises,
+    contexte: function () { var f = fam(); return { age: f && f.enfant ? f.enfant.age : null, format: genreAppareil(), langue: lang, version: versionAppli }; },
+    envoyer: function (lot, o) { if (!usageEnvoi || !Nuage.actif()) return Promise.reject(new Error('pas maintenant')); return Nuage.noterUsage(lot, o); }
+  }) : null;
+  function noterUsage(evt, g, details) { if (Usage) try { Usage.noter(evt, g ? (typeof g === 'string' ? g : g.id) : null, details); } catch (e) { /* rien */ } }
+  // Jamais pendant une partie en cours : l'écran de fin, oui.
+  function envoyerUsage(o) { if (Usage && !(playing && playing.phase !== 'arrete')) Usage.envoyer(o); }
+  setTimeout(envoyerUsage, 4000);
+  document.addEventListener('visibilitychange', function () { if (document.hidden) envoyerUsage({ keepalive: true }); });
   function synchroVoulue() { return !!(Nuage && Nuage.actif() && Nuage.connecte() && (Nuage.appareilAutorise() || (Nuage.liaisonDemandee() && LudiBarre.parentOuvert()))); }
   // Ce qu'on dit au parent : la copie est active seulement si le compte l'a choisie et que cet appareil y est relié.
   function copieActive() { return !!(Nuage && Nuage.actif() && Nuage.connecte() && Nuage.synchroLocale()); }
@@ -1563,6 +1589,7 @@
       if (garde) { delete k.jeuxRetires[g.id]; delete k.jeux[g.id].range; }
       traiterDemande(k, g.id); // l'enfant l'avait demandé : c'est fait
     }, { nom: e.enfant.nom });
+    noterUsage('jeu_installe', g);
   }
   // « Pas maintenant » : la demande s'en va ; l'enfant pourra la refaire.
   function pasMaintenant(id, g) {
@@ -1574,6 +1601,7 @@
     var e = enfantParId(id);
     regle = null;
     changer(t('parent.cPutAway', { g: pick(g.title) }), function () { var c = enfantParId(id).jeux[g.id]; if (c) c.range = Date.now(); }, { nom: e.enfant.nom });
+    noterUsage('jeu_range', g);
   }
   function ressortir(id, g) {
     var e = enfantParId(id);
@@ -1586,6 +1614,7 @@
       (k.jeuxRetires || (k.jeuxRetires = {}))[g.id] = k.jeux[g.id];
       delete k.jeux[g.id];
     }, { nom: e.enfant.nom });
+    noterUsage('jeu_retire', g);
   }
   function boutonInstaller(e, g) {
     return bouton('btn-sun pa-installer', t('parent.install', { n: e.enfant.nom }), 'plus', function () { installer(e.id, g); }, { 'data-installer': g.id, 'data-enfant': e.id });
@@ -1596,6 +1625,7 @@
   // =====================================================================
   function openFiche(g) {
     var f = fam();
+    noterUsage('fiche_ouverte', g);
     var actions = [bouton('btn-ghost', t('parent.tryMe'), 'play', function () { play(g, { essai: true }); })];
     if (g.embed === false) actions.push(el('p', { class: 'pa-note', text: t('parent.newTab') }));
     var o = { lang: lang, actions: actions };
@@ -1946,6 +1976,19 @@
       } }),
       el('span', { text: t('parent.fullscreenCase') })
     ])]));
+    // Les statistiques d'usage (décision de Julien du 2026-11-23) : cochées par défaut, le parent peut refuser pour toute la maison.
+    maison.push(rang(t('parent.stats'), [
+      el('label', { class: 'pa-case' }, [
+        el('input', { type: 'checkbox', checked: mesuresPermises(), 'data-reglage': 'statistiques', onchange: function (e) {
+          var v = e.target.checked;
+          changer(t('parent.cStats'), function () { if (v) delete foyer().mesures; else foyer().mesures = false; }, { maison: true });
+          // Une seule fois, sans le numéro de l'appareil : pour savoir quelle part des familles refuse (Julien, 2026-11-23)
+          if (Usage) { if (!v) Usage.oublier(); Usage.signalerChoix(v ? 'statistiques_reprises' : 'statistiques_refusees'); }
+        } }),
+        el('span', { text: t('parent.statsCase') })
+      ]),
+      el('p', { class: 'pa-note', text: t('parent.statsText') })
+    ]));
     maison.push(el('details', { class: 'pa-plie' }, [
       el('summary', { text: t('parent.lock') }),
       el('p', { text: t('parent.lockText') }),
@@ -1972,6 +2015,7 @@
       bouton('btn-danger pa-btn', t(enLigne ? 'parent.eraseSync' : 'parent.erase'), 'warn', function () {
         if (!window.confirm(t(enLigne ? 'parent.eraseConfirmSync' : 'parent.eraseConfirm'))) return;
         try { localStorage.removeItem(STORE); localStorage.removeItem('ludiworld.envie'); localStorage.removeItem(COPIE_VUE); } catch (e) { /* rien */ }
+        if (Usage) Usage.oublier(); // les statistiques en attente et le numéro de l'appareil partent aussi
         journal = []; majJournal();
         if (Nuage) Nuage.oublier(); // un appareil vidé ne reste lié à personne : il peut changer de famille
         store = { games: {} }; acc = accVide(); regarde = null;
@@ -2006,7 +2050,8 @@
     if (g.embed === false) { window.open(g.url, '_blank', 'noopener'); return; }
     // Essayé depuis sa fiche (côté parent) : la fiche se referme pendant le jeu et revient après.
     var fiche = LudiCatalogue.ouverte();
-    playing = { game: g, origin: new URL(g.url, document.baseURI).origin, kit: false, essai: !!o.essai, last: Date.now(), phase: 'jouer', avertie: false, fiche: fiche };
+    playing = { game: g, origin: new URL(g.url, document.baseURI).origin, kit: false, essai: !!o.essai, last: Date.now(), phase: 'jouer', avertie: false, fiche: fiche, joue: 0 };
+    noterUsage('jeu_lance', g, o.essai ? { essai: true } : null);
     if (fiche) LudiCatalogue.fermer();
     frame = el('iframe', { title: pick(g.title), src: g.url, allow: 'autoplay; screen-wake-lock; gamepad' }); // pas de plein écran pour le jeu : c'est Ludiworld qui décide
     player.insertBefore(frame, player.firstChild);
@@ -2015,14 +2060,26 @@
     document.body.style.overflow = 'hidden';
     history.pushState({ ludi: 'play', id: g.id }, '');
     try { frame.focus(); } catch (e) { /* rien */ }
+    var act = activiteDe(g);
+    if (act) act.steps.forEach(function (s) { var src = imageActivite(s.img); if (src) { var im = new Image(); im.src = src; } });
     boucle();
   }
 
+  // Une partie finie, une seule fois : combien de minutes et pourquoi (l'enfant est sorti, ou le temps : jour, heure, jeu).
+  function noterFin(raison) {
+    if (!playing || playing.finNotee) return;
+    playing.finNotee = true;
+    var d = { minutes: Math.round(playing.joue / 6000) / 10, raison: raison };
+    if (playing.essai) d.essai = true;
+    noterUsage('jeu_fini', playing.game, d);
+  }
   function stop(fromHistory) {
     if (!playing) return;
     compter();
+    noterFin('sortie');
     flushStore();
     setTimeout(planifierSynchro, 0); // la partie est finie : le temps de jeu peut partir
+    setTimeout(envoyerUsage, 0);
     var wasEssai = playing.essai, fiche = playing.fiche, retourDemande = false;
     playing = null;
     if (frame) { frame.remove(); frame = null; }
@@ -2043,7 +2100,9 @@
     var now = Date.now();
     var ms = Math.min(now - playing.last, 5000); // un onglet endormi ne compte pas des heures d'un coup
     playing.last = now;
-    if (playing.essai || playing.phase === 'arrete' || document.visibilityState === 'hidden') return;
+    if (playing.phase === 'arrete' || document.visibilityState === 'hidden') return;
+    playing.joue += ms;
+    if (playing.essai) return;
     addTime(playing.game.id, ms);
   }
 
@@ -2137,6 +2196,8 @@
   }
 
   function arreter(cause) {
+    compter();
+    noterFin(cause || 'temps');
     playing.phase = 'arrete';
     flushStore();
     synchroniser();
@@ -2154,6 +2215,7 @@
     ]));
     rideau.setAttribute('data-moment', toutFini ? 'nuit' : 'soir');
     rideau.hidden = false;
+    setTimeout(envoyerUsage, 0);
     var b = rideau.querySelector('button'); if (b) setTimeout(function () { b.focus(); }, 300);
   }
 
@@ -2167,10 +2229,116 @@
     if (store.apresVu[qui] === k) return null;
     store.apresVu[qui] = k;
     saveStore();
+    noterUsage('idee_montree', g, activiteDe(g) ? { activite: true } : null);
     return el('div', { class: 'rideau-apres' }, [
       LudiCatalogue.icone(g, 52),
-      el('p', { text: phrase.replace(/ ([?!:;»])/g, ' $1') })
+      el('p', { text: phrase.replace(/ ([?!:;»])/g, '\u00a0$1') }),
+      activiteDe(g) ? el('button', { type: 'button', class: 'btn-activite', onclick: function () { ouvrirActivite(g); } }, [icon('book'), t('kid.howTo')]) : null
     ]);
+  }
+
+  // ---------- L'activité hors écran pas à pas (champ `activity` de la fiche ; décision de Julien du 23 novembre)
+  // Elle s'ouvre par-dessus « C'est fini pour aujourd'hui » : le jeu est déjà arrêté, le temps ne compte plus
+  // (on fait quelque chose en dehors de la tablette, avec la tablette). Ce qu'il faut, puis une étape à la fois :
+  // un grand schéma et une phrase courte, que l'enfant entend en appuyant dessus.
+  function activiteDe(g) {
+    var a = g && g.activity;
+    return a && Array.isArray(a.steps) && a.steps.length >= 2 ? a : null;
+  }
+  function imageActivite(src) {
+    if (/^https:\/\//.test(src)) return src;
+    return /^img\/activites\/[a-z0-9-]+\.(svg|webp)$/.test(src) ? 'jeux/' + src : '';
+  }
+  // La voix de l'appareil, seulement si l'enfant appuie ; seulement une voix installée (le texte ne part pas en ligne).
+  function voixLocale() {
+    try {
+      var s = window.speechSynthesis; if (!s) return null;
+      return (s.getVoices() || []).filter(function (x) { return x.localService && x.lang.toLowerCase().indexOf(lang) === 0; })[0] || null;
+    } catch (e) { return null; }
+  }
+  function dire(texte) {
+    try {
+      var s = window.speechSynthesis, v = voixLocale(); if (!s || !v || !texte) return;
+      s.cancel();
+      var u = new SpeechSynthesisUtterance(texte); u.voice = v; u.lang = v.lang; u.rate = .9;
+      s.speak(u);
+    } catch (e) { /* pas de voix : rien */ }
+  }
+  // Chrome ne charge ses voix qu'à la première demande : on les demande dès le départ de l'appli.
+  try { if (window.speechSynthesis) window.speechSynthesis.getVoices(); } catch (e) { /* rien */ }
+  function taire() { try { if (window.speechSynthesis) window.speechSynthesis.cancel(); } catch (e) { /* rien */ } }
+  var activiteOuverte = null; // la fonction qui la ferme, tant qu'elle est ouverte
+  function ouvrirActivite(g, etape) {
+    var a = activiteDe(g); if (!a) return;
+    var n = a.steps.length, i = -1; // -1 : ce qu'il faut
+    var plusLoin = 0; // l'étape la plus loin vue (0 : ce qu'il faut), pour les statistiques
+    var boite = el('div', { class: 'p-activite', role: 'dialog', 'aria-modal': 'true', 'aria-label': pick(a.title) });
+    // un texte qu'on entend en appuyant dessus
+    // sans voix sur l'appareil, pas de haut-parleur : il promettrait ce qui ne vient pas (audit des situations, n° 2)
+    function phrase(cls, texte) {
+      if (!voixLocale()) return el('p', { class: 'act-phrase sans-voix ' + cls }, [el('span', { text: texte })]);
+      return el('button', { type: 'button', class: 'act-phrase ' + cls, 'aria-label': t('kid.actListen') + ' : ' + texte, onclick: function () { dire(texte); } },
+        [icon('parle'), el('span', { text: texte })]);
+    }
+    // parRetour : true (retour du téléphone), 'fini' (« J'ai fini »), rien (croix, Échap)
+    function fermer(parRetour) {
+      taire(); document.removeEventListener('keydown', touche); boite.remove(); activiteOuverte = null;
+      noterUsage('activite_fermee', g, { etape: plusLoin, etapes: n, finie: parRetour === 'fini' });
+      if (parRetour === 'fini') parRetour = false;
+      // fermée par un bouton : on retire le pas d'historique posé à l'ouverture
+      if (!parRetour && history.state && history.state.ludiActivite) { ignorePop++; history.back(); }
+      var b = rideau.querySelector('.btn-activite'); if (b) b.focus();
+    }
+    function touche(e) {
+      if (e.key === 'Escape') fermer();
+      else if (e.key === 'ArrowRight' && i < n - 1) { i++; montrer(); }
+      else if (e.key === 'ArrowLeft' && i > -1) { i--; montrer(); }
+    }
+    function montrer() {
+      taire();
+      plusLoin = Math.max(plusLoin, i + 1);
+      boite.textContent = '';
+      boite.appendChild(el('div', { class: 'act-tete' }, [
+        LudiCatalogue.icone(g, 40),
+        el('h2', { text: pick(a.title) }),
+        el('button', { type: 'button', class: 'act-fermer', 'aria-label': t('kid.actClose'), onclick: function () { fermer(); } }, [icon('cross')])
+      ]));
+      if (i < 0) {
+        boite.appendChild(el('div', { class: 'act-corps act-besoin' }, [
+          el('p', { class: 'act-kicker', text: t('kid.actNeed') }),
+          phrase('act-grande', pick(a.need)),
+          el('button', { type: 'button', class: 'btn-sun big act-suivant', onclick: function () { i = 0; montrer(); } }, [t('kid.actStart')])
+        ]));
+      } else {
+        var s = a.steps[i];
+        boite.appendChild(el('div', { class: 'act-corps' }, [
+          el('img', { class: 'act-schema', src: imageActivite(s.img), alt: '', draggable: 'false' }),
+          el('p', { class: 'act-compte' }, [t('kid.actStep', { i: i + 1, n: n })].concat(
+            [el('span', { class: 'act-points', 'aria-hidden': 'true' }, a.steps.map(function (x, k) { return el('i', { class: k === i ? 'on' : (k < i ? 'vu' : null) }); }))])),
+          phrase('', pick(s.text)),
+          el('div', { class: 'act-nav' }, [
+            el('button', { type: 'button', class: 'btn-ghost act-retour', onclick: function () { i--; montrer(); } }, [t('kid.actPrev')]),
+            i < n - 1
+              ? el('button', { type: 'button', class: 'btn-sun big act-suivant', onclick: function () { i++; montrer(); } }, [t('kid.actNext')])
+              : el('button', { type: 'button', class: 'btn-sun big act-suivant', onclick: function () { fermer('fini'); } }, [icon('check'), t('kid.actDone')])
+          ])
+        ]));
+      }
+      var f = boite.querySelector('.act-suivant'); if (f) f.focus();
+    }
+    document.addEventListener('keydown', touche);
+    // les voix arrivent après l'ouverture : on redessine l'étape pour faire apparaître le haut-parleur
+    var synth = window.speechSynthesis;
+    if (synth && synth.addEventListener && !voixLocale()) {
+      var surVoix = function () { synth.removeEventListener('voiceschanged', surVoix); if (boite.isConnected && voixLocale()) montrer(); };
+      synth.addEventListener('voiceschanged', surVoix);
+    }
+    rideau.appendChild(boite);
+    noterUsage('activite_ouverte', g);
+    history.pushState({ ludiActivite: 1 }, '');
+    activiteOuverte = fermer;
+    if (etape) i = Math.max(-1, Math.min(n - 1, etape - 1));
+    montrer();
   }
 
   function boucle() { compter(); evaluer(false); }
@@ -2256,6 +2424,7 @@
       if (ficheApresRetour) { var g = ficheApresRetour; ficheApresRetour = null; if (vue === 'parent') openFiche(g); }
       return;
     }
+    if (activiteOuverte) { activiteOuverte(true); return; } // l'activité pas à pas : le retour revient à l'écran de fin
     if (playing) { stop(true); return; }
     if (!vitrine.hidden) {
       var pas = history.state && history.state.ludiVitrine;
@@ -2320,7 +2489,7 @@
   }
   loadCatalogue().then(function () {
     // Un jeu choisi qui a disparu du catalogue n'est plus proposé (on garde son choix au cas où il revient).
-    if (!prepare) { show('accueil'); return; }
+    if (!prepare) { show('accueil'); finEssai(); return; }
     synchroniser();
     if (ongletDe(arrivee) && LudiBarre.parentOuvert()) { ouvrirCarnet(ongletDe(arrivee)); return; }
     // Retour depuis une page du site ouverte côté parent : le pas d'historique garde l'onglet ; pas de code tant que le parent est là.
@@ -2334,7 +2503,31 @@
       var g = games.filter(function (x) { return x.id === aJouer; })[0];
       if (g && choix(g.id) && resteJeu(g.id).jeu > 0 && document.querySelector('.tuile')) play(g);
     }
+    finEssai();
   });
+  // Pour essayer l'écran de fin et l'activité sans jouer jusqu'au bout : seulement sur le serveur de dev (localhost:7357).
+  function finEssai() {
+    if (!(/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && location.port === '7357')) return;
+    var q = new URLSearchParams(location.search), g = byId[q.get('fin')];
+    if (!g || playing) return;
+    var f = fam(), phrase = g.after ? pick(g.after) : '';
+    rideau.textContent = '';
+    rideau.appendChild(el('div', { class: 'rideau-carte' }, [
+      el('img', { src: 'img/marmotte-dodo.webp', alt: '' }),
+      el('h2', { text: t('kid.stopTitle') }),
+      el('p', { text: t('kid.stopText', { n: f && f.enfant.nom ? f.enfant.nom : 'Petit Loup' }) }),
+      phrase ? el('div', { class: 'rideau-apres' }, [
+        LudiCatalogue.icone(g, 52), el('p', { text: phrase }),
+        activiteDe(g) ? el('button', { type: 'button', class: 'btn-activite', onclick: function () { ouvrirActivite(g); } }, [icon('book'), t('kid.howTo')]) : null
+      ]) : null,
+      el('button', { type: 'button', class: 'btn-sun big', text: t('kid.stopOk'), onclick: function () { rideau.hidden = true; player.hidden = true; document.body.style.overflow = ''; } })
+    ]));
+    rideau.setAttribute('data-moment', 'nuit');
+    player.hidden = false; document.body.style.overflow = 'hidden'; // l'écran de fin vit dans le cadre du jeu
+    rideau.hidden = false;
+    var n = parseInt(q.get('etape'), 10);
+    if (n >= 0 && activiteDe(g)) ouvrirActivite(g, n);
+  }
   // La page revient du cache du navigateur (retour depuis une page du site) : côté parent encore ouvert, on le garde ; sinon côté enfant.
   window.addEventListener('pageshow', function (e) {
     if (!e.persisted || vue !== 'parent') return;

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300" role="img" aria-label="Le chapeau retourné, l'autre bande à relever">
+  <defs>
+    <marker id="f" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#e0a400"/></marker>
+  </defs>
+  <!-- retourner : une flèche qui fait le tour -->
+  <path d="M118 58 A 32 22 0 1 1 182 58" fill="none" stroke="#e0a400" stroke-width="6" stroke-linecap="round" marker-end="url(#f)"/>
+  <!-- l'autre face : lisse, la bande encore en bas -->
+  <path d="M150 110 L75 185 L75 225 L225 225 L225 185 z" fill="#fbf7ee" stroke="#1d2b4f" stroke-width="4" stroke-linejoin="round"/>
+  <line x1="75" y1="185" x2="225" y2="185" stroke="#4c5b7c" stroke-width="3" stroke-dasharray="10 8"/>
+  <path d="M246 222 Q 272 185 246 152" fill="none" stroke="#e0a400" stroke-width="7" stroke-linecap="round" marker-end="url(#f)"/>
+</svg>

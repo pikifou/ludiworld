@@ -73,6 +73,7 @@
       if (jeton) entetes.Authorization = 'Bearer ' + jeton;
       var f = { method: options.method || 'GET', headers: entetes };
       if (options.corps !== undefined) f.body = JSON.stringify(options.corps);
+      if (options.keepalive) f.keepalive = true; // la page se ferme : l'envoi part quand même
       return appeler(url + chemin, f).catch(function () { throw erreur('reseau'); }).then(function (r) {
         return r.text().then(function (txt) {
           var corps = null;
@@ -279,6 +280,8 @@
       synchroLocale: synchroLocale,
       poserSynchroLocale: poserSynchroLocale,
       avisPublics: avisPublics,
+      // Les statistiques d'usage (docs/usage.js) : toujours sans le compte, même connecté, pour ne jamais les y rattacher.
+      noterUsage: function (lot, opts) { return requete('/rest/v1/rpc/noter_usage', { method: 'POST', corps: { p_evts: lot }, keepalive: !!(opts && opts.keepalive) }, null); },
       lireAvis: lireAvis,
       donnerAvis: donnerAvis,
       retirerAvis: retirerAvis

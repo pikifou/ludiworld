@@ -290,5 +290,44 @@ await refuse('trop de nouvelles réponses d\'un coup : refusé', 'anon', null, `
 await en('anon', null, `select public.enregistrer_envie($1, 'fr', array['jouer'])`, [ENV.l]);
 check('une réponse en cours continue quand même', (await db.query('select envie from public.envies where id = $1', [ENV.l])).rows[0].envie[0] === 'jouer');
 
+console.log('Statistiques d\'usage');
+{
+  const app = '6f1c2a3b-4d5e-4f60-8a7b-9c0d1e2f3a4b';
+  const jour = new Date().toISOString().slice(0, 10);
+  const lot = [
+    { jour, appareil: app, evt: 'jeu_lance', jeu: 'chasseur-dragons', age: '6-7', format: 'tablette', langue: 'fr', version: '0.10.0' },
+    { jour, appareil: app, evt: 'jeu_fini', jeu: 'chasseur-dragons', details: { minutes: 12.5, raison: 'total' } },
+    { jour, appareil: app, evt: 'idee_montree', jeu: 'chasseur-dragons', details: { activite: true } },
+    { jour, appareil: app, evt: 'activite_ouverte', jeu: 'chasseur-dragons' },
+    { jour, appareil: app, evt: 'activite_fermee', jeu: 'chasseur-dragons', details: { etape: 6, etapes: 6, finie: true } },
+    { jour, appareil: 'pas-un-numero', evt: 'jeu_lance' },
+    { jour: '1999-01-01', appareil: app, evt: 'jeu_lance' },
+    { jour, appareil: app, evt: 'Pas Bon' },
+    { jour, appareil: app, evt: 'vue', age: '35' }
+    ,{ jour, appareil: app, evt: 'jeu_fini', jeu: 'autre-jeu', details: { minutes: 'beaucoup', finie: 'peut-etre' } }
+    ,{ jour, appareil: app, evt: 'jeu_fini', jeu: 'autre-jeu', details: { minutes: 99999 } }
+  ];
+  const n = (await en('anon', null, 'select public.noter_usage($1::jsonb) n', [JSON.stringify(lot)]))[0].n;
+  check('sans compte, un lot s\'écrit ; les événements mal formés sont laissés de côté', n === 7, n);
+  await refuse('personne ne relit la table, même sans compte', 'anon', null, 'select * from public.usage_evenements');
+  await refuse('un parent connecté ne la relit pas non plus', 'authenticated', ID.a, 'select * from public.usage_evenements');
+  await refuse('ni ne l\'efface', 'authenticated', ID.a, 'delete from public.usage_evenements');
+  await refuse('un lot de plus de 200 est refusé', 'anon', null, `select public.noter_usage((select jsonb_agg(jsonb_build_object('jour', current_date, 'appareil', '${app}', 'evt', 'vue')) from generate_series(1, 201)))`);
+  await refuse('le bureau d\'usage est réservé au bureau', 'authenticated', ID.a, 'select public.bureau_usage(90)');
+  await refuse('anon n\'y a pas accès', 'anon', null, 'select public.bureau_usage(90)');
+  const stats = (await en('authenticated', ID.adm, 'select public.bureau_usage(90) r'))[0].r;
+  const dragons = stats.jeux.find(j => j.jeu === 'chasseur-dragons');
+  check('le bureau lit des totaux par jeu', stats.appareils === 1 && dragons.lancements === 1 && Number(dragons.minutes) === 12.5 && dragons.activites === 1 && dragons.activites_finies === 1 && dragons.etapes['6'] === 1, stats);
+  check('une valeur étrange ne casse pas la lecture, une partie compte 600 minutes au plus', Number(stats.jeux.find(j => j.jeu === 'autre-jeu').minutes) === 600, stats.jeux);
+  check('et les répartitions par tranche d\'âge et appareil', stats.repartition.age['6-7'] === 1 && stats.repartition.format.tablette === 1, stats.repartition);
+  await en('anon', null, 'select public.noter_usage($1::jsonb)', [JSON.stringify([
+    { jour, appareil: '1a2b3c4d-0000-4000-8000-000000000001', evt: 'statistiques_refusees', age: '8-10', format: 'telephone' },
+    { jour, appareil: '1a2b3c4d-0000-4000-8000-000000000002', evt: 'statistiques_refusees', age: '8-10', format: 'tablette' },
+    { jour, appareil: '1a2b3c4d-0000-4000-8000-000000000003', evt: 'statistiques_reprises', age: '6-7', format: 'tablette' }])]);
+  const st2 = (await en('authenticated', ID.adm, 'select public.bureau_usage(90) r'))[0].r;
+  check('les refus se comptent à part, avec leur tranche d\'âge et leur appareil', st2.choix.refus === 2 && st2.choix.reprises === 1 && st2.choix.age['8-10'] === 2 && st2.choix.format.telephone === 1, st2.choix);
+  check('ils ne gonflent ni les appareils ni les répartitions', st2.appareils === 1 && st2.repartition.age['8-10'] === undefined, { appareils: st2.appareils, age: st2.repartition.age });
+}
+
 console.log(`\n${ok} vérifications passées, ${ko} en échec.`);
 process.exit(ko ? 1 : 0);

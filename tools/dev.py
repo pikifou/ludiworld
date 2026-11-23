@@ -119,6 +119,11 @@ class Dev(BaseHTTPRequestHandler):
                 if 'screenshots' not in fiche and 'screenshots' in cat:
                     fiche['screenshots'], fiche['screens'] = cat['screenshots'], cat.get('screens')
                     change = True
+                # L'idée hors écran et son activité pas à pas sont écrites par Ludiworld, dans le catalogue.
+                for k in ('after', 'activity'):
+                    if k not in fiche and k in cat:
+                        fiche[k] = cat[k]
+                        change = True
                 # La date d'entrée au catalogue (« Nouveau ») est celle du catalogue, jamais celle du clone.
                 if 'added' in cat and fiche.get('added') != cat['added']:
                     fiche['added'] = cat['added']
