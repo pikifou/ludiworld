@@ -74,5 +74,29 @@
   "after": {
     "fr": "Arrose une plante à la maison, et regarde où l’eau s’en va dans la terre.",
     "en": "Water a plant at home, and watch where the water goes into the soil."
-  }
+  },
+  "screenshots": [
+    {
+      "src": "img/au-fil-de-leau-1.webp",
+      "alt": {
+        "fr": "Les potagers : la pièce en T partage l'eau entre deux plantes",
+        "en": "The vegetable gardens: the T piece splits the water between two plants"
+      }
+    },
+    {
+      "src": "img/au-fil-de-leau-2.webp",
+      "alt": {
+        "fr": "La forêt : une racine bloque l'eau entre deux cases",
+        "en": "The forest: a root blocks the water between two tiles"
+      }
+    },
+    {
+      "src": "img/au-fil-de-leau-3.webp",
+      "alt": {
+        "fr": "Le village : Aïna et la fontaine, les derniers jardins",
+        "en": "The village: Aïna and the fountain, the last gardens"
+      }
+    }
+  ],
+  "screens": "portrait"
 }
