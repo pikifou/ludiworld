@@ -5,8 +5,8 @@
   "added": "2026-10-28",
   "title": { "fr": "Ma Petite Civilisation", "en": "My Little Civilization" },
   "pitch": {
-    "fr": "Un petit village qui traverse l'histoire. On construit, on découvre le feu, les outils, l'agriculture, et le village grandit tout seul sous ses yeux. La démo va jusqu'au néolithique.",
-    "en": "A small village travelling through history. Build, discover fire, tools and farming, and watch the village grow. The demo goes up to the Neolithic."
+    "fr": "Un petit village qui traverse toute l'histoire, du premier feu jusqu'au décollage d'une fusée. On construit, on découvre l'agriculture, le fer, la vapeur, l'électricité, et le village devient une ville sous ses yeux.",
+    "en": "A small village travelling through all of history, from the first fire to a rocket launch. Build, discover farming, iron, steam and electricity, and watch the village become a city."
   },
   "url": "https://pikifou.github.io/du-feu-a-la-fusee/",
   "icon": "https://pikifou.github.io/du-feu-a-la-fusee/icone-512.png",
@@ -25,8 +25,8 @@
     "level": "core",
     "domains": ["histoire.prehistoire", "histoire.techniques", "gestion.ressources"],
     "what": {
-      "fr": "La vraie histoire des techniques, dans l'ordre réel (feu, outils de pierre, agriculture, élevage, poterie…), ce que chacune a changé dans la vie des gens, et de vrais lieux (Lascaux, Carnac, Stonehenge…).",
-      "en": "The real history of techniques, in their real order (fire, stone tools, farming, herding, pottery…), what each one changed in people's lives, and real places (Lascaux, Carnac, Stonehenge…)."
+      "fr": "La vraie histoire des techniques, dans l'ordre réel, de l'âge de pierre au monde moderne (feu, agriculture, bronze, écriture, imprimerie, machine à vapeur, électricité, avion, fusée…), ce que chacune a changé dans la vie des gens, et de vrais lieux (Lascaux, Carnac, Stonehenge…).",
+      "en": "The real history of techniques, in their real order, from the Stone Age to the modern world (fire, farming, bronze, writing, printing, the steam engine, electricity, planes, rockets…), what each one changed in people's lives, and real places (Lascaux, Carnac, Stonehenge…)."
     },
     "how": {
       "fr": "Chaque découverte ouvre une grande page illustrée lue à voix haute (avant / maintenant, « Le savais-tu ? »). On voit les habitants travailler, dormir, chasser. Se joue sans savoir lire.",
