@@ -2,7 +2,7 @@
 LudiSite.en({
   metaDesc: 'Small games made by parents, with no ads, nothing to buy and no traps. You choose, your child plays, the sun says when to stop.',
   skip: 'Skip to content',
-  heroAlt: 'Evening in a living room, a parent and child on the sofa. A small island floats above the tablet.',
+  heroAlt: 'An afternoon in a living room, a mother and her child on an orange sofa. A small round world floats above the tablet, the marmot waves from it.',
   h1a: 'The sun says',
   h1b: 'when to stop.',
   lede: 'Small games made by parents. You choose, your child plays, the sun sets the pace.',

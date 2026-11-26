@@ -119,8 +119,8 @@ select { width: auto; min-height: 40px; padding: 4px 10px; font-size: 1rem; }
 .a-ciel { position: relative; aspect-ratio: 1.1; order: 2; }
 .a-soleil { position: absolute; width: 30%; left: 4%; top: 2%; animation: lever 2.4s cubic-bezier(.2, .8, .2, 1) both; }
 .a-nuage { position: absolute; width: 34%; right: 2%; top: 12%; animation: glisse 2.4s .3s cubic-bezier(.2, .8, .2, 1) both; }
-.a-ile { position: absolute; width: 92%; left: 4%; bottom: 0; animation: monte 1.8s .2s cubic-bezier(.2, .9, .25, 1) both, flotte 7s 2s ease-in-out infinite; }
-.a-marmotte { position: absolute; width: 20%; left: 54%; bottom: 40%; animation: coucou .7s 1.6s cubic-bezier(.3, 1.6, .5, 1) both; }
+.a-ile { position: absolute; width: 72%; left: 22%; bottom: 0; animation: monte 1.8s .2s cubic-bezier(.2, .9, .25, 1) both, flotte 7s 2s ease-in-out infinite; }
+.a-marmotte { position: absolute; width: 16%; left: 56%; bottom: 56%; animation: coucou .7s 1.6s cubic-bezier(.3, 1.6, .5, 1) both; }
 .a-texte { order: 1; animation: monte 1.2s .1s cubic-bezier(.2, .9, .25, 1) both; }
 .a-texte .langs { margin-bottom: 18px; }
 .a-kicker { margin: 0; font-family: var(--f-titre); font-style: italic; font-size: 1.2rem; color: var(--encre-douce); }
@@ -266,15 +266,15 @@ select { width: auto; min-height: 40px; padding: 4px 10px; font-size: 1rem; }
 .enfant[data-moment="nuit"] .e-temps .ico { color: var(--encre-douce); }
 
 .e-monde { grid-area: monde; position: relative; z-index: 1; display: grid; place-items: end center; min-height: 0; }
-.ile { position: relative; width: min(92%, 560px, 62vh); aspect-ratio: 1100 / 994; animation: monte 1.6s .15s cubic-bezier(.2, .9, .25, 1) both; }
+.ile { position: relative; width: min(86%, 520px, 54vh); aspect-ratio: 1100 / 1175; /* la petite planète (tour 67) */ animation: monte 1.6s .15s cubic-bezier(.2, .9, .25, 1) both; }
 .ile > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
 .ile-jour { animation: flotte 8s 1.8s ease-in-out infinite; transition: filter 2.5s, opacity 2s; }
 .ile-nuit { opacity: 0; animation: flotte 8s 1.8s ease-in-out infinite; transition: opacity 2s; }
 .enfant[data-moment="soir"] .ile-jour { filter: sepia(.28) saturate(1.15) hue-rotate(-12deg) brightness(.97); }
 .enfant[data-moment="nuit"] .ile-nuit { opacity: 1; }
 .enfant[data-moment="nuit"] .ile-jour { opacity: 0; }
-.ile > .marmotte { inset: auto; width: 11%; height: auto; left: 73%; bottom: 52%; animation: coucou .7s 1.4s cubic-bezier(.3, 1.6, .5, 1) both; }
-.enfant[data-moment="nuit"] .ile > .marmotte { width: 12%; left: 72%; bottom: 47%; }
+.ile > .marmotte { inset: auto; width: 12%; height: auto; left: 60%; bottom: 66%; animation: coucou .7s 1.4s cubic-bezier(.3, 1.6, .5, 1) both; }
+.enfant[data-moment="nuit"] .ile > .marmotte { width: 12%; left: 60%; bottom: 66%; }
 .enfant[data-moment="soir"] .soleil { filter: saturate(1.5) hue-rotate(-28deg); }
 
 .e-jeux {
